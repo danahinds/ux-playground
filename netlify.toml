@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback — all routes serve index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Except prototype files — serve them directly
+[[redirects]]
+  from = "/prototypes/*"
+  to = "/prototypes/:splat"
+  status = 200
+  force = true
