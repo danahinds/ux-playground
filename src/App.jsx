@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { TopBar } from './components/landing/TopBar'
 import { Hero } from './components/landing/Hero'
 import { HowItWorks } from './components/landing/HowItWorks'
@@ -8,8 +9,9 @@ import { Demo } from './components/demo/Demo'
 import { DashboardPanel } from './components/dashboard/DashboardPanel'
 import { TweaksPanel } from './components/tweaks/TweaksPanel'
 import { Tag, Button, Icon } from './components/shared'
+import WrapperPage from './wrapper/WrapperPage'
 
-export default function App() {
+function Showcase() {
   const [tweaks, setTweaks] = useState({ palette: 'graphite', aesthetic: 'dark', heroVariant: 0 })
   const [showTweaks, setShowTweaks] = useState(false)
 
@@ -112,7 +114,6 @@ $ uxtg share --cohort designers`}</pre>
 
       {showTweaks && <TweaksPanel state={tweaks} onChange={updateTweaks}/>}
 
-      {/* Floating tweaks toggle */}
       <button onClick={() => setShowTweaks(s => !s)} style={{
         position:'fixed',right:16,bottom:16,zIndex:40,
         background:'var(--bg-2)',border:'1px solid var(--border)',
@@ -124,5 +125,16 @@ $ uxtg share --cohort designers`}</pre>
         {showTweaks ? 'Hide Tweaks' : 'Toggle Tweaks'}
       </button>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Showcase />} />
+        <Route path="/t" element={<WrapperPage />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
