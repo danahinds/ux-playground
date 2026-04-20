@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Wordmark, Button, Tag, Icon, Card, HeatDot, SparkBar } from '../shared'
 
 export const DashboardPanel = () => {
+  const navigate = useNavigate()
   const [selected, setSelected] = useState(0)
   const [filter, setFilter] = useState('all')
   const [tab, setTab] = useState('replay')
@@ -41,7 +43,7 @@ export const DashboardPanel = () => {
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
           <Tag accent size="sm">{'● LIVE · 2 testing now'}</Tag>
           <Button size="sm" variant="secondary" icon="copy">Share</Button>
-          <Button size="sm" icon="plus">New test</Button>
+          <Button size="sm" icon="plus" onClick={() => navigate('/upload')}>New test</Button>
         </div>
       </div>
 

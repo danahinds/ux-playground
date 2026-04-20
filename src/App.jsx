@@ -10,6 +10,7 @@ import { DashboardPanel } from './components/dashboard/DashboardPanel'
 import { TweaksPanel } from './components/tweaks/TweaksPanel'
 import { Tag, Button, Icon } from './components/shared'
 import WrapperPage from './wrapper/WrapperPage'
+import UploadPage from './components/upload/UploadPage'
 
 function Showcase() {
   const [tweaks, setTweaks] = useState({ palette: 'graphite', aesthetic: 'dark', heroVariant: 0 })
@@ -134,6 +135,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Showcase />} />
         <Route path="/t" element={<WrapperPage />} />
+        <Route path="/upload" element={<UploadPage />} />
       </Routes>
     </BrowserRouter>
   )
