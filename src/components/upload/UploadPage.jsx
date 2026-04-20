@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import JSZip from 'jszip'
 import { Icon, Button, Tag, Card, Wordmark } from '../shared'
 
 function toSlug(text) {
@@ -10,17 +11,26 @@ function toSlug(text) {
     .slice(0, 60)
 }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      // readAsDataURL returns "data:text/html;base64,<content>"
-      const base64 = reader.result.split(',')[1]
-      resolve(base64)
+function contentToBase64(text) {
+  const bytes = new TextEncoder().encode(text)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
+async function extractHtmlFromZip(file) {
+  const zip = await JSZip.loadAsync(file)
+  const htmlFiles = []
+
+  zip.forEach((path, entry) => {
+    if (!entry.dir && /\.html?$/i.test(path)) {
+      htmlFiles.push({ path, entry })
     }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
   })
+
+  return htmlFiles
 }
 
 export default function UploadPage() {
@@ -28,34 +38,100 @@ export default function UploadPage() {
   const fileInputRef = useRef(null)
   const [name, setName] = useState('')
   const [file, setFile] = useState(null)
+  const [htmlContent, setHtmlContent] = useState(null)
   const [dragging, setDragging] = useState(false)
-  const [status, setStatus] = useState('idle') // idle | uploading | success | error
+  const [status, setStatus] = useState('idle') // idle | picking | uploading | success | error
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [zipHtmlFiles, setZipHtmlFiles] = useState([])
+  const [selectedZipFile, setSelectedZipFile] = useState(null)
 
   const slug = toSlug(name)
-  const valid = slug.length >= 2 && file
+  const valid = slug.length >= 2 && htmlContent
 
-  const handleFile = (f) => {
+  const isZip = (f) => f.name.endsWith('.zip')
+  const isHtml = (f) => /\.html?$/i.test(f.name)
+
+  const readHtmlFile = (f) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsText(f)
+    })
+  }
+
+  const handleFile = async (f) => {
     if (!f) return
-    if (!f.name.endsWith('.html') && !f.name.endsWith('.htm')) {
-      setError('Please select an HTML file.')
-      return
-    }
-    if (f.size > 512 * 1024) {
-      setError('File is too large. Maximum size is 512KB.')
-      return
-    }
     setError('')
-    setFile(f)
+    setZipHtmlFiles([])
+    setSelectedZipFile(null)
+    setHtmlContent(null)
+
+    if (isZip(f)) {
+      if (f.size > 10 * 1024 * 1024) {
+        setError('Zip file too large. Maximum size is 10MB.')
+        return
+      }
+      setFile(f)
+      try {
+        const htmlFiles = await extractHtmlFromZip(f)
+        if (htmlFiles.length === 0) {
+          setError('No HTML files found in this zip.')
+          setFile(null)
+          return
+        }
+        if (htmlFiles.length === 1) {
+          // Only one HTML file — use it directly
+          const content = await htmlFiles[0].entry.async('string')
+          setHtmlContent(content)
+          setSelectedZipFile(htmlFiles[0].path)
+          setStatus('idle')
+        } else {
+          // Multiple HTML files — let PM pick
+          setZipHtmlFiles(htmlFiles)
+          setStatus('picking')
+        }
+      } catch (e) {
+        setError('Could not read zip file. Make sure it is a valid zip archive.')
+        setFile(null)
+      }
+    } else if (isHtml(f)) {
+      if (f.size > 512 * 1024) {
+        setError('File too large. Maximum size is 512KB.')
+        return
+      }
+      setFile(f)
+      const content = await readHtmlFile(f)
+      setHtmlContent(content)
+      setStatus('idle')
+    } else {
+      setError('Please select an HTML or ZIP file.')
+    }
+  }
+
+  const handlePickZipFile = async (htmlFile) => {
+    try {
+      const content = await htmlFile.entry.async('string')
+      if (content.length > 512 * 1024) {
+        setError(`"${htmlFile.path}" is too large (${(content.length / 1024).toFixed(0)}KB). Maximum is 512KB.`)
+        return
+      }
+      setHtmlContent(content)
+      setSelectedZipFile(htmlFile.path)
+      setZipHtmlFiles([])
+      setStatus('idle')
+      setError('')
+    } catch (e) {
+      setError('Could not extract that file from the zip.')
+    }
   }
 
   const handleDrop = (e) => {
     e.preventDefault()
     setDragging(false)
-    const f = e.dataTransfer.files[0]
-    handleFile(f)
+    handleFile(e.dataTransfer.files[0])
   }
 
   const handleSubmit = async () => {
@@ -64,7 +140,7 @@ export default function UploadPage() {
     setError('')
 
     try {
-      const html = await fileToBase64(file)
+      const html = contentToBase64(htmlContent)
 
       const res = await fetch('/.netlify/functions/upload-prototype', {
         method: 'POST',
@@ -96,6 +172,17 @@ export default function UploadPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const resetForm = () => {
+    setStatus('idle')
+    setFile(null)
+    setHtmlContent(null)
+    setName('')
+    setResult(null)
+    setZipHtmlFiles([])
+    setSelectedZipFile(null)
+    setError('')
+  }
+
   return (
     <div style={{
       minHeight: '100vh', background: 'var(--bg)',
@@ -122,12 +209,11 @@ export default function UploadPage() {
           Upload a prototype
         </h1>
         <p style={{ color: 'var(--fg-2)', fontSize: 15, marginBottom: 36, lineHeight: 1.55 }}>
-          Drop your HTML file here, name the test, and get a shareable link.
+          Drop your HTML or ZIP file here, name the test, and get a shareable link.
           It goes live in about 1-2 minutes after upload.
         </p>
 
         {status === 'success' ? (
-          /* Success state */
           <Card style={{ padding: 32, textAlign: 'center' }}>
             <div style={{
               width: 48, height: 48, borderRadius: '50%',
@@ -144,7 +230,6 @@ export default function UploadPage() {
               Deploying now. Your link will be live in ~1-2 minutes.
             </p>
 
-            {/* Shareable link */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: 'var(--bg-3)', border: '1px solid var(--border)',
@@ -168,19 +253,62 @@ export default function UploadPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <Button variant="outline" onClick={() => {
-                setStatus('idle')
-                setFile(null)
-                setName('')
-                setResult(null)
-              }}>
-                Upload another
-              </Button>
-              <Button onClick={() => navigate('/')}>
-                Back to home
-              </Button>
+              <Button variant="outline" onClick={resetForm}>Upload another</Button>
+              <Button onClick={() => navigate('/')}>Back to home</Button>
             </div>
           </Card>
+
+        ) : status === 'picking' ? (
+          /* Zip file picker */
+          <Card style={{ padding: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <Icon name="grid" size={16} style={{ color: 'var(--fg-3)' }} />
+              <span style={{ fontSize: 15, fontWeight: 500 }}>
+                {zipHtmlFiles.length} HTML files found in <span className="mono" style={{ color: 'var(--fg-2)' }}>{file?.name}</span>
+              </span>
+            </div>
+            <p style={{ color: 'var(--fg-2)', fontSize: 13, marginBottom: 16 }}>
+              Pick the file testers should see:
+            </p>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {zipHtmlFiles.map((hf) => {
+                const nameParts = hf.path.split('/')
+                const fileName = nameParts[nameParts.length - 1]
+                return (
+                  <button
+                    key={hf.path}
+                    onClick={() => handlePickZipFile(hf)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '12px 14px', borderRadius: 8, textAlign: 'left',
+                      background: 'var(--bg-3)', border: '1px solid var(--border)',
+                      cursor: 'pointer', transition: 'border-color .15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                  >
+                    <Icon name="terminal" size={14} style={{ color: 'var(--fg-3)', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500 }}>{fileName}</div>
+                      {nameParts.length > 1 && (
+                        <div className="mono" style={{ fontSize: 11, color: 'var(--fg-3)', marginTop: 2 }}>
+                          {hf.path}
+                        </div>
+                      )}
+                    </div>
+                    <Icon name="chevronRight" size={14} style={{ color: 'var(--fg-3)' }} />
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              onClick={resetForm}
+              style={{ marginTop: 14, fontSize: 12, color: 'var(--fg-3)', textDecoration: 'underline' }}
+            >
+              Cancel and start over
+            </button>
+          </Card>
+
         ) : (
           /* Upload form */
           <div style={{ display: 'grid', gap: 24 }}>
@@ -217,7 +345,7 @@ export default function UploadPage() {
                 fontSize: 11, color: 'var(--fg-3)', textTransform: 'uppercase',
                 letterSpacing: '.08em', marginBottom: 8, display: 'block',
               }}>
-                HTML prototype file
+                Prototype file
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -239,9 +367,12 @@ export default function UploadPage() {
                     <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 4 }}>{file.name}</div>
                     <div className="mono" style={{ fontSize: 12, color: 'var(--fg-3)' }}>
                       {(file.size / 1024).toFixed(1)} KB
+                      {selectedZipFile && (
+                        <span> · using <span style={{ color: 'var(--fg-2)' }}>{selectedZipFile.split('/').pop()}</span></span>
+                      )}
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setFile(null) }}
+                      onClick={(e) => { e.stopPropagation(); resetForm() }}
                       style={{ marginTop: 10, fontSize: 12, color: 'var(--fg-3)', textDecoration: 'underline' }}
                     >
                       Remove
@@ -251,10 +382,10 @@ export default function UploadPage() {
                   <div>
                     <Icon name="download" size={24} style={{ color: 'var(--fg-3)', marginBottom: 10, transform: 'rotate(180deg)' }} />
                     <div style={{ fontSize: 15, color: 'var(--fg-2)', marginBottom: 4 }}>
-                      Drag and drop your HTML file here
+                      Drag and drop your file here
                     </div>
                     <div className="mono" style={{ fontSize: 12, color: 'var(--fg-3)' }}>
-                      or click to browse · max 512KB
+                      or click to browse · HTML or ZIP · max 512KB per file
                     </div>
                   </div>
                 )}
@@ -262,7 +393,7 @@ export default function UploadPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".html,.htm"
+                accept=".html,.htm,.zip"
                 style={{ display: 'none' }}
                 onChange={e => handleFile(e.target.files[0])}
               />
