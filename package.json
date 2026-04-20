@@ -1,0 +1,26 @@
+{
+  "name": "ux-playground",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Playground — internal UX prototype testing platform",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danahinds/ux-playground.git"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.14.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.9"
+  }
+}
