@@ -1,0 +1,15 @@
+{
+  "slug": "shower-workflow-12-01",
+  "testName": "SHower workflow 12:01",
+  "schemaVersion": 1,
+  "createdAt": "2026-04-21T16:01:41.918Z",
+  "mode": "guided",
+  "prompt": null,
+  "tasks": [
+    {
+      "id": "t1",
+      "prompt": "Add a person to the showe"
+    }
+  ],
+  "archived": false
+}
