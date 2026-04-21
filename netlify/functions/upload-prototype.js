@@ -1,115 +1,208 @@
 const REPO_OWNER = 'danahinds'
 const REPO_NAME = 'ux-playground'
 const BRANCH = 'main'
+const GITHUB_API = 'https://api.github.com'
+
+const SLUG_MAX = 60
+const SLUG_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/
+const TEST_NAME_MIN = 2
+const TEST_NAME_MAX = 80
+const PROMPT_MAX = 280
+const TASK_MAX = 10
+
+const json = (body, status) => new Response(JSON.stringify(body), {
+  status,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+async function gh(path, token, init = {}) {
+  return fetch(`${GITHUB_API}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init.headers || {}),
+    },
+  })
+}
+
+function utf8ToBase64(text) {
+  return Buffer.from(text, 'utf-8').toString('base64')
+}
 
 export default async (req) => {
-  // Only accept POST
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Method not allowed' }, 405)
   }
 
   const token = process.env.GITHUB_TOKEN
   if (!token) {
-    return new Response(JSON.stringify({ error: 'Server misconfigured: missing GITHUB_TOKEN' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Server misconfigured: missing GITHUB_TOKEN' }, 500)
   }
 
   let body
   try {
     body = await req.json()
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Invalid JSON body' }, 400)
   }
 
-  const { slug, html } = body
+  const { slug, testName, html, mode, prompt, tasks } = body
 
-  // Validate slug
-  if (!slug || !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug) || slug.length > 60) {
-    return new Response(JSON.stringify({
-      error: 'Invalid test name. Use lowercase letters, numbers, and hyphens (e.g., "checkout-v3"). 2-60 characters.',
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+  if (!slug || !SLUG_RE.test(slug) || slug.length > SLUG_MAX) {
+    return json({
+      error: 'Invalid test name. Use lowercase letters, numbers, and hyphens (e.g., "checkout-v3"). 2–60 characters.',
+    }, 400)
   }
 
-  // Validate HTML content
+  const trimmedName = typeof testName === 'string' ? testName.trim() : ''
+  if (trimmedName.length < TEST_NAME_MIN || trimmedName.length > TEST_NAME_MAX) {
+    return json({ error: `Test name must be ${TEST_NAME_MIN}–${TEST_NAME_MAX} characters.` }, 400)
+  }
+
   if (!html) {
-    return new Response(JSON.stringify({ error: 'No HTML content provided' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'No HTML content provided' }, 400)
   }
 
-  // Check size (~512KB limit, base64 is ~33% larger than raw)
   if (html.length > 700000) {
-    return new Response(JSON.stringify({ error: 'File too large. Maximum size is 512KB.' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'File too large. Maximum size is 512KB.' }, 400)
   }
 
-  const filePath = `public/prototypes/${slug}/index.html`
-  const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`
+  if (mode !== 'exploration' && mode !== 'guided') {
+    return json({ error: 'Invalid mode. Must be "exploration" or "guided".' }, 400)
+  }
 
-  // Check if prototype already exists
-  const checkRes = await fetch(apiUrl, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
-  })
+  let normalizedPrompt = null
+  let normalizedTasks = null
 
-  if (checkRes.status === 200) {
-    return new Response(JSON.stringify({
+  if (mode === 'exploration') {
+    if (prompt != null) {
+      if (typeof prompt !== 'string' || prompt.length > PROMPT_MAX) {
+        return json({ error: `Prompt must be ${PROMPT_MAX} characters or fewer.` }, 400)
+      }
+      const trimmed = prompt.trim()
+      normalizedPrompt = trimmed.length ? trimmed : null
+    }
+  } else {
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      return json({ error: 'Guided mode requires at least one task.' }, 400)
+    }
+    if (tasks.length > TASK_MAX) {
+      return json({ error: `Maximum ${TASK_MAX} tasks.` }, 400)
+    }
+    normalizedTasks = []
+    for (let i = 0; i < tasks.length; i++) {
+      const t = tasks[i]
+      if (typeof t !== 'string' || !t.trim()) {
+        return json({ error: `Task ${i + 1} is empty.` }, 400)
+      }
+      if (t.length > PROMPT_MAX) {
+        return json({ error: `Task ${i + 1} is too long (max ${PROMPT_MAX} chars).` }, 400)
+      }
+      normalizedTasks.push({ id: `t${i + 1}`, prompt: t.trim() })
+    }
+  }
+
+  // Duplicate check — rejects if index.html OR meta.json already exists for this slug.
+  const indexPath = `public/prototypes/${slug}/index.html`
+  const metaPath = `public/prototypes/${slug}/meta.json`
+  const [indexExists, metaExists] = await Promise.all([
+    gh(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${indexPath}`, token),
+    gh(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${metaPath}`, token),
+  ])
+  if (indexExists.status === 200 || metaExists.status === 200) {
+    return json({
       error: `A prototype named "${slug}" already exists. Choose a different name.`,
-    }), {
-      status: 409,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    }, 409)
   }
 
-  // Commit the file via GitHub Contents API
-  const commitRes = await fetch(apiUrl, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      message: `upload: add prototype "${slug}"`,
-      content: html,
-      branch: BRANCH,
-    }),
-  })
+  const meta = {
+    slug,
+    testName: trimmedName,
+    schemaVersion: 1,
+    createdAt: new Date().toISOString(),
+    mode,
+    prompt: normalizedPrompt,
+    tasks: normalizedTasks,
+    archived: false,
+  }
+  const metaContentBase64 = utf8ToBase64(JSON.stringify(meta, null, 2) + '\n')
 
-  if (!commitRes.ok) {
-    const err = await commitRes.text()
+  try {
+    // 1. Create blobs in parallel
+    const [indexBlobRes, metaBlobRes] = await Promise.all([
+      gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/blobs`, token, {
+        method: 'POST',
+        body: JSON.stringify({ content: html, encoding: 'base64' }),
+      }),
+      gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/blobs`, token, {
+        method: 'POST',
+        body: JSON.stringify({ content: metaContentBase64, encoding: 'base64' }),
+      }),
+    ])
+    if (!indexBlobRes.ok || !metaBlobRes.ok) {
+      throw new Error(`blob creation failed: ${indexBlobRes.status}/${metaBlobRes.status}`)
+    }
+    const indexBlob = await indexBlobRes.json()
+    const metaBlob = await metaBlobRes.json()
+
+    // 2. Read current branch tip
+    const refRes = await gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/ref/heads/${BRANCH}`, token)
+    if (!refRes.ok) throw new Error(`ref read failed: ${refRes.status}`)
+    const ref = await refRes.json()
+    const baseCommitSha = ref.object.sha
+
+    const baseCommitRes = await gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/commits/${baseCommitSha}`, token)
+    if (!baseCommitRes.ok) throw new Error(`base commit read failed: ${baseCommitRes.status}`)
+    const baseCommit = await baseCommitRes.json()
+    const baseTreeSha = baseCommit.tree.sha
+
+    // 3. Create tree with both new files on top of the current tree
+    const treeRes = await gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/trees`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        base_tree: baseTreeSha,
+        tree: [
+          { path: indexPath, mode: '100644', type: 'blob', sha: indexBlob.sha },
+          { path: metaPath, mode: '100644', type: 'blob', sha: metaBlob.sha },
+        ],
+      }),
+    })
+    if (!treeRes.ok) throw new Error(`tree creation failed: ${treeRes.status}`)
+    const tree = await treeRes.json()
+
+    // 4. Commit with the base as parent
+    const newCommitRes = await gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/commits`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        message: `upload: add prototype "${slug}"`,
+        tree: tree.sha,
+        parents: [baseCommitSha],
+      }),
+    })
+    if (!newCommitRes.ok) throw new Error(`commit creation failed: ${newCommitRes.status}`)
+    const newCommit = await newCommitRes.json()
+
+    // 5. Fast-forward the branch
+    const updateRes = await gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/refs/heads/${BRANCH}`, token, {
+      method: 'PATCH',
+      body: JSON.stringify({ sha: newCommit.sha, force: false }),
+    })
+    if (!updateRes.ok) throw new Error(`ref update failed: ${updateRes.status}`)
+  } catch (err) {
     console.error('GitHub API error:', err)
-    return new Response(JSON.stringify({ error: 'Failed to upload prototype. Please try again.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Failed to upload prototype. Please try again.' }, 500)
   }
 
-  return new Response(JSON.stringify({
+  return json({
     url: `/t?proto=${slug}`,
     slug,
+    testName: trimmedName,
+    mode,
     status: 'deploying',
-    message: `Prototype "${slug}" uploaded. It will be live in ~1-2 minutes.`,
-  }), {
-    status: 201,
-    headers: { 'Content-Type': 'application/json' },
-  })
+    message: `Prototype "${slug}" uploaded. It will be live in ~1–2 minutes.`,
+  }, 201)
 }
 
 export const config = {
