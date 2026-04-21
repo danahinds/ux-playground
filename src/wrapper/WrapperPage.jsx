@@ -1,23 +1,33 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { generateSessionId } from './session'
-import { tagSession, tagPrototype, tagDemographics } from './clarity'
+import { tagSession, tagPrototype, tagMode, tagDemographics } from './clarity'
+import { useMeta } from './useMeta'
 import { WrapperIntake } from './WrapperIntake'
+import { PromptScreen } from './PromptScreen'
 import { PrototypeViewer } from './PrototypeViewer'
+import { TaskOverlay } from './TaskOverlay'
 import { WrapperPostSession } from './WrapperPostSession'
 import { WrapperThankYou } from './WrapperThankYou'
+import { ClosedScreen } from './ClosedScreen'
 
 export default function WrapperPage() {
   const [searchParams] = useSearchParams()
   const prototype = searchParams.get('proto')
   const sessionId = useMemo(() => generateSessionId(), [])
-  const [view, setView] = useState('intake') // intake | proto | postsession | thanks
+  const { loading, meta } = useMeta(prototype)
+  const [view, setView] = useState('intake') // intake | prompt | proto | postsession | thanks
+  const [taskTimings, setTaskTimings] = useState([])
 
-  // Tag Clarity with session ID on mount
-  useState(() => {
+  useEffect(() => {
+    if (!prototype) return
     tagSession(sessionId)
-    if (prototype) tagPrototype(prototype)
-  })
+    tagPrototype(prototype)
+  }, [prototype, sessionId])
+
+  useEffect(() => {
+    if (meta?.mode) tagMode(meta.mode)
+  }, [meta?.mode])
 
   // No prototype specified
   if (!prototype) {
@@ -44,9 +54,24 @@ export default function WrapperPage() {
     )
   }
 
+  if (loading) return null
+
+  if (meta?.archived) {
+    return <ClosedScreen testName={meta.testName} />
+  }
+
+  const mode = meta?.mode || 'exploration'
+  const isGuided = mode === 'guided' && Array.isArray(meta?.tasks) && meta.tasks.length > 0
+  const hasPrompt = mode === 'exploration' && typeof meta?.prompt === 'string' && meta.prompt.trim().length > 0
+
   const handleIntakeSubmit = (form) => {
     tagDemographics(form)
-    setView('proto')
+    setView(hasPrompt ? 'prompt' : 'proto')
+  }
+
+  const handleTaskComplete = (timings) => {
+    setTaskTimings(timings)
+    setView('postsession')
   }
 
   return (
@@ -58,16 +83,32 @@ export default function WrapperPage() {
           onSubmit={handleIntakeSubmit}
         />
       )}
-      {view === 'proto' && (
-        <PrototypeViewer
-          prototype={prototype}
-          onEnd={() => setView('postsession')}
+      {view === 'prompt' && (
+        <PromptScreen
+          prompt={meta.prompt}
+          onStart={() => setView('proto')}
         />
+      )}
+      {view === 'proto' && (
+        <>
+          <PrototypeViewer
+            prototype={prototype}
+            onEnd={isGuided ? null : () => setView('postsession')}
+          />
+          {isGuided && (
+            <TaskOverlay
+              tasks={meta.tasks}
+              onComplete={handleTaskComplete}
+            />
+          )}
+        </>
       )}
       {view === 'postsession' && (
         <WrapperPostSession
           sessionId={sessionId}
           prototype={prototype}
+          mode={mode}
+          taskTimings={taskTimings}
           onSubmit={() => setView('thanks')}
         />
       )}
