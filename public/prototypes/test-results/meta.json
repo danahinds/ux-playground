@@ -1,0 +1,10 @@
+{
+  "slug": "test-results",
+  "testName": "Test results",
+  "schemaVersion": 1,
+  "createdAt": "2026-04-21T16:57:17.003Z",
+  "mode": "exploration",
+  "prompt": "Hello, Thank you for Managing our shower station. Please help guide clients to the right shower stalls. If you have nay question speak woth out leads",
+  "tasks": null,
+  "archived": false
+}
