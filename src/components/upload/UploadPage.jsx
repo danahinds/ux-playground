@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import JSZip from 'jszip'
 import { Icon, Button, Tag, Card, Wordmark } from '../shared'
@@ -40,12 +40,16 @@ export default function UploadPage() {
   const [file, setFile] = useState(null)
   const [htmlContent, setHtmlContent] = useState(null)
   const [dragging, setDragging] = useState(false)
-  const [status, setStatus] = useState('idle') // idle | picking | uploading | success | error
+  const [status, setStatus] = useState('idle') // idle | picking | uploading | deploying | live | timeout | error
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [zipHtmlFiles, setZipHtmlFiles] = useState([])
   const [selectedZipFile, setSelectedZipFile] = useState(null)
+  const [deployAttempts, setDeployAttempts] = useState(0)
+
+  const MAX_DEPLOY_ATTEMPTS = 30
+  const POLL_INTERVAL_MS = 5000
 
   const slug = toSlug(name)
   const valid = slug.length >= 2 && htmlContent
@@ -157,11 +161,41 @@ export default function UploadPage() {
       }
 
       setResult(data)
-      setStatus('success')
+      setDeployAttempts(0)
+      setStatus('deploying')
     } catch (e) {
       setError('Network error. Please check your connection and try again.')
       setStatus('error')
     }
+  }
+
+  // Poll the prototype URL until it responds 200 (Netlify deploy finished)
+  useEffect(() => {
+    if (status !== 'deploying') return
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/prototypes/${slug}/index.html`, {
+          method: 'HEAD', cache: 'no-store',
+        })
+        if (res.ok) {
+          setStatus('live')
+          return
+        }
+      } catch {
+        // Network hiccup — keep polling.
+      }
+      if (deployAttempts + 1 >= MAX_DEPLOY_ATTEMPTS) {
+        setStatus('timeout')
+      } else {
+        setDeployAttempts(a => a + 1)
+      }
+    }, POLL_INTERVAL_MS)
+    return () => clearTimeout(timer)
+  }, [status, deployAttempts, slug])
+
+  const retryDeploy = () => {
+    setDeployAttempts(0)
+    setStatus('deploying')
   }
 
   const fullUrl = `${window.location.origin}/t?proto=${slug}`
@@ -181,6 +215,7 @@ export default function UploadPage() {
     setZipHtmlFiles([])
     setSelectedZipFile(null)
     setError('')
+    setDeployAttempts(0)
   }
 
   return (
@@ -213,21 +248,31 @@ export default function UploadPage() {
           It goes live in about 1-2 minutes after upload.
         </p>
 
-        {status === 'success' ? (
+        {(status === 'deploying' || status === 'live' || status === 'timeout') ? (
           <Card style={{ padding: 32, textAlign: 'center' }}>
             <div style={{
               width: 48, height: 48, borderRadius: '50%',
-              background: 'var(--accent)', color: 'var(--accent-fg)',
+              background: status === 'live' ? 'var(--accent)' : 'var(--bg-3)',
+              color: status === 'live' ? 'var(--accent-fg)' : 'var(--fg-2)',
+              border: status === 'live' ? 'none' : '1px solid var(--border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
-              <Icon name="check" size={24} stroke={2.5} />
+              <Icon
+                name={status === 'live' ? 'check' : status === 'timeout' ? 'clock' : 'dot'}
+                size={status === 'live' ? 24 : 20}
+                stroke={2.5}
+              />
             </div>
             <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>
-              Prototype uploaded
+              {status === 'live' && 'Live now'}
+              {status === 'deploying' && 'Deploying…'}
+              {status === 'timeout' && 'Still deploying'}
             </h2>
             <p style={{ color: 'var(--fg-2)', fontSize: 14, marginBottom: 24 }}>
-              Deploying now. Your link will be live in ~1-2 minutes.
+              {status === 'live' && 'Your prototype is live and ready to share.'}
+              {status === 'deploying' && 'Netlify is building. This usually takes ~1–2 minutes.'}
+              {status === 'timeout' && "This is taking longer than expected. Try the preview — if it works, you're good. Otherwise give it another minute."}
             </p>
 
             <div style={{
@@ -252,9 +297,17 @@ export default function UploadPage() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {status === 'live' && (
+                <Button icon="eye" onClick={() => window.open(`/t?proto=${slug}`, '_blank')}>
+                  Preview
+                </Button>
+              )}
+              {status === 'timeout' && (
+                <Button variant="outline" onClick={retryDeploy}>Keep checking</Button>
+              )}
               <Button variant="outline" onClick={resetForm}>Upload another</Button>
-              <Button onClick={() => navigate('/')}>Back to home</Button>
+              <Button variant="ghost" onClick={() => navigate('/')}>Back to home</Button>
             </div>
           </Card>
 
