@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { TopBar } from './components/landing/TopBar'
 import { Hero } from './components/landing/Hero'
 import { HowItWorks } from './components/landing/HowItWorks'
@@ -15,6 +15,7 @@ import ResultsPage from './components/results/ResultsPage'
 import PrototypeIndex from './components/prototypes/PrototypeIndex'
 
 function Showcase() {
+  const navigate = useNavigate()
   const [tweaks, setTweaks] = useState({ palette: 'graphite', aesthetic: 'dark', heroVariant: 0 })
   const [showTweaks, setShowTweaks] = useState(false)
 
@@ -93,9 +94,8 @@ function Showcase() {
                   send the link. Ping #playground in Slack if anything feels off.
                 </p>
                 <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-                  <Button size="lg" icon="zap" trailing="arrow">Start a test</Button>
-                  <Button size="lg" variant="outline" icon="terminal">Open the PRD</Button>
-                  <Button size="lg" variant="ghost">#playground</Button>
+                  <Button size="lg" icon="zap" trailing="arrow" onClick={() => navigate('/upload')}>Start a test</Button>
+                  <Button size="lg" variant="outline" icon="grid" onClick={() => navigate('/prototypes')}>View my tests</Button>
                 </div>
               </div>
               <pre className="mono" style={{
