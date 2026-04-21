@@ -12,6 +12,7 @@ import { Tag, Button, Icon } from './components/shared'
 import WrapperPage from './wrapper/WrapperPage'
 import UploadPage from './components/upload/UploadPage'
 import ResultsPage from './components/results/ResultsPage'
+import PrototypeIndex from './components/prototypes/PrototypeIndex'
 
 function Showcase() {
   const [tweaks, setTweaks] = useState({ palette: 'graphite', aesthetic: 'dark', heroVariant: 0 })
@@ -138,6 +139,7 @@ export default function App() {
         <Route path="/t" element={<WrapperPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/results" element={<ResultsPage />} />
+        <Route path="/prototypes" element={<PrototypeIndex />} />
       </Routes>
     </BrowserRouter>
   )
