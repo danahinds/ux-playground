@@ -1,0 +1,10 @@
+{
+  "slug": "test-with-results-output",
+  "testName": "TEST with Results Output",
+  "schemaVersion": 1,
+  "createdAt": "2026-04-21T16:29:07.231Z",
+  "mode": "exploration",
+  "prompt": "Thank you for managing our shower stall. Please manage clients using our app. We thank you for your service",
+  "tasks": null,
+  "archived": false
+}
