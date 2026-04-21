@@ -123,13 +123,28 @@ export default async (req) => {
       const formsRes = await netlify(`/sites/${siteId}/forms`, nfToken)
       if (formsRes.ok) {
         const forms = await formsRes.json()
+        const intakeForm = forms.find(f => f.name === 'playground-intake')
         const sessionForm = forms.find(f => f.name === 'playground-session')
-        if (sessionForm) {
-          const subs = await listAllSubmissions(sessionForm.id, nfToken)
-          for (const s of subs) {
-            const slug = fieldsOf(s).prototype
-            if (!slug) continue
-            countsBySlug.set(slug, (countsBySlug.get(slug) || 0) + 1)
+        const formIds = [intakeForm?.id, sessionForm?.id].filter(Boolean)
+        if (formIds.length) {
+          const batches = await Promise.all(
+            formIds.map(id => listAllSubmissions(id, nfToken)),
+          )
+          // Count unique session-ids per slug across both forms so intake-only
+          // testers (who closed the tab before post-session) are still counted.
+          const sessionsBySlug = new Map()
+          for (const subs of batches) {
+            for (const s of subs) {
+              const fields = fieldsOf(s)
+              const slug = fields.prototype
+              const sid = fields['session-id'] || fields.session_id
+              if (!slug || !sid) continue
+              if (!sessionsBySlug.has(slug)) sessionsBySlug.set(slug, new Set())
+              sessionsBySlug.get(slug).add(sid)
+            }
+          }
+          for (const [slug, ids] of sessionsBySlug) {
+            countsBySlug.set(slug, ids.size)
           }
         }
       }
