@@ -9,14 +9,10 @@
   command = "npm run dev"
   targetPort = 5173
 
-# Prototype files served directly (must come before SPA fallback)
-[[redirects]]
-  from = "/prototypes/*"
-  to = "/prototypes/:splat"
-  status = 200
-  force = true
-
-# SPA fallback — all other routes serve index.html
+# SPA fallback — any path with no matching static file renders index.html
+# so React Router can handle it on refresh. Static files (the uploaded
+# prototypes under /prototypes/<slug>/...) are still served directly
+# because Netlify prefers static assets over rewrites.
 [[redirects]]
   from = "/*"
   to = "/index.html"
