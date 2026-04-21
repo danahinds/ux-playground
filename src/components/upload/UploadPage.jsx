@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import JSZip from 'jszip'
 import { Icon, Button, Tag, Card, Wordmark } from '../shared'
+import { ModeSelector } from './ModeSelector'
 
 function toSlug(text) {
   return text
@@ -47,12 +48,24 @@ export default function UploadPage() {
   const [zipHtmlFiles, setZipHtmlFiles] = useState([])
   const [selectedZipFile, setSelectedZipFile] = useState(null)
   const [deployAttempts, setDeployAttempts] = useState(0)
+  const [mode, setMode] = useState('exploration')
+  const [prompt, setPrompt] = useState('')
+  const [tasks, setTasks] = useState([''])
 
   const MAX_DEPLOY_ATTEMPTS = 30
   const POLL_INTERVAL_MS = 5000
 
   const slug = toSlug(name)
-  const valid = slug.length >= 2 && htmlContent
+  const testName = name.trim()
+  const nonEmptyTasks = tasks.map(t => t.trim()).filter(Boolean)
+  const modeValid = mode === 'exploration' || nonEmptyTasks.length > 0
+  const valid = slug.length >= 2 && testName.length >= 2 && htmlContent && modeValid
+
+  const handleModeChange = (patch) => {
+    if ('mode' in patch) setMode(patch.mode)
+    if ('prompt' in patch) setPrompt(patch.prompt)
+    if ('tasks' in patch) setTasks(patch.tasks)
+  }
 
   const isZip = (f) => f.name.endsWith('.zip')
   const isHtml = (f) => /\.html?$/i.test(f.name)
@@ -149,7 +162,14 @@ export default function UploadPage() {
       const res = await fetch('/.netlify/functions/upload-prototype', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, html }),
+        body: JSON.stringify({
+          slug,
+          testName,
+          html,
+          mode,
+          prompt: mode === 'exploration' ? prompt.trim() : null,
+          tasks: mode === 'guided' ? nonEmptyTasks : null,
+        }),
       })
 
       const data = await res.json()
@@ -216,6 +236,9 @@ export default function UploadPage() {
     setSelectedZipFile(null)
     setError('')
     setDeployAttempts(0)
+    setMode('exploration')
+    setPrompt('')
+    setTasks([''])
   }
 
   return (
@@ -391,6 +414,14 @@ export default function UploadPage() {
                 </div>
               )}
             </div>
+
+            {/* Mode selector */}
+            <ModeSelector
+              mode={mode}
+              prompt={prompt}
+              tasks={tasks}
+              onChange={handleModeChange}
+            />
 
             {/* File drop zone */}
             <div>

@@ -1,0 +1,10 @@
+{
+  "slug": "shower-queue",
+  "testName": "Shower Queue",
+  "schemaVersion": 1,
+  "createdAt": "2026-04-20T16:09:43-04:00",
+  "mode": "exploration",
+  "prompt": null,
+  "tasks": null,
+  "archived": false
+}
