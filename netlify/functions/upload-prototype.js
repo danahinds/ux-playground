@@ -10,6 +10,37 @@ const TEST_NAME_MAX = 80
 const PROMPT_MAX = 280
 const TASK_MAX = 10
 
+// Auto-inject Microsoft Clarity into every uploaded prototype so sessions
+// INSIDE the iframe are recorded too. Uses the same project as the wrapper
+// so the parent + prototype recordings land in one dashboard, correlated
+// by the session_id tag (passed in via ?sid= on the iframe URL).
+const CLARITY_ID = 'weqc268a3f'
+
+const CLARITY_SNIPPET = `  <!-- Playground: auto-injected Microsoft Clarity for inside-iframe recording -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window,document,"clarity","script","${CLARITY_ID}");
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      var sid = p.get('sid');
+      if (sid) window.clarity('set', 'session_id', sid);
+      var m = window.location.pathname.match(/\\/prototypes\\/([^/]+)\\//);
+      if (m) window.clarity('set', 'prototype', m[1]);
+      window.clarity('set', 'context', 'prototype');
+    })();
+  </script>
+`
+
+function injectClarity(html) {
+  if (/clarity\.ms\/tag/i.test(html)) return html
+  if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, CLARITY_SNIPPET + '</head>')
+  if (/<\/body>/i.test(html)) return html.replace(/<\/body>/i, CLARITY_SNIPPET + '</body>')
+  return html + '\n' + CLARITY_SNIPPET
+}
+
 const json = (body, status) => new Response(JSON.stringify(body), {
   status,
   headers: { 'Content-Type': 'application/json' },
@@ -129,12 +160,26 @@ export default async (req) => {
   }
   const metaContentBase64 = utf8ToBase64(JSON.stringify(meta, null, 2) + '\n')
 
+  // Inject Clarity into the uploaded HTML so behaviour inside the iframe is
+  // recorded alongside the wrapper, correlated by session_id via ?sid=.
+  let indexContentBase64 = html
+  try {
+    const decoded = Buffer.from(html, 'base64').toString('utf-8')
+    const injected = injectClarity(decoded)
+    if (injected !== decoded) {
+      indexContentBase64 = utf8ToBase64(injected)
+    }
+  } catch (e) {
+    // If injection fails for any reason, fall back to the original HTML.
+    console.warn('Clarity injection failed, uploading unmodified:', e)
+  }
+
   try {
     // 1. Create blobs in parallel
     const [indexBlobRes, metaBlobRes] = await Promise.all([
       gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/blobs`, token, {
         method: 'POST',
-        body: JSON.stringify({ content: html, encoding: 'base64' }),
+        body: JSON.stringify({ content: indexContentBase64, encoding: 'base64' }),
       }),
       gh(`/repos/${REPO_OWNER}/${REPO_NAME}/git/blobs`, token, {
         method: 'POST',
