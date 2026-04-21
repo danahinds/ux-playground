@@ -1,0 +1,10 @@
+{
+  "slug": "testing-with-results",
+  "testName": "Testing With Results",
+  "schemaVersion": 1,
+  "createdAt": "2026-04-21T16:42:15.777Z",
+  "mode": "exploration",
+  "prompt": "Welcome Please manage clients at the shower station",
+  "tasks": null,
+  "archived": false
+}
