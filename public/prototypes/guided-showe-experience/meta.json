@@ -1,0 +1,35 @@
+{
+  "slug": "guided-showe-experience",
+  "testName": "Guided showe experience",
+  "schemaVersion": 1,
+  "createdAt": "2026-04-21T19:07:12.640Z",
+  "mode": "guided",
+  "prompt": null,
+  "tasks": [
+    {
+      "id": "t1",
+      "prompt": "Please open 3 shower stallss"
+    },
+    {
+      "id": "t2",
+      "prompt": "Add 3 persons to a shower"
+    },
+    {
+      "id": "t3",
+      "prompt": "Make 4 individuals miss a shower"
+    },
+    {
+      "id": "t4",
+      "prompt": "Move a person from missed shower back in line"
+    },
+    {
+      "id": "t5",
+      "prompt": "Move a person from missed into a shower stall"
+    },
+    {
+      "id": "t6",
+      "prompt": "Mark a person out of the showe"
+    }
+  ],
+  "archived": false
+}
