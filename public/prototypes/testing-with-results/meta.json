@@ -6,5 +6,5 @@
   "mode": "exploration",
   "prompt": "Welcome Please manage clients at the shower station",
   "tasks": null,
-  "archived": false
+  "archived": true
 }
