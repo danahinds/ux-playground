@@ -322,15 +322,20 @@ export default function UploadPage() {
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               {status === 'live' && (
-                <Button icon="eye" onClick={() => window.open(`/t?proto=${slug}`, '_blank')}>
-                  Preview
-                </Button>
+                <>
+                  <Button icon="eye" onClick={() => window.open(`/t?proto=${slug}`, '_blank')}>
+                    Preview
+                  </Button>
+                  <Button variant="outline" icon="chart" onClick={() => navigate(`/results?proto=${slug}`)}>
+                    View results
+                  </Button>
+                </>
               )}
               {status === 'timeout' && (
                 <Button variant="outline" onClick={retryDeploy}>Keep checking</Button>
               )}
-              <Button variant="outline" onClick={resetForm}>Upload another</Button>
-              <Button variant="ghost" onClick={() => navigate('/')}>Back to home</Button>
+              <Button variant="ghost" onClick={resetForm}>Upload another</Button>
+              <Button variant="ghost" onClick={() => navigate('/prototypes')}>My tests</Button>
             </div>
           </Card>
 
