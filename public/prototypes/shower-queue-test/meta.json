@@ -1,0 +1,10 @@
+{
+  "slug": "shower-queue-test",
+  "testName": "Shower Queue Test",
+  "schemaVersion": 1,
+  "createdAt": "2026-04-21T18:54:53.544Z",
+  "mode": "exploration",
+  "prompt": "Welcome, explored the shower stations. Have Fun!",
+  "tasks": null,
+  "archived": false
+}
