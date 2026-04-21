@@ -4,13 +4,14 @@ import { generateSessionId } from './session'
 import { tagSession, tagPrototype, tagDemographics } from './clarity'
 import { WrapperIntake } from './WrapperIntake'
 import { PrototypeViewer } from './PrototypeViewer'
+import { WrapperPostSession } from './WrapperPostSession'
 import { WrapperThankYou } from './WrapperThankYou'
 
 export default function WrapperPage() {
   const [searchParams] = useSearchParams()
   const prototype = searchParams.get('proto')
   const sessionId = useMemo(() => generateSessionId(), [])
-  const [view, setView] = useState('intake') // intake | proto | thanks
+  const [view, setView] = useState('intake') // intake | proto | postsession | thanks
 
   // Tag Clarity with session ID on mount
   useState(() => {
@@ -60,7 +61,14 @@ export default function WrapperPage() {
       {view === 'proto' && (
         <PrototypeViewer
           prototype={prototype}
-          onEnd={() => setView('thanks')}
+          onEnd={() => setView('postsession')}
+        />
+      )}
+      {view === 'postsession' && (
+        <WrapperPostSession
+          sessionId={sessionId}
+          prototype={prototype}
+          onSubmit={() => setView('thanks')}
         />
       )}
       {view === 'thanks' && (
