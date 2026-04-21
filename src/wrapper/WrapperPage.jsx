@@ -93,6 +93,7 @@ export default function WrapperPage() {
         <>
           <PrototypeViewer
             prototype={prototype}
+            sessionId={sessionId}
             onEnd={isGuided ? null : () => setView('postsession')}
           />
           {isGuided && (

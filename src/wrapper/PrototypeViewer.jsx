@@ -1,5 +1,7 @@
-export function PrototypeViewer({ prototype, onEnd }) {
-  const src = `/prototypes/${prototype}/index.html`
+export function PrototypeViewer({ prototype, sessionId, onEnd }) {
+  const src = sessionId
+    ? `/prototypes/${prototype}/index.html?sid=${encodeURIComponent(sessionId)}`
+    : `/prototypes/${prototype}/index.html`
 
   return (
     <div style={{
