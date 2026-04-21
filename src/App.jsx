@@ -11,6 +11,7 @@ import { TweaksPanel } from './components/tweaks/TweaksPanel'
 import { Tag, Button, Icon } from './components/shared'
 import WrapperPage from './wrapper/WrapperPage'
 import UploadPage from './components/upload/UploadPage'
+import ResultsPage from './components/results/ResultsPage'
 
 function Showcase() {
   const [tweaks, setTweaks] = useState({ palette: 'graphite', aesthetic: 'dark', heroVariant: 0 })
@@ -136,6 +137,7 @@ export default function App() {
         <Route path="/" element={<Showcase />} />
         <Route path="/t" element={<WrapperPage />} />
         <Route path="/upload" element={<UploadPage />} />
+        <Route path="/results" element={<ResultsPage />} />
       </Routes>
     </BrowserRouter>
   )
