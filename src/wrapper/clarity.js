@@ -18,6 +18,10 @@ export function tagPrototype(name) {
   claritySet('prototype', name)
 }
 
+export function tagMode(mode) {
+  claritySet('mode', mode)
+}
+
 export function tagDemographics(form) {
   Object.entries(form).forEach(([key, value]) => {
     if (value) claritySet(key, value)
