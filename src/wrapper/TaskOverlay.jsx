@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 export function TaskOverlay({ tasks, onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [timings, setTimings] = useState([])
+  const [collapsed, setCollapsed] = useState(false)
   const startedAtRef = useRef(performance.now())
 
   const task = tasks[currentIndex]
@@ -19,6 +20,7 @@ export function TaskOverlay({ tasks, onComplete }) {
 
     setTimings(next)
     setCurrentIndex(i => i + 1)
+    setCollapsed(false)
     startedAtRef.current = performance.now()
   }
 
@@ -26,6 +28,29 @@ export function TaskOverlay({ tasks, onComplete }) {
     padding: '10px 18px', fontSize: 14, fontWeight: 600,
     borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
     border: '1.5px solid transparent',
+  }
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={() => setCollapsed(false)}
+        title="Show task"
+        style={{
+          position: 'fixed', right: 16, bottom: 16, zIndex: 25,
+          background: 'rgba(10, 10, 10, 0.88)', color: '#fff',
+          padding: '10px 16px', fontSize: 13, fontWeight: 600,
+          borderRadius: 999, border: '1px solid rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(8px)', cursor: 'pointer',
+          fontFamily: 'ui-monospace, monospace', letterSpacing: '.02em',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}
+      >
+        <span>Task {currentIndex + 1}/{tasks.length}</span>
+        <span style={{ opacity: 0.7 }}>▴</span>
+      </button>
+    )
   }
 
   return (
@@ -53,7 +78,21 @@ export function TaskOverlay({ tasks, onComplete }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
+        <button
+          type="button"
+          onClick={() => setCollapsed(true)}
+          title="Hide task (a button underneath is in the way)"
+          aria-label="Minimize task panel"
+          style={{
+            width: 36, height: 36, fontSize: 16,
+            background: '#fff', color: '#888', borderColor: '#ddd',
+            border: '1.5px solid #ddd', borderRadius: 8,
+            cursor: 'pointer',
+          }}
+        >
+          ▾
+        </button>
         <button
           type="button"
           onClick={() => advance('stuck')}
