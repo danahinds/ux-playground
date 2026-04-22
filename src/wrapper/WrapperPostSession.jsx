@@ -30,6 +30,7 @@ export function WrapperPostSession({
       ease: ease == null ? '' : String(ease),
       'task-timings': taskTimings.length ? JSON.stringify(taskTimings) : '',
       timestamp: new Date().toISOString(),
+      completion: 'manual',
     })
 
     try {

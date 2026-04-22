@@ -126,6 +126,7 @@ export default async (req) => {
       ease: easeRaw === '' ? null : Number(easeRaw),
       taskTimings: parseTaskTimings(fields['task-timings'] || fields.task_timings),
       timestamp: fields.timestamp || s.created_at,
+      completion: fields.completion || 'manual',
     }
     bySessionId.set(sid, entry)
   }

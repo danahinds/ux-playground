@@ -4,6 +4,32 @@ const SUCCESS_STYLES = {
   no: { label: 'No', color: '#b91c1c' },
 }
 
+const CLARITY_PROJECT_ID = 'weqc268a3f'
+const CLARITY_DASHBOARD = `https://clarity.microsoft.com/projects/view/${CLARITY_PROJECT_ID}/impressions`
+
+function ClarityLink({ sessionId }) {
+  const open = () => {
+    if (navigator.clipboard) navigator.clipboard.writeText(sessionId).catch(() => {})
+    window.open(CLARITY_DASHBOARD, '_blank', 'noopener,noreferrer')
+  }
+  return (
+    <button
+      type="button"
+      onClick={open}
+      title={`Copy ${sessionId} and open Clarity recordings in a new tab`}
+      style={{
+        fontSize: 11, fontFamily: 'var(--font-mono)',
+        background: 'none', border: 'none', padding: 0, marginTop: 4,
+        color: 'var(--fg-2)', cursor: 'pointer', textAlign: 'left',
+        textDecoration: 'underline', textDecorationStyle: 'dotted',
+        display: 'block',
+      }}
+    >
+      view in Clarity ↗
+    </button>
+  )
+}
+
 function SuccessChip({ value }) {
   const style = SUCCESS_STYLES[value]
   if (!style) return <span style={{ fontSize: 12, color: 'var(--fg-3)' }}>—</span>
@@ -62,8 +88,10 @@ export function PerTesterTable({ sessions }) {
                   <div className="mono" style={{ fontSize: 12 }}>
                     {s.sessionId.slice(0, 12)}…
                   </div>
-                  {!session && <div style={{ fontSize: 10, color: 'var(--fg-3)', marginTop: 2 }}>intake only</div>}
+                  {!session && <div style={{ fontSize: 10, color: 'var(--fg-3)', marginTop: 2 }}>intake only · closed browser</div>}
+                  {session?.completion === 'auto' && <div style={{ fontSize: 10, color: '#d97706', marginTop: 2 }}>closed browser · partial</div>}
                   {session && !intake && <div style={{ fontSize: 10, color: 'var(--fg-3)', marginTop: 2 }}>no intake</div>}
+                  <ClarityLink sessionId={s.sessionId} />
                 </td>
                 <td style={cell}>{intake?.role || '—'}</td>
                 <td style={cell}>{intake?.ageRange || '—'}</td>
