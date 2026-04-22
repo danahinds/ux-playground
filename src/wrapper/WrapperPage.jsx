@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { generateSessionId } from './session'
 import { tagSession, tagPrototype, tagMode, tagDemographics } from './clarity'
@@ -19,11 +19,46 @@ export default function WrapperPage() {
   const [view, setView] = useState('intake') // intake | prompt | proto | postsession | thanks
   const [taskTimings, setTaskTimings] = useState([])
 
+  // Refs so the pagehide listener reads the latest values without re-binding.
+  const viewRef = useRef(view)
+  const timingsRef = useRef(taskTimings)
+  useEffect(() => { viewRef.current = view }, [view])
+  useEffect(() => { timingsRef.current = taskTimings }, [taskTimings])
+
   useEffect(() => {
     if (!prototype) return
     tagSession(sessionId)
     tagPrototype(prototype)
   }, [prototype, sessionId])
+
+  // Auto-save partial session data if the tester closes the tab after
+  // starting the prototype but before submitting the post-session form.
+  useEffect(() => {
+    if (!prototype) return
+    const mode = meta?.mode || 'exploration'
+    const handler = () => {
+      const v = viewRef.current
+      if (v !== 'proto' && v !== 'postsession') return
+      const timings = timingsRef.current
+      const body = new URLSearchParams({
+        'form-name': 'playground-session',
+        'session-id': sessionId,
+        prototype,
+        mode,
+        intent: '',
+        success: '',
+        confusion: '',
+        ease: '',
+        'task-timings': timings.length ? JSON.stringify(timings) : '',
+        timestamp: new Date().toISOString(),
+        completion: 'auto',
+      }).toString()
+      const blob = new Blob([body], { type: 'application/x-www-form-urlencoded' })
+      if (navigator.sendBeacon) navigator.sendBeacon('/', blob)
+    }
+    window.addEventListener('pagehide', handler)
+    return () => window.removeEventListener('pagehide', handler)
+  }, [prototype, sessionId, meta?.mode])
 
   useEffect(() => {
     if (meta?.mode) tagMode(meta.mode)

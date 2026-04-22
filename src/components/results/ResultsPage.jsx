@@ -166,7 +166,7 @@ export default function ResultsPage() {
         </h3>
         <PerTesterTable sessions={sessions} />
         <div style={{ marginTop: 10, fontSize: 12, color: 'var(--fg-3)' }}>
-          Find a session recording in Microsoft Clarity by searching for the <span className="mono">session_id</span> tag.
+          Click <span className="mono">view in Clarity</span> on any row to copy its <span className="mono">session_id</span> and open the Clarity recordings dashboard — paste the ID into the custom-tag filter to find the recording.
         </div>
       </div>
     </Shell>
