@@ -12,8 +12,8 @@ A lightweight tool that lets PMs upload HTML prototypes, collect tester demograp
 
 ## Stack
 
-- React 18 + React Router (Vite)
-- Microsoft Clarity (behavioral capture)
+
+oral capture)
 - Netlify Forms (demographic storage)
 - Netlify (static hosting)
 
