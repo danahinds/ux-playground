@@ -103,7 +103,6 @@ export default async (req) => {
     const entry = bySessionId.get(sid) || { sessionId: sid, intake: null, session: null }
     entry.intake = {
       ageRange: fields['age-range'] || fields.age_range || '',
-      role: fields.role || '',
       techComfort: fields['tech-comfort'] || fields.tech_comfort || '',
       familiarity: fields.familiarity || '',
       timestamp: fields.timestamp || s.created_at,

@@ -13,7 +13,7 @@ export const FAQ = () => {
     ['Iframe compatibility \u2014 one edge case to watch.',
      "Prototypes that use top.location or ship X-Frame-Options: DENY won't render inside the wrapper iframe. For those, use direct-link mode (session-ID goes via query param) and you still get the linkage."],
     ['PII policy: don\'t collect it, and redact if it sneaks in.',
-     'Intake is role (free text), age range, tech comfort, familiarity. No names, emails, or IPs. If your prototype has dummy form fields and a tester fills them with real data, redact in Clarity before sharing the recording.'],
+     'Intake is age range, tech comfort, familiarity. No names, emails, or IPs. If your prototype has dummy form fields and a tester fills them with real data, redact in Clarity before sharing the recording.'],
     ['Retention & ownership.',
      'Clarity keeps recordings 30 days by default. Netlify Forms keeps submissions indefinitely. Both accounts are owned by UX Testground \u2014 ping the platform team before changing anything on either.'],
   ]

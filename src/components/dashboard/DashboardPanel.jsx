@@ -9,12 +9,12 @@ export const DashboardPanel = () => {
   const [tab, setTab] = useState('replay')
 
   const sessions = [
-    { id:'4f2a-b9c1', proto:'checkout-v3', age:'25–34', role:'Designer', tech:'Power user', fam:'Weekly', duration:'2:14', events:42, rage:0, dead:1, t:'12m ago', heat:[[.3,.4,.8],[.5,.6,.6],[.7,.3,.4]] },
-    { id:'a1c5-02de', proto:'checkout-v3', age:'45–54', role:'Ops Manager', tech:'Get by', fam:'Occasional', duration:'4:08', events:71, rage:3, dead:2, t:'38m ago', heat:[[.5,.6,1],[.48,.62,.9],[.52,.58,.95],[.3,.3,.4]], flag:true },
-    { id:'e73b-9102', proto:'checkout-v3', age:'18–24', role:'Student', tech:'Comfortable', fam:'First time', duration:'1:45', events:28, rage:0, dead:0, t:'1h ago', heat:[[.2,.3,.5],[.6,.7,.7]] },
-    { id:'c84f-551a', proto:'onboarding-v2', age:'35–44', role:'Engineer', tech:'I build software', fam:'Weekly', duration:'3:22', events:55, rage:1, dead:0, t:'2h ago', heat:[[.4,.5,.6],[.7,.5,.8]] },
-    { id:'9b0d-dd71', proto:'checkout-v3', age:'55+', role:'Finance Exec', tech:'Get by', fam:'Occasional', duration:'5:41', events:93, rage:4, dead:3, t:'3h ago', heat:[[.5,.6,1],[.52,.62,1],[.48,.58,.9],[.3,.3,.3]], flag:true },
-    { id:'2e4a-7c88', proto:'checkout-v3', age:'25–34', role:'Marketing', tech:'Comfortable', fam:'Weekly', duration:'2:58', events:48, rage:0, dead:1, t:'4h ago', heat:[[.6,.4,.7]] },
+    { id:'4f2a-b9c1', proto:'checkout-v3', age:'25–34', tech:'Power user', fam:'Weekly', duration:'2:14', events:42, rage:0, dead:1, t:'12m ago', heat:[[.3,.4,.8],[.5,.6,.6],[.7,.3,.4]] },
+    { id:'a1c5-02de', proto:'checkout-v3', age:'45–54', tech:'Get by', fam:'Occasional', duration:'4:08', events:71, rage:3, dead:2, t:'38m ago', heat:[[.5,.6,1],[.48,.62,.9],[.52,.58,.95],[.3,.3,.4]], flag:true },
+    { id:'e73b-9102', proto:'checkout-v3', age:'18–24', tech:'Comfortable', fam:'First time', duration:'1:45', events:28, rage:0, dead:0, t:'1h ago', heat:[[.2,.3,.5],[.6,.7,.7]] },
+    { id:'c84f-551a', proto:'onboarding-v2', age:'35–44', tech:'I build software', fam:'Weekly', duration:'3:22', events:55, rage:1, dead:0, t:'2h ago', heat:[[.4,.5,.6],[.7,.5,.8]] },
+    { id:'9b0d-dd71', proto:'checkout-v3', age:'55+', tech:'Get by', fam:'Occasional', duration:'5:41', events:93, rage:4, dead:3, t:'3h ago', heat:[[.5,.6,1],[.52,.62,1],[.48,.58,.9],[.3,.3,.3]], flag:true },
+    { id:'2e4a-7c88', proto:'checkout-v3', age:'25–34', tech:'Comfortable', fam:'Weekly', duration:'2:58', events:48, rage:0, dead:1, t:'4h ago', heat:[[.6,.4,.7]] },
   ]
 
   const filtered = filter === 'all'
@@ -100,7 +100,7 @@ export const DashboardPanel = () => {
                   <span className="mono" style={{fontSize:10,color:'var(--fg-3)'}}>{s.t}</span>
                 </div>
                 <div style={{fontSize:12,color:'var(--fg-2)',marginBottom:6}}>
-                  {s.age} · {s.role} · {s.tech}
+                  {s.age} · {s.tech} · {s.fam}
                 </div>
                 <div style={{display:'flex',gap:6,alignItems:'center'}}>
                   <span className="mono" style={{fontSize:10,color:'var(--fg-3)'}}>{s.duration}</span>
@@ -206,7 +206,7 @@ export const DashboardPanel = () => {
       }}>
         <span className="mono" style={{fontSize:10.5,color:'var(--fg-3)',textTransform:'uppercase',letterSpacing:'.1em'}}>Segment tags:</span>
         {[
-          ['age', sel.age], ['role', sel.role], ['tech', sel.tech], ['familiarity', sel.fam]
+          ['age', sel.age], ['tech', sel.tech], ['familiarity', sel.fam]
         ].map(([k,v])=>(
           <span key={k} className="mono" style={{
             fontSize:11,padding:'3px 8px',

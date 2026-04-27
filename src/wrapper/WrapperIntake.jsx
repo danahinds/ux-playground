@@ -3,14 +3,13 @@ import { useState } from 'react'
 export function WrapperIntake({ sessionId, prototype, onSubmit }) {
   const [form, setForm] = useState({
     'age-range': '',
-    role: '',
     'tech-comfort': '',
     familiarity: '',
   })
   const [submitting, setSubmitting] = useState(false)
 
   const set = (key, value) => setForm(f => ({ ...f, [key]: value }))
-  const valid = form['age-range'] && form.role.trim() && form['tech-comfort'] && form.familiarity
+  const valid = form['age-range'] && form['tech-comfort'] && form.familiarity
 
   const handleSubmit = async () => {
     if (!valid || submitting) return
@@ -22,7 +21,6 @@ export function WrapperIntake({ sessionId, prototype, onSubmit }) {
       'session-id': sessionId,
       prototype,
       'age-range': form['age-range'],
-      role: form.role,
       'tech-comfort': form['tech-comfort'],
       familiarity: form.familiarity,
       timestamp: new Date().toISOString(),
@@ -63,14 +61,14 @@ export function WrapperIntake({ sessionId, prototype, onSubmit }) {
           fontSize: 10, letterSpacing: '.15em', color: '#999', marginBottom: 20,
           fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase',
         }}>
-          PLAYGROUND · INTAKE · 4 QUESTIONS · ~60 SEC
+          PLAYGROUND · INTAKE · 3 QUESTIONS · ~45 SEC
         </div>
 
         <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 8 }}>
           Before we start.
         </h1>
         <p style={{ color: '#666', marginBottom: 32, fontSize: 15, lineHeight: 1.55 }}>
-          These four questions help us segment your session recording.
+          These three questions help us segment your session recording.
           We don't collect your name, email, or IP.
         </p>
 
@@ -87,28 +85,10 @@ export function WrapperIntake({ sessionId, prototype, onSubmit }) {
             </div>
           </div>
 
-          {/* Role */}
-          <div>
-            <label style={{ fontSize: 12, color: '#888', marginBottom: 10, display: 'block', fontFamily: 'ui-monospace, monospace', letterSpacing: '.08em' }}>
-              02 · PROFESSIONAL ROLE
-            </label>
-            <input
-              type="text"
-              value={form.role}
-              onChange={e => set('role', e.target.value)}
-              placeholder="e.g. Designer, PM, Engineer, Student…"
-              style={{
-                width: '100%', padding: '12px 14px', fontSize: 14,
-                border: '1.5px solid #ddd', borderRadius: 8, background: '#fff',
-                outline: 'none', color: '#111',
-              }}
-            />
-          </div>
-
           {/* Tech comfort */}
           <div>
             <label style={{ fontSize: 12, color: '#888', marginBottom: 10, display: 'block', fontFamily: 'ui-monospace, monospace', letterSpacing: '.08em' }}>
-              03 · TECH COMFORT
+              02 · TECH COMFORT
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {['I avoid it', 'Get by', 'Comfortable', 'Power user', 'I build software'].map(a => (
@@ -120,7 +100,7 @@ export function WrapperIntake({ sessionId, prototype, onSubmit }) {
           {/* Familiarity */}
           <div>
             <label style={{ fontSize: 12, color: '#888', marginBottom: 10, display: 'block', fontFamily: 'ui-monospace, monospace', letterSpacing: '.08em' }}>
-              04 · FAMILIAR WITH THIS PRODUCT AREA
+              03 · FAMILIAR WITH THIS PRODUCT AREA
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {['Not really', 'A bit', 'Comfortable', 'Very familiar'].map(a => (
@@ -146,7 +126,7 @@ export function WrapperIntake({ sessionId, prototype, onSubmit }) {
             {submitting ? 'Starting…' : 'Start the test →'}
           </button>
           <span style={{ fontSize: 12, color: '#aaa', fontFamily: 'ui-monospace, monospace' }}>
-            {Object.values(form).filter(Boolean).length}/4
+            {Object.values(form).filter(Boolean).length}/3
           </span>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 const REASONS = [
-  ['use-tool',     'Ask to use the tool',  "You'd like access for a project you're working on."],
+  ['use-tool',     'Interested in using this tool?',  "You'd like access for a project you're working on."],
   ['get-in-touch', 'Get in touch',          'Consulting, collaboration, or just to say hello.'],
 ]
 
