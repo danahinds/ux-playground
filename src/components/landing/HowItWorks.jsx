@@ -4,7 +4,7 @@ export const HowItWorks = () => {
   const steps = [
     { n:'01', k:'DEPLOY', t:'Drop the folder onto Netlify', d:'One folder with your HTML prototype. No build step. Live URL in under a minute.', code:'$ netlify deploy --prod' },
     { n:'02', k:'SHARE', t:'Send testers the intake link', d:'One wrapper serves every prototype via ?proto=. Each tester gets a unique session ID.', code:'playground.uxtg.dev/t\n  ?proto=checkout-v3' },
-    { n:'03', k:'OBSERVE', t:'Demographics + behavior, linked', d:'Clarity captures mouse, clicks, rage/dead clicks. Netlify Forms stores the intake. Linked by session ID.', code:'clarity("set", "age", "25-34")\nclarity("set", "role", "designer")' },
+    { n:'03', k:'OBSERVE', t:'Demographics + behavior, linked', d:'Clarity captures mouse, clicks, rage/dead clicks. Netlify Forms stores the intake. Linked by session ID.', code:'clarity("set", "age", "25-34")\nclarity("set", "tech", "comfortable")'},
     { n:'04', k:'SEGMENT', t:'Filter recordings by tag', d:'"Show me all testers 45+ who rage-clicked" \u2014 one filter, no dashboard to build.', code:'filter: age=45+ AND event=rage' },
   ]
   return (

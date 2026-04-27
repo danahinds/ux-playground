@@ -58,7 +58,7 @@ Tasks exist only as an advanced mode for flows with defined steps (checkout, sig
 
 ### 4.4 Tester wrapper — `/t?proto=<slug>`
 `src/wrapper/WrapperPage.jsx`
-- **Intake** (`WrapperIntake`): 4 hard-coded questions — age range, professional role, tech comfort, product familiarity. Submits to Netlify Forms (`playground-intake`).
+- **Intake** (`WrapperIntake`): 3 hard-coded questions — age range, tech comfort, product familiarity. Submits to Netlify Forms (`playground-intake`).
 - **Viewer** (`PrototypeViewer`): full-viewport sandboxed iframe (`allow-scripts allow-same-origin allow-forms allow-popups`), floating "End session" button.
 - **Thank you** (`WrapperThankYou`): static confirmation, session ID displayed.
 - Missing `?proto=` → friendly error page.
@@ -122,7 +122,7 @@ At `/results?proto=<slug>` (auth-gated, TBD):
 Per session:
 - **Session ID** — random, links Clarity + Forms + any future store.
 - **Prototype slug.**
-- **Demographics** — age, role, tech comfort, familiarity.
+- **Demographics** — age, tech comfort, familiarity.
 - **Mode** — `exploration` | `guided`.
 - **Prompt shown** (exploration) or **tasks shown** (guided).
 - **Intent** — free text.
