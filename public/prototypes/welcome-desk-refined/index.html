@@ -1,0 +1,3141 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serve513 Welcome Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap">
+<style>
+:root {
+  --bg-canvas: #F5F0E5;
+  --bg-card: #FFFFFF;
+  --bg-card-alt: #F1EFE8;
+  --bg-info: #E6F1FB;
+  --bg-success: #E5EFE9;
+  --brand: #085041;
+  --brand-deep: #063A2F;
+  --brand-tint: #E5EFE9;
+  --text-primary: #1A1A1A;
+  --text-secondary: #5F5E5A;
+  --text-tertiary: #8B8578;
+  --text-info: #185FA5;
+  --text-light: #FBF7EE;
+  --border: rgba(26,26,26,0.08);
+  --border-strong: rgba(26,26,26,0.18);
+  --border-info: #185FA5;
+  --warn: #B45309;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.18);
+  --t: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+.serif { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; letter-spacing: -0.01em; }
+
+/* ================ TOP BAR ================ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-canvas);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.brand-logo {
+  width: 32px; height: 32px;
+  background: var(--brand);
+  color: var(--text-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 16px;
+}
+.brand-text { font-size: 14px; font-weight: 500; line-height: 1.1; }
+.brand-text small { display: block; font-weight: 400; color: var(--text-tertiary); font-size: 11px; margin-top: 2px; }
+.topbar-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-left: auto;
+  text-align: right;
+  line-height: 1.3;
+}
+.topbar-meta strong { color: var(--text-secondary); font-weight: 500; }
+.topbar-actions { display: flex; gap: 8px; }
+
+/* ================ PROGRESS ================ */
+.progress {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.progress-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.progress-step[disabled] { cursor: not-allowed; opacity: 0.5; }
+.progress-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--t);
+}
+.progress-step.active .progress-dot {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--text-light);
+}
+.progress-step.done .progress-dot {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--text-light);
+}
+.progress-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.progress-step.active .progress-label { color: var(--text-primary); }
+.progress-step.done .progress-label { color: var(--text-secondary); }
+.progress-bar-fill {
+  flex: 1;
+  height: 1.5px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 250ms ease;
+}
+.progress-step.done + .progress-bar-fill::after,
+.progress-step.active ~ .progress-bar-fill.filled::after { transform: scaleX(1); }
+.progress-bar-fill.filled::after { transform: scaleX(1); }
+
+/* ================ APP SHELL ================ */
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  padding-bottom: 96px;
+}
+
+.step-header {
+  margin-bottom: 22px;
+}
+.step-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin: 0 0 6px;
+}
+.step-title {
+  font-size: 32px;
+  margin: 0 0 4px;
+  letter-spacing: -0.015em;
+}
+.step-sub {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 56ch;
+}
+
+/* ================ BUTTONS ================ */
+.btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--t);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { background: var(--bg-card-alt); }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--bg-card); transform: none; }
+
+.btn-primary {
+  background: var(--brand);
+  color: var(--text-light);
+  border-color: var(--brand);
+}
+.btn-primary:hover { background: var(--brand-deep); border-color: var(--brand-deep); }
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover { background: var(--bg-card-alt); color: var(--text-primary); }
+
+.btn-lg { padding: 12px 22px; font-size: 14px; }
+
+.btn-active {
+  background: var(--brand-tint);
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+/* ================ FOOTER NAV ================ */
+.footer-nav {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 0;
+  background: var(--bg-canvas);
+  border-top: 1px solid var(--border);
+  z-index: 40;
+}
+.footer-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.footer-nav-summary {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 auto 0 0;
+  line-height: 1.3;
+}
+.footer-nav-summary strong { color: var(--text-primary); font-weight: 500; }
+
+/* ================ STEP 1: IDENTIFY ================ */
+.identify-grid {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+.identify-grid.has-visitor {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+.identify-grid.no-visitor {
+  grid-template-columns: minmax(0, 720px);
+  justify-content: center;
+}
+@media (max-width: 900px) {
+  .identify-grid.has-visitor,
+  .identify-grid.no-visitor { grid-template-columns: 1fr; }
+}
+
+.search-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.search-input-wrap {
+  flex: 1;
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  font: inherit;
+  font-size: 15px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color var(--t);
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+.search-input::placeholder { color: var(--text-tertiary); }
+.search-icon {
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.search-results {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.search-empty {
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.result-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg-card-alt);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.result-card:hover {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+}
+.result-card.selected {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+}
+
+.avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.result-name { font-size: 14px; font-weight: 500; margin: 0; }
+.result-meta { font-size: 12px; color: var(--text-secondary); margin: 2px 0 0; }
+.result-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.add-new-card {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: rgba(8, 80, 65, 0.025);
+}
+.add-new-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.add-new-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+}
+.add-new-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.add-new-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.add-new-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0 0 6px;
+  display: block;
+}
+.field-label .opt { color: var(--text-tertiary); font-weight: 400; }
+.field-input {
+  width: 100%;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+.field-input:focus { outline: none; border-color: var(--brand); }
+
+/* Last visit card (right column) */
+.lastvisit {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.lastvisit.empty {
+  background: transparent;
+  border: 1.5px dashed var(--border-strong);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-style: italic;
+  padding: 36px 18px;
+  box-shadow: none;
+}
+.lastvisit-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.lastvisit-name { font-size: 22px; margin: 0; line-height: 1.1; }
+.lastvisit-meta { font-size: 12px; color: var(--text-secondary); margin: 4px 0 0; }
+.lastvisit-section {
+  margin-bottom: 14px;
+}
+.lastvisit-section:last-of-type { margin-bottom: 0; }
+.lastvisit-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+.lastvisit-list {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lastvisit-list li {
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.lastvisit-list li span { color: var(--text-tertiary); font-size: 12px; }
+.reorder-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  background: var(--brand-tint);
+  color: var(--brand);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.reorder-btn:hover { background: var(--brand); color: var(--text-light); }
+
+/* ================ STEP 2: SERVICES ================ */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 820px;
+}
+@media (max-width: 700px) {
+  .services-grid { grid-template-columns: 1fr; }
+}
+.service-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all var(--t);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.service-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.service-card.active {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  box-shadow: 0 0 0 3px rgba(8, 80, 65, 0.08);
+}
+.service-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--bg-card-alt);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.service-card.active .service-icon { background: var(--brand); color: var(--text-light); }
+.service-name { font-size: 18px; font-weight: 500; margin: 0; }
+.service-sub { font-size: 12px; color: var(--text-secondary); margin: 0; }
+.service-check {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: all var(--t);
+}
+.service-card.active .service-check {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--text-light);
+}
+
+/* ================ STEP 3: ITEMS ================ */
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+.intake { display: flex; flex-direction: column; gap: 14px; }
+
+.filter-strip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+.filter-group { display: flex; align-items: center; gap: 10px; }
+.filter-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.filter-buttons { display: flex; gap: 6px; }
+.filter-buttons .btn { padding: 6px 14px; font-size: 13px; }
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.section-title { font-size: 15px; font-weight: 500; margin: 0; }
+.section-hint { font-size: 12px; color: var(--text-tertiary); font-style: italic; margin: 0; }
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (min-width: 900px) { .items-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+
+.section-empty {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 20px 0;
+  font-style: italic;
+  grid-column: 1 / -1;
+}
+
+.item {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: background var(--t);
+}
+.item.has-selection { background: #F4EFE0; }
+.item-photo {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-tertiary);
+}
+.item-photo svg { opacity: 0.45; }
+.item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.item-name {
+  font-size: 14px; font-weight: 500; margin: 0;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.item-remove {
+  width: 22px; height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--t);
+  visibility: hidden;
+}
+.item.has-selection .item-remove { visibility: visible; }
+.item-remove:hover { background: var(--bg-card); color: var(--text-primary); }
+
+.size-grid { display: grid; gap: 4px; margin-bottom: 10px; }
+.size-pill {
+  padding: 6px 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  height: 30px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.size-pill:hover { border-color: var(--border-strong); }
+.size-pill.active {
+  background: var(--brand-tint);
+  color: var(--brand);
+  border-color: var(--brand);
+  border-width: 1.5px;
+}
+
+.stepper { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.stepper-btn {
+  width: 28px; height: 28px;
+  padding: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: all var(--t);
+}
+.stepper-btn:hover { background: var(--bg-card-alt); }
+.stepper-btn:active { transform: scale(0.95); }
+.stepper-count {
+  font-size: 13px; font-weight: 600;
+  min-width: 20px; text-align: center;
+}
+
+.add-btn {
+  width: 100%;
+  padding: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.add-btn:hover { background: var(--brand-tint); color: var(--brand); border-color: var(--brand); }
+
+/* Cart sidebar */
+.cart {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  position: sticky;
+  top: 130px;
+  box-shadow: var(--shadow-sm);
+}
+.cart-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.cart-title { font-size: 15px; font-weight: 500; margin: 0; }
+.cart-count { font-size: 12px; color: var(--text-secondary); }
+.cart-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-tertiary);
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+.cart-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.cart-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-card-alt);
+  border-radius: var(--radius-sm);
+}
+.cart-row-thumb {
+  width: 28px; height: 28px;
+  background: var(--bg-card);
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px dashed var(--border-strong);
+}
+.cart-row-name {
+  font-size: 12px; flex: 1; min-width: 0; margin: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cart-row-qty { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.cart-row-remove {
+  width: 20px; height: 20px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--t);
+}
+.cart-row-remove:hover { background: var(--bg-card); border-color: var(--border); color: var(--text-primary); }
+.cart-empty {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  text-align: center;
+  padding: 12px 0;
+}
+.cart-notes {
+  width: 100%;
+  min-height: 60px;
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  resize: vertical;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+.cart-notes:focus { outline: none; border-color: var(--brand); }
+
+/* Visitor strip on items step */
+.visitor-strip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.visitor-strip .avatar { width: 36px; height: 36px; font-size: 13px; }
+.visitor-strip-info { flex: 1; min-width: 0; }
+.visitor-strip-name { font-size: 14px; font-weight: 500; margin: 0; }
+.visitor-strip-meta { font-size: 12px; color: var(--text-secondary); margin: 2px 0 0; }
+
+/* ================ STEP 4: CONFIRM ================ */
+.confirm-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 900px) { .confirm-grid { grid-template-columns: 1fr; } }
+
+.summary {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.summary-block { margin-bottom: 22px; }
+.summary-block:last-child { margin-bottom: 0; }
+.summary-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+.summary-value { font-size: 16px; font-weight: 500; margin: 0; }
+.summary-meta { font-size: 13px; color: var(--text-secondary); margin: 4px 0 0; }
+
+.summary-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--brand-tint);
+  color: var(--brand);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.summary-list { list-style: none; margin: 0; padding: 0; }
+.summary-list li {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.summary-list li:first-child { border-top: none; padding-top: 0; }
+.summary-list-name { color: var(--text-primary); font-weight: 500; }
+.summary-list-meta { color: var(--text-tertiary); font-size: 12px; }
+.summary-list-qty { color: var(--text-secondary); font-weight: 600; }
+
+.notes-display {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: pre-wrap;
+}
+.notes-empty {
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.checklist-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.checklist-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.checklist-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ================ MODALS ================ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 14, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+.modal-backdrop.visible { display: flex; }
+.modal {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  animation: modal-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.modal.modal-wide { max-width: 720px; padding: 32px; }
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-title { font-size: 22px; font-weight: 500; margin: 0 0 6px; letter-spacing: -0.01em; }
+.modal-subtitle { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-actions .btn { flex: 1; justify-content: center; padding: 12px; font-size: 14px; }
+
+/* Success screen */
+.success-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  max-width: 540px;
+  margin: 40px auto;
+}
+.success-icon {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 22px;
+}
+.success-title { font-size: 28px; margin: 0 0 8px; }
+.success-sub { font-size: 14px; color: var(--text-secondary); margin: 0 0 28px; }
+.success-recap {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin: 0 0 24px;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+.success-recap strong { font-weight: 500; }
+.success-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 96px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--brand-deep);
+  color: var(--text-light);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 200;
+  pointer-events: none;
+}
+.toast.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Print styles for blank slip */
+@media print {
+  body * { visibility: hidden; }
+  .printable-slip, .printable-slip * { visibility: visible; }
+  .printable-slip {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    background: #fff;
+    color: #000;
+    padding: 24px;
+  }
+  .modal-backdrop { background: #fff; padding: 0; }
+  .modal { box-shadow: none; max-width: 100%; }
+  .modal-actions, .modal-close { display: none !important; }
+}
+
+.slip {
+  border: 2px solid #1a1a1a;
+  border-radius: 10px;
+  padding: 18px 20px;
+  background: #fff;
+}
+.slip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #1a1a1a;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+.slip-eyebrow {
+  font-size: 9px;
+  font-weight: 500;
+  color: #595959;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+}
+.slip-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #595959;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 8px 0 4px;
+}
+.slip-line {
+  border-bottom: 1.5px solid #1a1a1a;
+  height: 22px;
+  margin-bottom: 4px;
+}
+.slip-time {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 32px;
+  color: #1a1a1a;
+  border-bottom: 2px solid #1a1a1a;
+  padding-bottom: 2px;
+  min-width: 100px;
+  display: inline-block;
+  text-align: center;
+}
+.slip-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 4px 0 8px;
+}
+.slip-check { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.slip-check-box {
+  width: 14px; height: 14px;
+  border: 1.5px solid #1a1a1a;
+  border-radius: 2px;
+}
+.slip-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 8px; }
+
+/* Tweaks panel hidden (no tweaks per user) */
+.modal-close {
+  background: transparent;
+  border: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.modal-close:hover { background: var(--bg-card-alt); color: var(--text-primary); }
+.modal-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+/* Recent visitors block on identify step */
+.recent-block {
+  margin-top: 22px;
+}
+.recent-block-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin: 0 0 12px;
+  padding-left: 4px;
+}
+.recent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.recent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: inherit;
+  text-align: left;
+  transition: all var(--t);
+}
+.recent-card:hover {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.recent-card-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex: 0 0 36px;
+}
+.recent-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.recent-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recent-card-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.recent-card-tag {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-app);
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+.recent-card:hover .recent-card-tag {
+  background: var(--bg-card);
+}
+
+/* ============== INLINE QUICK CHECK (Step 1 right column) ============== */
+.lastvisit-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.qc-inline {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.qc-inline-head { margin-bottom: 14px; }
+.qc-inline-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--brand);
+  margin: 0 0 4px;
+}
+.qc-inline-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+.qc-inline-block { margin-bottom: 14px; }
+.qc-inline-block:last-child { margin-bottom: 0; }
+.qc-inline-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.qc-inline-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.qc-inline-help {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+.qc-inline-tag {
+  font-size: 11px;
+  background: var(--brand-tint);
+  color: var(--brand);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.qc-pillrow {
+  display: flex;
+  gap: 6px;
+}
+.qc-pill {
+  flex: 1;
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.qc-pill:hover { background: var(--bg-card-alt); }
+.qc-pill.active {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 500;
+}
+.qc-flagrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.qc-flagchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.qc-flagchip:hover { background: var(--bg-card-alt); }
+.qc-flagchip.active {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 500;
+}
+.qc-inline-note {
+  margin-top: 8px;
+  width: 100%;
+  font-size: 13px;
+}
+
+/* ============== EDITABLE CONFIRM ============== */
+.summary-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.summary-block-head .summary-label { margin: 0; }
+
+.edit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.edit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  background: var(--brand-tint);
+  color: var(--brand);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--brand);
+}
+.edit-chip-x {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(8, 80, 65, 0.12);
+  color: var(--brand);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all var(--t);
+}
+.edit-chip-x:hover { background: var(--brand); color: white; }
+.edit-chip-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.edit-chip-add:hover {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  border-style: solid;
+  color: var(--brand);
+}
+
+.edit-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.edit-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-card-alt);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: border-color var(--t);
+}
+.edit-row:hover { border-color: var(--border); }
+.edit-row-thumb {
+  width: 36px; height: 36px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.edit-row-main { min-width: 0; }
+.edit-row-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+.edit-row-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+.edit-row-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.edit-size {
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.edit-size:hover { border-color: var(--border-strong); }
+.edit-size.active {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 500;
+}
+.edit-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.edit-row-remove {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all var(--t);
+}
+.edit-row-remove:hover {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.picker-panel {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--bg-card-alt);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+}
+.picker-section { margin-bottom: 14px; }
+.picker-section:last-child { margin-bottom: 0; }
+.picker-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin: 0 0 8px;
+}
+.picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.picker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.picker-chip:hover {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.notes-edit {
+  width: 100%;
+  font-size: 13px;
+  resize: vertical;
+}
+
+/* ==========================================
+   Responsive polish — tablet touch targets + phone fallback
+   ========================================== */
+
+/* Tablet baseline: bump small interactive elements to feel right under a finger.
+   Previous values (22-30px) were tight on iPad; these aren't huge but clear the
+   thumb-comfort line for a stylus or finger tap. */
+.stepper-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+.size-pill {
+  height: 36px;
+  font-size: 13px;
+}
+.qc-pill {
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.qc-flagchip {
+  padding: 9px 14px;
+  font-size: 13px;
+}
+.item-remove {
+  width: 28px;
+  height: 28px;
+}
+.cart-row-remove {
+  width: 28px;
+  height: 28px;
+}
+.add-btn {
+  padding: 10px;
+}
+
+/* Phone — keep the prototype usable, not pretty.
+   Targets meet 44px iOS guideline. Layout collapses to 1-column where cramped. */
+@media (max-width: 600px) {
+  /* Reclaim vertical space taken by huge serif titles */
+  .step-title {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  /* Top bar: let the meta line wrap below brand+actions instead of crowding */
+  .topbar-inner {
+    padding: 12px 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .topbar-meta {
+    margin-left: 0;
+    text-align: left;
+    flex-basis: 100%;
+    order: 3;
+    font-size: 11px;
+  }
+  .progress {
+    padding: 0 16px 12px;
+  }
+  .progress-label {
+    font-size: 12px;
+  }
+
+  /* Tighter page padding */
+  .app {
+    padding: 16px;
+    padding-bottom: 110px;
+  }
+
+  /* Footer: ellipsize long summaries instead of wrap-walls */
+  .footer-nav-inner {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .footer-nav-summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    min-width: 0;
+  }
+  .footer-nav .btn-lg {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  /* Items go single-column so size pills get real estate to be tappable */
+  .items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 44px-class touch targets across the small interactive elements */
+  .stepper-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+  .size-pill {
+    height: 44px;
+    font-size: 14px;
+  }
+  .qc-pill {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  .qc-flagchip {
+    padding: 11px 16px;
+    font-size: 13px;
+  }
+  .item-remove,
+  .cart-row-remove {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Visitor card a touch tighter so it doesn't feel boxy on small screens */
+  .lastvisit {
+    padding: 16px;
+  }
+
+  /* Service cards already collapse to 1-col at 700px — fine. */
+}
+</style>
+  <!-- Playground: auto-injected Microsoft Clarity for inside-iframe recording -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window,document,"clarity","script","weqc268a3f");
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      var sid = p.get('sid');
+      if (sid) window.clarity('set', 'session_id', sid);
+      var m = window.location.pathname.match(/\/prototypes\/([^/]+)\//);
+      if (m) window.clarity('set', 'prototype', m[1]);
+      window.clarity('set', 'context', 'prototype');
+    })();
+  </script>
+</head>
+<body data-screen-label="Welcome Desk Wizard">
+
+
+<!-- Icon library -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 20 20"><circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"></circle><line x1="13.5" y1="13.5" x2="17" y2="17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></symbol>
+  <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="6" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><line x1="8" y1="9" x2="20" y2="20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line><line x1="8" y1="15" x2="20" y2="4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></symbol>
+  <symbol id="i-shower" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></line><path d="M9 7 V14 M12 7 V16 M15 7 V14 M11 9 V12 M13 9 V12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></symbol>
+  <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M7 6 L9 4 L15 4 L17 6 L20 7 L19 11 L17 10 L17 20 L7 20 L7 10 L5 11 L4 7 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="M3 3 L13 13 M13 3 L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"></path></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-arrow-r" viewBox="0 0 16 16"><path d="M3 8 H13 M9 4 L13 8 L9 12" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-arrow-l" viewBox="0 0 16 16"><path d="M13 8 H3 M7 4 L3 8 L7 12" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-print" viewBox="0 0 20 20"><rect x="5" y="3" width="10" height="5" fill="none" stroke="currentColor" stroke-width="1.5"></rect><rect x="3" y="8" width="14" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"></rect><rect x="6" y="12" width="8" height="5" fill="none" stroke="currentColor" stroke-width="1.5"></rect><circle cx="14" cy="10.5" r="0.6" fill="currentColor"></circle></symbol>
+  <symbol id="i-user" viewBox="0 0 20 20"><circle cx="10" cy="7" r="3" fill="none" stroke="currentColor" stroke-width="1.5"></circle><path d="M3 17 C3 13 6.5 12 10 12 C13.5 12 17 13 17 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></symbol>
+  <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3 V13 M3 8 H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"></path></symbol>
+</svg>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-mark">
+      <div class="brand-logo">S</div>
+      <div class="brand-text">Serve513 · Welcome desk<small id="topbar-meta">—</small></div>
+    </div>
+    <div class="topbar-meta" id="topbar-vol">
+      <strong>Volunteer:</strong> Pat M.
+    </div>
+    <div class="topbar-actions">
+      <button class="btn" onclick="openOffline()" title="Print blank intake slip">
+        <svg width="14" height="14"><use href="#i-print"></use></svg> Blank slip
+      </button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<!-- Main app -->
+<main class="app" id="app"></main>
+
+<!-- Footer nav -->
+<div class="footer-nav" id="footer-nav"></div>
+
+<!-- Confirm modal -->
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-title serif">Send to fulfillment?</h2>
+      <button class="modal-close" onclick="closeConfirm()">Close ✕</button>
+    </div>
+    <p class="modal-subtitle">This logs the visit and dispatches services + items to the appropriate stations.</p>
+    <div id="confirm-summary"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeConfirm()">Go back</button>
+      <button class="btn btn-primary" onclick="confirmVisit()">
+        <svg width="14" height="14"><use href="#i-check"></use></svg> Confirm &amp; send
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Offline blank-slip modal -->
+<div class="modal-backdrop" id="offline-modal">
+  <div class="modal modal-wide">
+    <div class="modal-hdr">
+      <h2 class="modal-title serif">Offline — blank intake slip</h2>
+      <button class="modal-close" onclick="closeOffline()">Close ✕</button>
+    </div>
+    <p class="modal-subtitle">Print this if the system is down. Hand-write the visit, then enter it later.</p>
+    <div class="printable-slip">
+      <div class="slip">
+        <div class="slip-head">
+          <div style="flex:1;margin-right:20px;">
+            <p class="slip-eyebrow">Serve513 · Pinellas Hope · Community shower day</p>
+            <p class="slip-label">Client name</p><div class="slip-line"></div>
+            <p class="slip-label">Date of birth</p><div class="slip-line"></div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;min-width:120px;">
+            <p class="slip-label" style="margin-top:0;">Check-in time</p>
+            <span class="slip-time">__:__</span>
+            <p style="font-size:9px;color:#595959;margin:3px 0 0;">AM / PM &nbsp; # _____</p>
+          </div>
+        </div>
+        <p class="slip-label" style="margin-top:0;">Services</p>
+        <div class="slip-checks">
+          <div class="slip-check"><div class="slip-check-box"></div>Barber</div>
+          <div class="slip-check"><div class="slip-check-box"></div>Shower</div>
+          <div class="slip-check"><div class="slip-check-box"></div>Clothing</div>
+        </div>
+        <div style="border-top:1.5px solid #1a1a1a;margin-top:12px;padding-top:12px;">
+          <p class="slip-label" style="margin-top:0;">Clothing — color preference: _____________</p>
+          <div class="slip-row3" style="margin-top:8px;">
+            <div><p class="slip-label" style="margin-top:0;">Top style</p><div class="slip-line"></div></div>
+            <div><p class="slip-label" style="margin-top:0;">Top size</p><div class="slip-line"></div></div>
+            <div><p class="slip-label" style="margin-top:0;">Top qty</p><div class="slip-line"></div></div>
+          </div>
+          <div class="slip-row3">
+            <div><p class="slip-label" style="margin-top:0;">Bottom style</p><div class="slip-line"></div></div>
+            <div><p class="slip-label" style="margin-top:0;">Waist / size</p><div class="slip-line"></div></div>
+            <div><p class="slip-label" style="margin-top:0;">Inseam</p><div class="slip-line"></div></div>
+          </div>
+          <div class="slip-row3">
+            <div><p class="slip-label" style="margin-top:0;">Underwear</p><div class="slip-line"></div></div>
+            <div><p class="slip-label" style="margin-top:0;">Bra size</p><div class="slip-line"></div></div>
+            <div><p class="slip-label" style="margin-top:0;">Shoe size</p><div class="slip-line"></div></div>
+          </div>
+          <p class="slip-label">Personal care</p>
+          <div class="slip-checks">
+            <div class="slip-check"><div class="slip-check-box"></div>Socks</div>
+            <div class="slip-check"><div class="slip-check-box"></div>Hygiene kit</div>
+            <div class="slip-check"><div class="slip-check-box"></div>Toothbrush</div>
+            <div class="slip-check"><div class="slip-check-box"></div>Hat</div>
+            <div class="slip-check"><div class="slip-check-box"></div>Blanket</div>
+            <div class="slip-check"><div class="slip-check-box"></div>Bag</div>
+          </div>
+          <p class="slip-label">Notes</p>
+          <div class="slip-line"></div>
+          <div class="slip-line"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeOffline()">Return to intake</button>
+      <button class="btn btn-primary" onclick="window.print()">
+        <svg width="14" height="14"><use href="#i-print"></use></svg> Print slip
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Visit confirmed · sent to fulfillment</div>
+
+<script>
+// =====================================================
+// Serve513 Welcome Desk — wizard logic
+// =====================================================
+
+// ---- Step definitions ----
+const STEPS = [
+  { id: 'identify', label: 'Identify' },
+  { id: 'services', label: 'Services' },
+  { id: 'items',    label: 'Items' },
+  { id: 'confirm',  label: 'Confirm' },
+];
+
+// ---- HMIS flag definitions ----
+const ACCESS_FLAGS = [
+  { id: 'mobility',  label: 'Mobility',  sub: 'wheelchair, cane, walker' },
+  { id: 'visual',    label: 'Visual',    sub: 'low vision, blind' },
+  { id: 'hearing',   label: 'Hearing',   sub: 'hard of hearing, deaf' },
+  { id: 'cognitive', label: 'Cognitive', sub: 'memory, processing' },
+  { id: 'medical',   label: 'Medical',   sub: 'oxygen, wound care, etc.' },
+  { id: 'other',     label: 'Other',     sub: 'note in details below' },
+];
+
+// ---- Catalog data ----
+const ITEMS = [
+  { id: 'polo-m',     name: 'Polo',       section: 'tops',     gender: 'men',   sizes: ['S','M','L','XL'] },
+  { id: 'tshirt-m',   name: 'T-shirt',    section: 'tops',     gender: 'men',   sizes: ['S','M','L','XL'] },
+  { id: 'polo-w',     name: 'Polo',       section: 'tops',     gender: 'women', sizes: ['XS','S','M','L'] },
+  { id: 'tshirt-w',   name: 'T-shirt',    section: 'tops',     gender: 'women', sizes: ['XS','S','M','L'] },
+  { id: 'blouse-w',   name: 'Blouse',     section: 'tops',     gender: 'women', sizes: ['XS','S','M','L'] },
+  { id: 'jeans-m',    name: 'Jeans',      section: 'bottoms',  gender: 'men',   sizes: ['30','32','34','36','38'] },
+  { id: 'sweats-m',   name: 'Sweatpants', section: 'bottoms',  gender: 'men',   sizes: ['S','M','L','XL'] },
+  { id: 'jeans-w',    name: 'Jeans',      section: 'bottoms',  gender: 'women', sizes: ['4','6','8','10','12'] },
+  { id: 'leggings-w', name: 'Leggings',   section: 'bottoms',  gender: 'women', sizes: ['XS','S','M','L'] },
+  { id: 'shoes-m',    name: 'Shoes',      section: 'footwear', gender: 'men',   sizes: ['8','9','10','11','12','13'] },
+  { id: 'shoes-w',    name: 'Shoes',      section: 'footwear', gender: 'women', sizes: ['6','7','8','9','10'] },
+  { id: 'boots-m',    name: 'Work boots', section: 'footwear', gender: 'men',   sizes: ['8','9','10','11','12','13'] },
+  { id: 'sandals',    name: 'Sandals',    section: 'footwear', gender: 'all',   sizes: ['S','M','L','XL'] },
+  { id: 'boxers-m',   name: 'Boxers',     section: 'underwear',gender: 'men',   sizes: ['S','M','L','XL'] },
+  { id: 'briefs-w',   name: 'Briefs',     section: 'underwear',gender: 'women', sizes: ['S','M','L'] },
+  { id: 'bras-w',     name: 'Bras',       section: 'underwear',gender: 'women', sizes: ['S','M','L'] },
+  { id: 'socks',      name: 'Socks',      section: 'personal', gender: 'all',   sizes: ['S','M','L'] },
+  { id: 'hygiene',    name: 'Hygiene kit',section: 'personal', gender: 'all',   sizes: null },
+  { id: 'toothbrush', name: 'Toothbrush', section: 'personal', gender: 'all',   sizes: null },
+];
+
+const SECTIONS = [
+  { id: 'tops',      title: 'Tops' },
+  { id: 'bottoms',   title: 'Bottoms' },
+  { id: 'footwear',  title: 'Footwear' },
+  { id: 'underwear', title: 'Underwear' },
+  { id: 'personal',  title: 'Personal care', hint: 'always available' },
+];
+const CATALOG_SECTIONS = ['tops','bottoms','footwear','underwear','personal'];
+
+const SERVICES = [
+  { id: 'barber',   name: 'Barber',   icon: 'i-scissors', sub: '~5 min wait today' },
+  { id: 'shower',   name: 'Shower',   icon: 'i-shower',   sub: 'Available now' },
+  { id: 'clothing', name: 'Clothing', icon: 'i-shirt',    sub: 'Pick items next' },
+];
+
+// ---- Mock visitor records ----
+const VISITORS = [
+  {
+    id: 'v-jdoe',
+    initials: 'JD',
+    name: 'John D.',
+    dob: '1978-04-12',
+    dobLabel: 'Apr 12, 1978',
+    lastVisit: '6 weeks ago',
+    lastVisitDate: 'Mar 15, 2026',
+    visitCount: 4,
+    pastServices: ['Barber', 'Clothing'],
+    veteran: 'yes',
+    accessFlags: [],
+    accessNote: '',
+    pastItems: [
+      { name: 'Polo (M)', qty: 1 },
+      { name: 'T-shirt (M)', qty: 2 },
+      { name: 'Jeans (32)', qty: 1 },
+      { name: 'Socks (M)', qty: 2 },
+    ],
+    reorder: {
+      services: { barber: true, shower: false, clothing: true },
+      filter: { men: true, women: false },
+      color: 'dark',
+      itemStates: {
+        'polo-m':   { size: 'M',  qty: 1 },
+        'tshirt-m': { size: 'M',  qty: 2 },
+        'jeans-m':  { size: '32', qty: 1 },
+        'socks':    { size: 'M',  qty: 2 },
+      }
+    }
+  },
+  {
+    id: 'v-mrod',
+    initials: 'MR',
+    name: 'Maria R.',
+    dob: '1985-09-03',
+    dobLabel: 'Sep 3, 1985',
+    lastVisit: '2 weeks ago',
+    lastVisitDate: 'Apr 14, 2026',
+    visitCount: 7,
+    pastServices: ['Shower', 'Clothing'],
+    veteran: 'no',
+    accessFlags: ['mobility'],
+    accessNote: 'Uses a cane; ground-floor shower preferred.',
+    pastItems: [
+      { name: 'Blouse (S)', qty: 2 },
+      { name: 'Leggings (S)', qty: 1 },
+      { name: 'Hygiene kit', qty: 1 },
+    ],
+    reorder: {
+      services: { barber: false, shower: true, clothing: true },
+      filter: { men: false, women: true },
+      color: 'light',
+      itemStates: {
+        'blouse-w':   { size: 'S', qty: 2 },
+        'leggings-w': { size: 'S', qty: 1 },
+        'hygiene':    { size: null, qty: 1 },
+      }
+    }
+  },
+  {
+    id: 'v-twright',
+    initials: 'TW',
+    name: 'Terrence W.',
+    dob: '1962-01-22',
+    dobLabel: 'Jan 22, 1962',
+    lastVisit: '4 days ago',
+    lastVisitDate: 'Apr 24, 2026',
+    visitCount: 12,
+    pastServices: ['Shower'],
+    veteran: 'yes',
+    accessFlags: ['hearing','medical'],
+    accessNote: 'Hard of hearing — face him when speaking. Diabetic.',
+    pastItems: [
+      { name: 'Toothbrush', qty: 1 },
+      { name: 'Socks (L)', qty: 1 },
+    ],
+    reorder: {
+      services: { barber: false, shower: true, clothing: false },
+      filter: { men: true, women: false },
+      color: 'dark',
+      itemStates: {
+        'toothbrush': { size: null, qty: 1 },
+        'socks':      { size: 'L', qty: 1 },
+      }
+    }
+  },
+];
+
+// ---- Session-level config (shift-wide, survives between visits) ----
+const session = {
+  trailerOpen: true, // Mobile trailer with hygiene kits / personal care items
+};
+
+// ---- App state ----
+const state = {
+  step: 0,
+  visitor: null,        // selected VISITORS entry, or { custom: true, name, dob }
+  searchQuery: '',
+  veteran: null,        // 'yes' | 'no' | 'decline' | null
+  accessFlags: [],      // array of flag ids
+  accessNote: '',
+  accessAnswered: false, // true once the volunteer has tapped a flag, "None", or selected a returning visitor whose record is on file
+  profileExpanded: false, // returning visitors see compact "on file" summary by default; expanded reveals the full edit form
+  filter: { men: true, women: false },
+  color: 'dark',
+  services: { barber: false, shower: false, clothing: false },
+  itemStates: {},
+  notes: '',
+};
+
+// =====================================================
+// HELPERS
+// =====================================================
+function $(id) { return document.getElementById(id); }
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html != null) e.innerHTML = html;
+  return e;
+}
+
+function visitorInitials(name) {
+  if (!name) return '?';
+  return name.split(/\s+/).map(s => s[0]).join('').slice(0,2).toUpperCase();
+}
+
+function activeServicesArr() { return SERVICES.filter(s => state.services[s.id]); }
+function cartItemsArr() {
+  return Object.entries(state.itemStates)
+    .filter(([_, st]) => st.qty > 0)
+    .map(([id, st]) => ({ id, item: ITEMS.find(i => i.id === id), ...st }));
+}
+function totalQty() { return cartItemsArr().reduce((s, ci) => s + ci.qty, 0); }
+
+function canAdvance() {
+  if (state.step === 0) return !!state.visitor && state.veteran !== null && state.accessAnswered;
+  if (state.step === 1) return activeServicesArr().length > 0;
+  if (state.step === 2) {
+    if (state.services.clothing) return totalQty() > 0;
+    return true;
+  }
+  return true;
+}
+
+function visitorDisplayName() {
+  if (!state.visitor) return '';
+  return state.visitor.name;
+}
+
+// =====================================================
+// TOP BAR + PROGRESS
+// =====================================================
+function renderTopbar() {
+  const now = new Date();
+  const date = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  $('topbar-meta').textContent = `${date} · session opened ${time}`;
+}
+
+function renderProgress() {
+  const c = $('progress');
+  c.innerHTML = '';
+  const itemsSkipped = !state.services.clothing && !session.trailerOpen;
+  STEPS.forEach((step, i) => {
+    const skipped = i === 2 && itemsSkipped;
+    const status = i < state.step ? 'done' : i === state.step ? 'active' : '';
+    const node = el('div', 'progress-step ' + status);
+    const reachable = !skipped && (i <= state.step || (i === state.step + 1 && canAdvance()));
+    if (!reachable) node.setAttribute('disabled', '');
+    if (skipped) node.style.opacity = '0.4';
+    node.innerHTML = `
+      <div class="progress-dot">${i < state.step ? '<svg width="10" height="10"><use href="#i-check"/></svg>' : (i+1)}</div>
+      <span class="progress-label">${step.label}</span>
+    `;
+    node.addEventListener('click', () => {
+      if (skipped) return;
+      if (i <= state.step) goTo(i);
+      else if (i === state.step + 1 && canAdvance()) goTo(i);
+    });
+    c.appendChild(node);
+    if (i < STEPS.length - 1) {
+      const bar = el('div', 'progress-bar-fill' + (i < state.step ? ' filled' : ''));
+      c.appendChild(bar);
+    }
+  });
+}
+
+// =====================================================
+// FOOTER NAV
+// =====================================================
+function renderFooter() {
+  const c = $('footer-nav');
+  const back = state.step > 0;
+  const isLast = state.step === STEPS.length - 1;
+  let summary = '';
+  if (state.visitor) {
+    const svcCount = activeServicesArr().length;
+    const itemCount = totalQty();
+    summary = `<strong>${visitorDisplayName()}</strong>`;
+    if (svcCount || itemCount) summary += ` · ${svcCount} service${svcCount===1?'':'s'} · ${itemCount} item${itemCount===1?'':'s'}`;
+    if (state.step === 0 && !canAdvance()) {
+      const missing = [];
+      if (state.veteran === null) missing.push('veteran status');
+      if (!state.accessAnswered) missing.push('access needs');
+      summary += ` · <span style="color: var(--warn);">answer ${missing.join(' & ')} to continue</span>`;
+    }
+  } else {
+    summary = `Step ${state.step + 1} of ${STEPS.length}`;
+  }
+  c.innerHTML = `
+    <div class="footer-nav-inner">
+      <button class="btn btn-ghost" onclick="cancelVisit()" title="Cancel and start over">Cancel visit</button>
+      <p class="footer-nav-summary">${summary}</p>
+      ${back ? `<button class="btn" onclick="goBack()"><svg width="14" height="14"><use href="#i-arrow-l"/></svg> Back</button>` : ''}
+      ${isLast
+        ? `<button class="btn btn-primary btn-lg" onclick="openConfirm()" ${canAdvance() ? '' : 'disabled'}>
+             <svg width="14" height="14"><use href="#i-check"/></svg> Send to fulfillment
+           </button>`
+        : `<button class="btn btn-primary btn-lg" onclick="goNext()" ${canAdvance() ? '' : 'disabled'}>
+             Next: ${STEPS[nextStepIndex()].label} <svg width="14" height="14"><use href="#i-arrow-r"/></svg>
+           </button>`
+      }
+    </div>
+  `;
+}
+
+// =====================================================
+// NAVIGATION
+// =====================================================
+function goTo(i) {
+  state.step = Math.max(0, Math.min(STEPS.length - 1, i));
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+// The Items step (index 2) is bypassed entirely only when there's literally
+// nothing to offer there: no clothing service AND mobile trailer closed.
+function nextStepIndex() {
+  let next = state.step + 1;
+  if (next === 2 && !state.services.clothing && !session.trailerOpen) next = 3;
+  return Math.min(STEPS.length - 1, next);
+}
+function prevStepIndex() {
+  let prev = state.step - 1;
+  if (prev === 2 && !state.services.clothing && !session.trailerOpen) prev = 1;
+  return Math.max(0, prev);
+}
+function goNext() { if (canAdvance()) goTo(nextStepIndex()); }
+function goBack() { goTo(prevStepIndex()); }
+
+function cancelVisit() {
+  if (!confirm('Cancel this visit and clear all selections?')) return;
+  resetAll();
+  goTo(0);
+}
+
+function resetAll() {
+  state.step = 0;
+  state.visitor = null;
+  state.searchQuery = '';
+  state.veteran = null;
+  state.accessFlags = [];
+  state.accessNote = '';
+  state.accessAnswered = false;
+  state.profileExpanded = false;
+  state.filter = { men: true, women: false };
+  state.color = 'dark';
+  state.services = { barber: false, shower: false, clothing: false };
+  state.itemStates = {};
+  state.notes = '';
+}
+
+// =====================================================
+// STEP 1 — IDENTIFY
+// =====================================================
+function renderIdentify() {
+  const root = $('app');
+  const hasVisitor = !!state.visitor;
+  root.innerHTML = `
+    <div class="step-header">
+      <p class="step-eyebrow">Step 1 of 4</p>
+      <h1 class="step-title serif">Who's at the desk?</h1>
+      <p class="step-sub">${hasVisitor
+        ? 'Confirm the profile questions below, then continue to services.'
+        : 'Search by name or date of birth.'}</p>
+    </div>
+
+    ${hasVisitor ? `
+      <div style="max-width: 520px; margin: 0 auto;">
+        ${renderLastVisitCard()}
+      </div>
+    ` : `
+      <div class="identify-grid no-visitor">
+        <div>
+          <div class="search-card">
+            <div class="search-row">
+              <div class="search-input-wrap">
+                <svg class="search-icon" width="18" height="18"><use href="#i-search"/></svg>
+                <input id="search-input" class="search-input" type="text" autocomplete="off"
+                       placeholder="Type a name or DOB"
+                       value="${escapeAttr(state.searchQuery)}" />
+              </div>
+            </div>
+
+            <div class="search-results" id="search-results"></div>
+          </div>
+        </div>
+      </div>
+    `}
+  `;
+
+  // Wire search (only when no visitor is selected)
+  if (!hasVisitor) {
+    const input = $('search-input');
+    input.addEventListener('input', e => {
+      state.searchQuery = e.target.value;
+      renderSearchResults();
+    });
+    renderSearchResults();
+    input.focus();
+  }
+}
+
+function escapeAttr(s) { return String(s||'').replace(/"/g, '&quot;'); }
+
+function renderSearchResults() {
+  const c = $('search-results');
+  if (!c) return;
+  const q = (state.searchQuery || '').trim();
+  if (!q) {
+    c.innerHTML = '';
+    return;
+  }
+  const lc = q.toLowerCase();
+  const matches = VISITORS.filter(v => {
+    const hay = (v.name + ' ' + v.dobLabel + ' ' + v.dob).toLowerCase();
+    return hay.includes(lc);
+  });
+
+  // If we have matches, just show them. Clean and focused.
+  if (matches.length) {
+    c.innerHTML = matches.map(v => {
+      const selected = state.visitor && state.visitor.id === v.id ? 'selected' : '';
+      return `
+        <div class="result-card ${selected}" onclick="selectVisitor('${v.id}')">
+          <div class="avatar">${v.initials}</div>
+          <div style="flex:1; min-width:0;">
+            <p class="result-name">${v.name}</p>
+            <p class="result-meta">DOB ${v.dobLabel} · ${v.visitCount} visits · last ${v.lastVisit}</p>
+          </div>
+          <span class="result-tag">Returning</span>
+        </div>
+      `;
+    }).join('');
+    return;
+  }
+
+  // No matches — offer to add this person as new, with the typed name pre-filled.
+  const isLikelyName = /[a-z]/i.test(q);
+  const newName = isLikelyName ? q.replace(/\s+/g, ' ').trim() : '';
+
+  c.innerHTML = `
+    <div class="add-new-card">
+      <div class="add-new-head">
+        <div class="add-new-icon"><svg width="16" height="16"><use href="#i-plus"/></svg></div>
+        <div>
+          <p class="add-new-title">No match found</p>
+          <p class="add-new-sub">Add ${newName ? `<strong>${escapeHTML(newName)}</strong>` : 'them'} as a new visitor.</p>
+        </div>
+      </div>
+      <div class="add-new-form">
+        <div>
+          <label class="field-label" for="nv-name">Full name</label>
+          <input id="nv-name" class="field-input" type="text" placeholder="First Last" value="${escapeAttr(newName)}" />
+        </div>
+        <div>
+          <label class="field-label" for="nv-dob">Date of birth <span class="opt">(optional)</span></label>
+          <input id="nv-dob" class="field-input" type="text" placeholder="MM / DD / YYYY" />
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button class="btn btn-primary" onclick="addNewVisitor()">
+            <svg width="14" height="14"><use href="#i-user"/></svg> Add new visitor
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderLastVisitCard() {
+  const v = state.visitor;
+  if (!v) {
+    return `<div class="lastvisit empty">Select a visitor to see their last visit and a one-tap reorder option.</div>`;
+  }
+  if (v.custom) {
+    return `
+      <div class="lastvisit">
+        <div class="lastvisit-header">
+          <div class="avatar">${visitorInitials(v.name)}</div>
+          <div style="flex:1; min-width:0;">
+            <h2 class="lastvisit-name serif">${v.name}</h2>
+            <p class="lastvisit-meta">New visitor${v.dob ? ' · DOB ' + v.dob : ''}</p>
+          </div>
+          <button class="btn btn-ghost" onclick="changeVisitor()" style="flex-shrink:0;">Change</button>
+        </div>
+        ${renderQuickCheckPanel()}
+        <div class="lastvisit-section">
+          <p class="lastvisit-label">First visit</p>
+          <p style="font-size:13px;color:var(--text-secondary);margin:0;">No history yet — you'll choose services and items in the next steps.</p>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="lastvisit">
+      <div class="lastvisit-header">
+        <div class="avatar">${v.initials}</div>
+        <div style="flex:1; min-width:0;">
+          <h2 class="lastvisit-name serif">${v.name}</h2>
+          <p class="lastvisit-meta">DOB ${v.dobLabel} · ${v.visitCount} prior visits</p>
+        </div>
+        <button class="btn btn-ghost" onclick="changeVisitor()" style="flex-shrink:0;">Change</button>
+      </div>
+      ${renderQuickCheckPanel()}
+      <div class="lastvisit-section">
+        <p class="lastvisit-label">Last visit · ${v.lastVisitDate}</p>
+        <ul class="lastvisit-list">
+          <li><span>Services</span> ${v.pastServices.join(', ')}</li>
+        </ul>
+      </div>
+      <div class="lastvisit-section">
+        <p class="lastvisit-label">Last items received</p>
+        <ul class="lastvisit-list">
+          ${v.pastItems.map(it => `<li>${it.name}<span>×${it.qty}</span></li>`).join('')}
+        </ul>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+        <button class="reorder-btn" style="margin-top: 0;" onclick="reorderLastVisit()">
+          Same as last visit →
+        </button>
+        <button class="btn" onclick="adjustLastVisit()" style="width: 100%; justify-content: center; padding: 10px;">
+          Same with changes →
+        </button>
+        <button class="btn" onclick="newOrder()" style="width: 100%; justify-content: center; padding: 10px;">
+          New order →
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function selectVisitor(id) {
+  const v = VISITORS.find(x => x.id === id);
+  if (!v) return;
+  state.visitor = v;
+  // Carry forward known HMIS data
+  state.veteran = v.veteran || null;
+  state.accessFlags = [...(v.accessFlags || [])];
+  state.accessNote = v.accessNote || '';
+  state.accessAnswered = true; // their record on file IS the answer; volunteer just confirms or updates
+  state.profileExpanded = false; // start compact — show summary, expand only if something has changed
+  // Pre-set filters based on past visit
+  if (v.reorder) {
+    state.filter = { ...v.reorder.filter };
+    state.color = v.reorder.color;
+  }
+  renderAll();
+}
+
+function addNewVisitor() {
+  const name = $('nv-name').value.trim();
+  const dob = $('nv-dob').value.trim();
+  if (!name) {
+    $('nv-name').focus();
+    $('nv-name').style.borderColor = 'var(--warn)';
+    return;
+  }
+  state.visitor = { custom: true, id: 'v-new-' + Date.now(), name, dob, initials: visitorInitials(name) };
+  state.veteran = null;
+  state.accessFlags = [];
+  state.accessNote = '';
+  state.accessAnswered = false;
+  state.searchQuery = '';
+  renderAll(); // Reveal the profile card so the volunteer can answer Veteran + Access needs before advancing
+}
+
+function changeVisitor() {
+  state.visitor = null;
+  state.veteran = null;
+  state.accessFlags = [];
+  state.accessNote = '';
+  state.accessAnswered = false;
+  state.profileExpanded = false;
+  state.searchQuery = '';
+  renderAll();
+}
+
+function loadLastVisit() {
+  // Shared by both Reorder paths — pull the last visit's services + items
+  // into state so they're treated as the starting point.
+  const v = state.visitor;
+  if (!v || !v.reorder) return;
+  state.services  = { ...v.reorder.services };
+  state.filter    = { ...v.reorder.filter };
+  state.color     = v.reorder.color;
+  state.itemStates = JSON.parse(JSON.stringify(v.reorder.itemStates));
+}
+
+function reorderLastVisit() {
+  // 1-click: commit to last visit and jump straight to the Confirm screen.
+  loadLastVisit();
+  goTo(3);
+}
+
+function adjustLastVisit() {
+  // Pre-fill from last visit, then enter the wizard at Services so the
+  // volunteer walks through and tweaks anything that's different today.
+  loadLastVisit();
+  goTo(1);
+}
+
+function newOrder() {
+  // Fresh start: clear services + items but keep the visitor + profile +
+  // clothing preferences (filter/color, which are visitor traits, not visit specifics).
+  state.services = { barber: false, shower: false, clothing: false };
+  state.itemStates = {};
+  goTo(1);
+}
+
+// =====================================================
+// QUICK CHECK (inline panel on Step 1's right column)
+// =====================================================
+function renderQuickCheckPanel() {
+  const v = state.visitor;
+  if (!v) return '';
+  const isReturning = !v.custom;
+
+  // Returning visitors with data on file see a compact "On file:" summary by
+  // default — quiet confirmation, not a question to answer. They tap Update
+  // only if something has actually changed.
+  if (isReturning && !state.profileExpanded) {
+    return renderProfileSummary();
+  }
+
+  return renderProfileForm();
+}
+
+function renderProfileSummary() {
+  const flagLabels = state.accessFlags.length
+    ? state.accessFlags.map(id => ACCESS_FLAGS.find(f => f.id === id).label).join(', ')
+    : 'no access needs';
+
+  return `
+    <div class="lastvisit-section" style="display: flex; align-items: center; gap: 10px; padding-bottom: 4px;">
+      <div style="font-size: 13px; color: var(--text-secondary); min-width: 0; flex: 1;">
+        <strong style="color: var(--text-primary); font-weight: 500;">On file:</strong>
+        ${vetLabel(state.veteran)} · ${flagLabels}
+      </div>
+      <button class="btn btn-ghost" onclick="expandProfile()" style="font-size: 12px; padding: 6px 10px; flex-shrink: 0;">
+        Update
+      </button>
+    </div>
+  `;
+}
+
+function renderProfileForm() {
+  const v = state.visitor;
+  const isReturning = !v.custom;
+  const firstName = v.name.split(' ')[0];
+  const hasFlags = state.accessFlags.length > 0;
+
+  const sub = isReturning
+    ? `Update anything that's changed for ${firstName}.`
+    : `A few quick questions before we start the order.`;
+
+  return `
+    <p class="lastvisit-meta" style="margin: -6px 0 14px; font-style: italic;">${sub}</p>
+
+    <div class="lastvisit-section">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;">
+        <p class="lastvisit-label" style="margin: 0;">Veteran</p>
+        ${state.veteran === null
+          ? '<span style="font-size: 11px; font-weight: 500; color: var(--warn);">Please answer</span>'
+          : ''}
+      </div>
+      <div class="qc-pillrow">
+        <button class="qc-pill ${state.veteran==='yes'?'active':''}" onclick="setVeteran('yes')">Yes</button>
+        <button class="qc-pill ${state.veteran==='no'?'active':''}" onclick="setVeteran('no')">No</button>
+        <button class="qc-pill ${state.veteran==='decline'?'active':''}" onclick="setVeteran('decline')">Prefer not</button>
+      </div>
+    </div>
+
+    <div class="lastvisit-section">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;">
+        <p class="lastvisit-label" style="margin: 0;">Access needs</p>
+        ${state.accessAnswered
+          ? `<span class="qc-inline-help">${isReturning ? 'Confirm or update' : 'Tap any that apply'}</span>`
+          : '<span style="font-size: 11px; font-weight: 500; color: var(--warn);">Please answer</span>'}
+      </div>
+      <div class="qc-flagrow">
+        ${ACCESS_FLAGS.map(f => {
+          const on = state.accessFlags.includes(f.id);
+          return `<button class="qc-flagchip ${on?'active':''}" onclick="toggleFlag('${f.id}')">
+            ${on ? '<svg width="10" height="10"><use href="#i-check"/></svg>' : ''}${f.label}
+          </button>`;
+        }).join('')}
+        <button class="qc-flagchip ${state.accessAnswered && !hasFlags ? 'active' : ''}" onclick="clearFlags()">None</button>
+      </div>
+      ${hasFlags ? `
+        <textarea id="qc-note" class="field-input qc-inline-note" rows="2"
+          placeholder="Details so the team can prepare (e.g. uses a walker)"
+          oninput="state.accessNote = this.value">${escapeAttr(state.accessNote)}</textarea>
+      ` : ''}
+    </div>
+
+    ${isReturning ? `
+      <div style="text-align: right; margin-top: -4px; margin-bottom: 4px;">
+        <button class="btn btn-ghost" onclick="collapseProfile()" style="font-size: 12px;">
+          ✓ Done
+        </button>
+      </div>
+    ` : ''}
+  `;
+}
+
+function vetLabel(v) {
+  return v === 'yes' ? 'Veteran' : v === 'no' ? 'Not a vet' : 'Declined';
+}
+
+function setVeteran(v) { state.veteran = v; renderAll(); }
+function toggleFlag(id) {
+  const i = state.accessFlags.indexOf(id);
+  if (i >= 0) state.accessFlags.splice(i, 1);
+  else state.accessFlags.push(id);
+  state.accessAnswered = true;
+  renderAll();
+}
+function clearFlags() { state.accessFlags = []; state.accessNote = ''; state.accessAnswered = true; renderAll(); }
+function expandProfile() { state.profileExpanded = true; renderAll(); }
+function collapseProfile() { state.profileExpanded = false; renderAll(); }
+
+// =====================================================
+// STEP 3 — SERVICES
+// =====================================================
+function renderServices() {
+  const root = $('app');
+  root.innerHTML = `
+    ${renderVisitorStrip()}
+    <div class="step-header">
+      <p class="step-eyebrow">Step 2 of 4</p>
+      <h1 class="step-title serif">What does ${visitorDisplayName().split(' ')[0]} need today?</h1>
+      <p class="step-sub">Tap any combination of services. Clothing opens the catalog in the next step.</p>
+    </div>
+
+    <div class="services-grid">
+      ${SERVICES.map(svc => {
+        const active = state.services[svc.id] ? 'active' : '';
+        return `
+          <button class="service-card ${active}" onclick="toggleService('${svc.id}')" type="button">
+            <div class="service-check">
+              <svg width="12" height="12"><use href="#i-check"/></svg>
+            </div>
+            <div class="service-icon">
+              <svg width="22" height="22"><use href="#${svc.icon}"/></svg>
+            </div>
+            <p class="service-name">${svc.name}</p>
+            <p class="service-sub">${svc.sub}</p>
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function toggleService(id) {
+  state.services[id] = !state.services[id];
+  // Clothing only owns the clothing items. Personal care lives or dies on the
+  // trailer state, so leave personal items alone when clothing is removed.
+  if (id === 'clothing' && !state.services.clothing) {
+    Object.keys(state.itemStates).forEach(itemId => {
+      const item = ITEMS.find(i => i.id === itemId);
+      if (item && item.section !== 'personal') delete state.itemStates[itemId];
+    });
+    // Bounce off the Items step only if there's also nothing left to offer there.
+    if (state.step === 2 && !session.trailerOpen) state.step = 1;
+  }
+  renderAll();
+}
+
+// Mobile trailer presence — toggled per shift from the top bar.
+function toggleTrailer() {
+  session.trailerOpen = !session.trailerOpen;
+  // Don't auto-remove items already in the cart — they were promised to this
+  // visitor. But bounce off the Items step if neither clothing nor trailer is
+  // available now and the volunteer is currently sitting on it.
+  if (!session.trailerOpen && state.step === 2 && !state.services.clothing) {
+    state.step = 1;
+  }
+  renderAll();
+}
+
+function renderVisitorStrip() {
+  const v = state.visitor;
+  if (!v) return '';
+  const meta = v.custom
+    ? `New visitor${v.dob ? ' · DOB ' + v.dob : ''}`
+    : `DOB ${v.dobLabel} · ${v.visitCount} prior visits · last ${v.lastVisit}`;
+  return `
+    <div class="visitor-strip">
+      <div class="avatar">${v.initials}</div>
+      <div class="visitor-strip-info">
+        <p class="visitor-strip-name">${v.name}${v.custom ? '' : ' — returning'}</p>
+        <p class="visitor-strip-meta">${meta}</p>
+      </div>
+      <button class="btn" onclick="goTo(0)">Change visitor</button>
+    </div>
+  `;
+}
+
+// =====================================================
+// STEP 4 — ITEMS
+// =====================================================
+function renderItems() {
+  const root = $('app');
+  const showClothing = state.services.clothing;
+  const showPersonal = session.trailerOpen;
+
+  let title, sub;
+  if (showClothing && showPersonal) {
+    title = 'Pick clothing & personal care';
+    sub = 'Filter by who the items are for and color preference, then choose sizes and quantities.';
+  } else if (showClothing) {
+    title = 'Pick clothing';
+    sub = 'Filter by who the items are for and color preference. Mobile trailer is closed today, so hygiene kits aren\'t available.';
+  } else if (showPersonal) {
+    title = 'Personal care items';
+    sub = 'No clothing service was selected. Add hygiene kits or other personal care items, or skip ahead.';
+  } else {
+    title = 'Nothing to add';
+    sub = 'No clothing was selected and the mobile trailer is closed. Skip to confirm.';
+  }
+
+  root.innerHTML = `
+    ${renderVisitorStrip()}
+    <div class="step-header">
+      <p class="step-eyebrow">Step 3 of 4</p>
+      <h1 class="step-title serif">${title}</h1>
+      <p class="step-sub">${sub}</p>
+    </div>
+
+    <div class="main-grid">
+      <div class="intake">
+        ${showClothing ? renderFilterStrip() : ''}
+        ${showClothing ? `
+          <div class="section">
+            <div class="section-header"><h3 class="section-title">Tops</h3></div>
+            <div class="items-grid" id="section-tops"></div>
+          </div>
+          <div class="section">
+            <div class="section-header"><h3 class="section-title">Bottoms</h3></div>
+            <div class="items-grid" id="section-bottoms"></div>
+          </div>
+          <div class="section">
+            <div class="section-header"><h3 class="section-title">Footwear</h3></div>
+            <div class="items-grid" id="section-footwear"></div>
+          </div>
+          <div class="section">
+            <div class="section-header"><h3 class="section-title">Underwear</h3></div>
+            <div class="items-grid" id="section-underwear"></div>
+          </div>
+        ` : ''}
+        ${showPersonal ? `
+          <div class="section">
+            <div class="section-header">
+              <h3 class="section-title">Personal care</h3>
+              <p class="section-hint">from the mobile trailer</p>
+            </div>
+            <div class="items-grid" id="section-personal"></div>
+          </div>
+        ` : ''}
+      </div>
+      <aside class="cart" id="cart"></aside>
+    </div>
+  `;
+  if (showClothing) ['tops','bottoms','footwear','underwear'].forEach(renderSection);
+  if (showPersonal) renderSection('personal');
+  renderCart();
+}
+
+function renderFilterStrip() {
+  return `
+    <div class="filter-strip">
+      <div class="filter-group">
+        <span class="filter-label">For</span>
+        <div class="filter-buttons">
+          <button class="btn ${state.filter.men ? 'btn-active' : ''}" onclick="toggleGender('men')">Men</button>
+          <button class="btn ${state.filter.women ? 'btn-active' : ''}" onclick="toggleGender('women')">Women</button>
+        </div>
+      </div>
+      <div class="filter-group" style="margin-left: auto;">
+        <span class="filter-label">Color</span>
+        <div class="filter-buttons">
+          <button class="btn ${state.color === 'light' ? 'btn-active' : ''}" onclick="setColor('light')">Light</button>
+          <button class="btn ${state.color === 'dark' ? 'btn-active' : ''}" onclick="setColor('dark')">Dark</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function visibleItems(sectionId) {
+  return ITEMS.filter(i => {
+    if (i.section !== sectionId) return false;
+    if (i.gender === 'all') return true;
+    if (i.gender === 'men' && state.filter.men) return true;
+    if (i.gender === 'women' && state.filter.women) return true;
+    return false;
+  });
+}
+
+function renderSection(sectionId) {
+  const c = $('section-' + sectionId);
+  if (!c) return;
+  const items = visibleItems(sectionId);
+  if (items.length === 0) {
+    c.innerHTML = `<p class="section-empty">No items match the current filter.</p>`;
+    return;
+  }
+  c.innerHTML = '';
+  items.forEach(it => c.appendChild(renderItem(it)));
+}
+
+function renderItem(item) {
+  const st = state.itemStates[item.id];
+  const has = st && st.qty > 0;
+  const card = el('div', 'item' + (has ? ' has-selection' : ''));
+  let sizeHTML = '';
+  let actionHTML = '';
+  if (item.sizes) {
+    const cols = item.sizes.length;
+    const buttons = item.sizes.map(s =>
+      `<button class="size-pill ${st && st.size === s ? 'active' : ''}" onclick="pickSize('${item.id}','${s}')">${s}</button>`
+    ).join('');
+    sizeHTML = `<div class="size-grid" style="grid-template-columns: repeat(${cols}, 1fr);">${buttons}</div>`;
+    if (has) {
+      actionHTML = stepperHTML(item.id, st.qty);
+    }
+  } else {
+    if (has) actionHTML = stepperHTML(item.id, st.qty);
+    else actionHTML = `<button class="add-btn" onclick="addNoSize('${item.id}')">+ Add</button>`;
+  }
+  card.innerHTML = `
+    <div class="item-photo">
+      <svg width="34" height="34" viewBox="0 0 24 24"><use href="#i-shirt"/></svg>
+    </div>
+    <div class="item-header">
+      <p class="item-name">${item.name}</p>
+      <button class="item-remove" onclick="removeItem('${item.id}')" title="Remove">
+        <svg width="9" height="9"><use href="#i-x"/></svg>
+      </button>
+    </div>
+    ${sizeHTML}
+    ${actionHTML}
+  `;
+  return card;
+}
+
+function stepperHTML(id, qty) {
+  return `
+    <div class="stepper">
+      <button class="stepper-btn" onclick="changeQty('${id}',-1)">−</button>
+      <span class="stepper-count">${qty}</span>
+      <button class="stepper-btn" onclick="changeQty('${id}',1)">+</button>
+    </div>
+  `;
+}
+
+function pickSize(id, size) {
+  const cur = state.itemStates[id];
+  if (cur && cur.size === size) return;
+  const qty = (cur && cur.qty) ? cur.qty : 1;
+  state.itemStates[id] = { size, qty };
+  refreshItems();
+}
+function changeQty(id, delta) {
+  const cur = state.itemStates[id];
+  if (!cur) return;
+  const q = cur.qty + delta;
+  if (q <= 0) delete state.itemStates[id];
+  else state.itemStates[id] = { ...cur, qty: q };
+  refreshItems();
+}
+function addNoSize(id) {
+  state.itemStates[id] = { size: null, qty: 1 };
+  refreshItems();
+}
+function removeItem(id) {
+  delete state.itemStates[id];
+  refreshItems();
+}
+function toggleGender(g) {
+  state.filter[g] = !state.filter[g];
+  if (!state.filter.men && !state.filter.women) state.filter.men = true;
+  refreshItems();
+}
+function setColor(c) {
+  state.color = c;
+  refreshItems();
+}
+function refreshItems() {
+  if (state.step !== 2) return;
+  if (state.services.clothing) ['tops','bottoms','footwear','underwear'].forEach(renderSection);
+  if (session.trailerOpen) renderSection('personal');
+  renderCart();
+  renderFooter();
+}
+
+function renderCart() {
+  const c = $('cart');
+  if (!c) return;
+  const svcs = activeServicesArr();
+  const cart = cartItemsArr();
+  const total = totalQty();
+  const clothingItems = cart.filter(ci => ci.item.section !== 'personal');
+  const personalItems = cart.filter(ci => ci.item.section === 'personal');
+
+  const filterCtx = [];
+  if (state.filter.men) filterCtx.push('men');
+  if (state.filter.women) filterCtx.push('women');
+  const ctxLabel = filterCtx.join(' + ') || 'mixed';
+
+  let html = `
+    <div class="cart-header">
+      <h2 class="cart-title">This visit</h2>
+      <span class="cart-count">${svcs.length} svc · ${total} item${total===1?'':'s'}</span>
+    </div>
+  `;
+  if (svcs.length) {
+    html += `<p class="cart-section-label">Services</p><div class="cart-rows">`;
+    svcs.forEach(s => {
+      html += `
+        <div class="cart-row">
+          <svg width="14" height="14" style="color:var(--text-secondary);flex-shrink:0;"><use href="#${s.icon}"/></svg>
+          <p class="cart-row-name">${s.name}</p>
+          <button class="cart-row-remove" onclick="toggleService('${s.id}')"><svg width="9" height="9"><use href="#i-x"/></svg></button>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  if (clothingItems.length) {
+    html += `<p class="cart-section-label">Clothing — ${ctxLabel}, ${state.color}</p><div class="cart-rows">`;
+    clothingItems.forEach(ci => {
+      html += `
+        <div class="cart-row">
+          <div class="cart-row-thumb"></div>
+          <p class="cart-row-name">${ci.item.name}${ci.size ? ' · ' + ci.size : ''}</p>
+          <span class="cart-row-qty">×${ci.qty}</span>
+          <button class="cart-row-remove" onclick="removeItem('${ci.id}')"><svg width="9" height="9"><use href="#i-x"/></svg></button>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  if (personalItems.length) {
+    html += `<p class="cart-section-label">Personal care</p><div class="cart-rows">`;
+    personalItems.forEach(ci => {
+      html += `
+        <div class="cart-row">
+          <div class="cart-row-thumb"></div>
+          <p class="cart-row-name">${ci.item.name}${ci.size ? ' · ' + ci.size : ''}</p>
+          <span class="cart-row-qty">×${ci.qty}</span>
+          <button class="cart-row-remove" onclick="removeItem('${ci.id}')"><svg width="9" height="9"><use href="#i-x"/></svg></button>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  if (!svcs.length && !cart.length) {
+    html += `<p class="cart-empty">Nothing yet — pick services and items.</p>`;
+  }
+  html += `
+    <p class="cart-section-label">Visit notes</p>
+    <textarea class="cart-notes" id="visit-notes" placeholder="e.g. prefers loose fit, allergic to wool" oninput="state.notes = this.value;">${escapeAttr(state.notes)}</textarea>
+  `;
+  c.innerHTML = html;
+}
+
+// =====================================================
+// STEP 4 — CONFIRM
+// =====================================================
+function renderConfirm() {
+  const root = $('app');
+  const v = state.visitor;
+  const svcs = activeServicesArr();
+  const cart = cartItemsArr();
+  const total = totalQty();
+  const clothing = cart.filter(ci => ci.item.section !== 'personal');
+  const personal = cart.filter(ci => ci.item.section === 'personal');
+
+  const inactiveSvcs = SERVICES.filter(s => !state.services[s.id]);
+  const filterLabel = [state.filter.men&&'men',state.filter.women&&'women'].filter(Boolean).join(' + ') || 'mixed';
+
+  root.innerHTML = `
+    <div class="step-header">
+      <p class="step-eyebrow">Step 4 of 4</p>
+      <h1 class="step-title serif">Review &amp; send to fulfillment</h1>
+      <p class="step-sub">Tweak anything inline — adjust quantities, swap sizes, add or drop items. Confirm when ready.</p>
+    </div>
+
+    <div class="confirm-grid">
+      <div class="summary">
+
+        <div class="summary-block">
+          <div class="summary-block-head">
+            <p class="summary-label">Visitor</p>
+            <button class="btn btn-ghost" onclick="goTo(0)">Change</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="avatar">${v.initials}</div>
+            <div>
+              <p class="summary-value">${v.name}</p>
+              <p class="summary-meta">${v.custom
+                ? 'New visitor' + (v.dob ? ' · DOB ' + v.dob : '')
+                : 'DOB ' + v.dobLabel + ' · ' + v.visitCount + ' prior visits · last ' + v.lastVisit}</p>
+              <p class="summary-meta" style="margin-top:4px;">
+                ${vetLabel(state.veteran)}${state.accessFlags.length ? ' · ' + state.accessFlags.map(id => ACCESS_FLAGS.find(f=>f.id===id).label).join(', ') : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-block">
+          <div class="summary-block-head">
+            <p class="summary-label">Services</p>
+          </div>
+          <div class="edit-chips">
+            ${svcs.map(s => `
+              <span class="edit-chip">
+                <svg width="13" height="13"><use href="#${s.icon}"/></svg> ${s.name}
+                <button class="edit-chip-x" onclick="toggleService('${s.id}'); renderConfirm();" title="Remove"><svg width="9" height="9"><use href="#i-x"/></svg></button>
+              </span>
+            `).join('')}
+            ${inactiveSvcs.map(s => `
+              <button class="edit-chip-add" onclick="toggleService('${s.id}'); renderConfirm();">
+                <svg width="11" height="11"><use href="#i-plus"/></svg> ${s.name}
+              </button>
+            `).join('')}
+            ${!svcs.length && !inactiveSvcs.length ? `<p class="notes-empty" style="margin:0;">No services available.</p>` : ''}
+          </div>
+        </div>
+
+        ${state.services.clothing ? `
+          <div class="summary-block">
+            <div class="summary-block-head">
+              <p class="summary-label">Items · ${total}</p>
+              <button class="btn btn-ghost" onclick="togglePicker()" id="picker-toggle">
+                <svg width="11" height="11"><use href="#i-plus"/></svg> Add item
+              </button>
+            </div>
+
+            ${clothing.length ? `
+              <p class="summary-meta" style="margin:0 0 8px;">Clothing — ${filterLabel}, ${state.color}</p>
+              <div class="edit-rows">
+                ${clothing.map(ci => renderEditRow(ci)).join('')}
+              </div>
+            ` : ''}
+            ${personal.length ? `
+              <p class="summary-meta" style="margin:${clothing.length ? '14' : '0'}px 0 8px;">Personal care</p>
+              <div class="edit-rows">
+                ${personal.map(ci => renderEditRow(ci)).join('')}
+              </div>
+            ` : ''}
+            ${!clothing.length && !personal.length ? `
+              <p class="notes-empty" style="margin:0;">No items yet — tap <strong>Add item</strong> to choose.</p>
+            ` : ''}
+
+            <div class="picker-panel" id="picker-panel" style="display:none;">
+              ${renderPickerSections()}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="summary-block">
+          <div class="summary-block-head">
+            <p class="summary-label">Visit notes</p>
+          </div>
+          <textarea class="field-input notes-edit" rows="2"
+            placeholder="Optional — context for the team (e.g. prefers loose fit)"
+            oninput="state.notes = this.value">${escapeAttr(state.notes)}</textarea>
+        </div>
+      </div>
+
+      <div class="checklist-card">
+        <p class="checklist-title">When you confirm:</p>
+        <ul class="checklist">
+          <li><span class="checklist-dot"><svg width="10" height="10"><use href="#i-check"/></svg></span> Visit is logged to ${v.custom ? 'a new' : 'their'} record</li>
+          <li><span class="checklist-dot"><svg width="10" height="10"><use href="#i-check"/></svg></span> ${svcs.length ? svcs.map(s=>s.name).join(' + ') + ' station' + (svcs.length===1?'':'s') + ' notified' : 'No services queued'}</li>
+          <li><span class="checklist-dot"><svg width="10" height="10"><use href="#i-check"/></svg></span> ${total ? 'Clothing closet pulls items for pickup' : 'No items to pull'}</li>
+          <li><span class="checklist-dot"><svg width="10" height="10"><use href="#i-check"/></svg></span> Volunteer screen resets for next visitor</li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+function renderEditRow(ci) {
+  const sizes = ci.item.sizes;
+  return `
+    <div class="edit-row">
+      <div class="edit-row-thumb"><svg width="20" height="20"><use href="#i-shirt"/></svg></div>
+      <div class="edit-row-main">
+        <p class="edit-row-name">${ci.item.name}</p>
+        ${sizes ? `
+          <div class="edit-row-sizes">
+            ${sizes.map(s => `<button class="edit-size ${ci.size===s?'active':''}" onclick="pickSize('${ci.id}','${s}'); renderConfirm();">${s}</button>`).join('')}
+          </div>
+        ` : `<p class="edit-row-meta">no size</p>`}
+      </div>
+      <div class="edit-row-actions">
+        <div class="stepper">
+          <button class="stepper-btn" onclick="changeQty('${ci.id}',-1); renderConfirm();">−</button>
+          <span class="stepper-count">${ci.qty}</span>
+          <button class="stepper-btn" onclick="changeQty('${ci.id}',1); renderConfirm();">+</button>
+        </div>
+        <button class="edit-row-remove" onclick="removeItem('${ci.id}'); renderConfirm();" title="Remove">
+          <svg width="11" height="11"><use href="#i-x"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderPickerSections() {
+  return SECTIONS.map(sec => {
+    const items = ITEMS.filter(i => i.section === sec.id && !state.itemStates[i.id]);
+    if (!items.length) return '';
+    return `
+      <div class="picker-section">
+        <p class="picker-section-title">${sec.title}</p>
+        <div class="picker-grid">
+          ${items.map(i => `
+            <button class="picker-chip" onclick="addItemFromPicker('${i.id}')">
+              <svg width="13" height="13"><use href="#i-plus"/></svg>
+              ${i.name}${i.gender !== 'all' ? ' · ' + i.gender : ''}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function togglePicker() {
+  const p = $('picker-panel');
+  if (!p) return;
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function addItemFromPicker(id) {
+  const item = ITEMS.find(i => i.id === id);
+  if (!item) return;
+  const defaultSize = item.sizes ? item.sizes[Math.floor(item.sizes.length / 2)] : null;
+  state.itemStates[id] = { size: defaultSize, qty: 1 };
+  renderConfirm();
+}
+
+function escapeHTML(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+// =====================================================
+// CONFIRM MODAL + SUCCESS
+// =====================================================
+function openConfirm() {
+  if (!canAdvance()) return;
+  const v = state.visitor;
+  const svcs = activeServicesArr();
+  const cart = cartItemsArr();
+  const total = totalQty();
+  let html = `
+    <div style="background:var(--bg-card-alt);border-radius:var(--radius-md);padding:14px 16px;">
+      <p style="font-size:13px;margin:0 0 6px;"><strong style="font-weight:500;">Visitor:</strong> ${v.name}${v.custom ? ' (new)' : ''}</p>
+      ${svcs.length ? `<p style="font-size:13px;margin:0 0 6px;"><strong style="font-weight:500;">Services:</strong> ${svcs.map(s=>s.name).join(', ')}</p>` : ''}
+      ${total ? `<p style="font-size:13px;margin:0;"><strong style="font-weight:500;">Items:</strong> ${cart.map(ci => `${ci.qty}× ${ci.item.name}${ci.size?' ('+ci.size+')':''}`).join(', ')}</p>` : ''}
+    </div>
+  `;
+  $('confirm-summary').innerHTML = html;
+  $('confirm-modal').classList.add('visible');
+}
+function closeConfirm() { $('confirm-modal').classList.remove('visible'); }
+
+function confirmVisit() {
+  closeConfirm();
+  // Show success screen briefly, then reset
+  const v = state.visitor;
+  const svcs = activeServicesArr();
+  const total = totalQty();
+  $('app').innerHTML = `
+    <div class="success-card">
+      <div class="success-icon"><svg width="34" height="34"><use href="#i-check"/></svg></div>
+      <h1 class="success-title serif">All set, ${v.name.split(' ')[0]}</h1>
+      <p class="success-sub">Visit logged at ${new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})} · sent to fulfillment</p>
+      <div class="success-recap">
+        <p style="margin:0 0 6px;"><strong>Visitor:</strong> ${v.name}</p>
+        ${svcs.length ? `<p style="margin:0 0 6px;"><strong>Services:</strong> ${svcs.map(s=>s.name).join(', ')}</p>` : ''}
+        ${total ? `<p style="margin:0;"><strong>Items:</strong> ${total} total</p>` : ''}
+      </div>
+      <div class="success-actions">
+        <button class="btn btn-primary btn-lg" onclick="startNextVisit()">
+          <svg width="14" height="14"><use href="#i-user"/></svg> Next visitor
+        </button>
+        <button class="btn btn-lg" onclick="window.print()">
+          <svg width="14" height="14"><use href="#i-print"/></svg> Print receipt
+        </button>
+      </div>
+    </div>
+  `;
+  $('footer-nav').innerHTML = '';
+  $('progress').innerHTML = '';
+  showToast('Visit confirmed · sent to fulfillment');
+}
+
+function startNextVisit() {
+  resetAll();
+  renderAll();
+}
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('visible'), 2400);
+}
+
+// =====================================================
+// OFFLINE MODAL
+// =====================================================
+function openOffline() { $('offline-modal').classList.add('visible'); }
+function closeOffline() { $('offline-modal').classList.remove('visible'); }
+
+// =====================================================
+// MAIN RENDER
+// =====================================================
+function renderAll() {
+  renderTopbar();
+  renderProgress();
+  renderFooter();
+  if (state.step === 0) renderIdentify();
+  else if (state.step === 1) renderServices();
+  else if (state.step === 2) renderItems();
+  else if (state.step === 3) renderConfirm();
+}
+
+// Backdrop close
+document.addEventListener('click', e => {
+  if (e.target.id === 'confirm-modal') closeConfirm();
+  if (e.target.id === 'offline-modal') closeOffline();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeConfirm();
+    closeOffline();
+  }
+});
+
+renderAll();
+
+</script>
+
+
+</body></html>
