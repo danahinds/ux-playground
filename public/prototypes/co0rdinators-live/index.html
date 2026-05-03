@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMIS · Coordinator (Live)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-canvas:#F5F0E5;
+  --bg-card:#FFFFFF;
+  --bg-card-alt:#F1EFE8;
+  --brand:#085041;
+  --brand-deep:#063A2F;
+  --brand-tint:#E5EFE9;
+  --text-primary:#1A1A1A;
+  --text-secondary:#5F5E5A;
+  --text-tertiary:#8B8578;
+  --text-light:#FBF7EE;
+  --border:rgba(26,26,26,0.08);
+  --border-strong:rgba(26,26,26,0.18);
+  --radius-sm:4px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg:0 12px 32px rgba(0,0,0,0.18);
+
+  --green:#085041;--green-l:#0F6E56;--green-xl:#E3F4EC;--green-b:#2D8653;
+  --amber:#F59E0B;--amber-l:#FEF3C7;--amber-b:#B45309;
+  --red:#DC2626;--red-l:#FEE2E2;
+  --bg:#F0EFEB;--card:#fff;--ink:#111111;--ink-2:#595959;--ink-3:#595959;
+  --rule:#E8E8E8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"DM Sans",sans-serif;background:var(--bg-canvas);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 40px;-webkit-font-smoothing:antialiased;}
+
+/* Topbar */
+.topbar{width:100%;background:var(--bg-canvas);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;margin-bottom:24px;}
+.topbar-inner{max-width:460px;margin:0 auto;padding:14px 0;display:flex;align-items:center;gap:16px;}
+.brand-mark{display:flex;align-items:center;gap:10px;flex-shrink:0;cursor:pointer;}
+.brand-logo{width:32px;height:32px;background:var(--brand);color:var(--text-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",Georgia,serif;font-size:16px;}
+.brand-text{font-size:14px;font-weight:500;line-height:1.1;color:var(--text-primary);}
+.brand-text small{display:block;font-weight:400;color:var(--text-tertiary);font-size:11px;margin-top:2px;}
+.dev-toggle{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-tertiary);font-family:"DM Mono",monospace;}
+.dev-toggle button{background:#fff;border:1px solid var(--rule);color:var(--text-secondary);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.dev-toggle button.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+.phone{width:100%;max-width:380px;min-height:660px;background:var(--bg);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;position:relative;}
+
+/* Phone surface */
+.dash{flex:1;display:flex;flex-direction:column;background:var(--bg-canvas);overflow-y:auto;padding-bottom:64px;}
+.dash-body{padding:18px 18px 24px;display:flex;flex-direction:column;gap:0;}
+
+/* Compact info-line greeting */
+.info-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.info-name{font-family:"DM Serif Display",serif;font-size:18px;color:var(--text-primary);line-height:1;}
+.info-name em{font-style:italic;color:var(--brand);}
+.info-meta{font-size:11px;color:var(--text-tertiary);font-family:"DM Mono",monospace;text-align:right;line-height:1.3;}
+
+/* Hero — mode-aware. Live = deep green. Planning = cream. */
+.hero{border-radius:var(--radius-xl);padding:22px 22px 20px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
+.hero-mark{position:absolute;top:18px;right:20px;font-size:48px;line-height:1;opacity:.12;font-family:"DM Serif Display",serif;}
+.hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-family:"DM Mono",monospace;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.hero-date{font-family:"DM Mono",monospace;font-size:13px;font-weight:500;margin-bottom:6px;letter-spacing:.02em;}
+.hero-title{font-family:"DM Serif Display",serif;font-size:26px;line-height:1.1;margin-bottom:8px;letter-spacing:-.005em;}
+.hero-sub{font-size:13px;line-height:1.5;margin-bottom:16px;}
+.hero-cta{width:100%;height:48px;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:transform .12s,box-shadow .12s;}
+.hero-cta:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.14);}
+.hero-live{background:linear-gradient(160deg, var(--brand) 0%, var(--brand-deep) 100%);color:#fff;}
+.hero-tappable{cursor:pointer;transition:transform .12s,box-shadow .12s;}
+.hero-tappable:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg);}
+.hero-live .hero-eyebrow{color:#A0DDC8;}
+.hero-live .hero-date{color:#C8EEE3;}
+.hero-live .hero-sub{color:#E5F4ED;}
+.hero-live .hero-cta{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);color:#fff;}
+.hero-live .hero-cta:hover{background:rgba(255,255,255,.24);}
+.hero-live .live-pulse-dot{background:#A0DDC8;animation:livepulse 1.6s ease-in-out infinite;}
+
+/* Embedded stats inside live hero — replaces the standalone live stats panel */
+.hero-embedded-stats{display:flex;background:rgba(0,0,0,.22);border-radius:var(--radius-md);overflow:hidden;margin-top:14px;}
+.hero-embedded-stat{flex:1;padding:11px 4px 9px;text-align:center;}
+.hero-embedded-stat+.hero-embedded-stat{border-left:1px solid rgba(255,255,255,.12);}
+.hero-embedded-stat-n{font-family:"DM Serif Display",serif;font-size:24px;line-height:1;color:#fff;letter-spacing:-.005em;}
+.hero-embedded-stat-lbl{font-size:9px;font-weight:600;color:#C8EEE3;text-transform:uppercase;letter-spacing:.07em;margin-top:5px;}
+.hero-planning{background:#F5EFE0;color:var(--text-primary);}
+.hero-planning .hero-eyebrow{color:var(--brand);}
+.hero-planning .hero-date{color:var(--text-secondary);}
+.hero-planning .hero-sub{color:var(--text-secondary);}
+.hero-planning .hero-cta{background:var(--brand);color:#fff;}
+.hero-planning .hero-cta:hover{background:var(--brand-deep);}
+
+/* Pre-event hero — event scheduled today, awaiting open */
+.hero-scheduled{background:linear-gradient(160deg, #FFE6B0 0%, #F2CD7A 100%);color:#5C3D08;border:1px solid #E5C088;}
+.hero-scheduled .hero-eyebrow{color:#8C5F1A;letter-spacing:.12em;}
+.hero-scheduled .hero-date{color:#7A4F0E;}
+.hero-scheduled .hero-sub{color:#5C3D08;}
+.hero-scheduled-actions{display:grid;grid-template-columns:2fr 1fr;gap:6px;}
+.hero-scheduled-actions .hero-cta{height:46px;font-size:14px;}
+.hero-scheduled-actions .hero-cta.primary{background:var(--brand);color:#fff;border:none;}
+.hero-scheduled-actions .hero-cta.primary:hover{background:var(--brand-deep);}
+.hero-scheduled-actions .hero-cta.secondary{background:transparent;border:1.5px solid #B8861A;color:#5C3D08;}
+.hero-scheduled-actions .hero-cta.secondary:hover{background:rgba(184,134,26,.1);}
+
+/* Closed event hero — event wrapped up */
+.hero-closed{background:linear-gradient(160deg, #5F5E5A 0%, #3A3A38 100%);color:#fff;}
+.hero-closed .hero-eyebrow{color:#C8C4BC;letter-spacing:.12em;}
+.hero-closed .hero-date{color:#C8C4BC;}
+.hero-closed .hero-sub{color:#E5E3DD;}
+.hero-closed .hero-cta{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);color:#fff;}
+.hero-closed .hero-cta:hover{background:rgba(255,255,255,.24);}
+.hero-closed-stats{display:flex;background:rgba(0,0,0,.22);border-radius:var(--radius-md);overflow:hidden;margin:14px 0 16px;}
+.hero-closed-stat{flex:1;padding:10px 4px;text-align:center;}
+.hero-closed-stat+.hero-closed-stat{border-left:1px solid rgba(255,255,255,.12);}
+.hero-closed-stat-n{font-family:"DM Serif Display",serif;font-size:24px;line-height:1;color:#fff;}
+.hero-closed-stat-lbl{font-size:9px;font-weight:600;color:#C8C4BC;text-transform:uppercase;letter-spacing:.07em;margin-top:5px;}
+
+/* Close-event prompt card — appears on home when end time reached */
+.close-prompt{background:#FFF1E0;border:1.5px solid #D4A55F;border-radius:var(--radius-lg);padding:16px;margin-bottom:16px;}
+.close-prompt-tag{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #B8861A;color:#7A4F0E;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:999px;margin-bottom:10px;}
+.close-prompt-title{font-family:"DM Serif Display",serif;font-size:18px;line-height:1.2;color:#3D2806;margin-bottom:4px;}
+.close-prompt-msg{font-size:13px;color:#5C3D08;line-height:1.5;margin-bottom:14px;}
+.close-prompt-actions{display:grid;grid-template-columns:2fr 1fr;gap:6px;}
+.close-prompt-actions button{height:42px;border-radius:var(--radius-md);font-size:13px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;border:none;}
+.close-prompt-actions .btn-close{background:var(--brand);color:#fff;}
+.close-prompt-actions .btn-close:hover{background:var(--brand-deep);}
+.close-prompt-actions .btn-stay{background:transparent;border:1.5px solid #B8861A;color:#5C3D08;}
+.close-prompt-actions .btn-stay:hover{background:rgba(184,134,26,.1);}
+
+/* End event — quiet section at bottom of live event detail */
+.end-event-wrap{margin-top:32px;padding-top:18px;border-top:1px solid var(--rule);text-align:center;}
+.btn-end-event{background:transparent;border:1.5px solid #B8861A;color:#7A4F0E;height:42px;padding:0 28px;border-radius:var(--radius-md);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .12s;}
+.btn-end-event:hover{background:rgba(184,134,26,.08);}
+.end-event-hint{font-size:11px;color:var(--text-tertiary);margin-top:8px;font-style:italic;}
+
+/* Working-station hero — coordinator is leading a station */
+.hero-working{background:linear-gradient(160deg, #064E40 0%, #032F26 100%);color:#fff;border:1px solid rgba(255,255,255,.08);}
+.hero-working .hero-eyebrow{color:#FFD27A;letter-spacing:.12em;}
+.hero-working .hero-eyebrow .live-pulse-dot{background:#FFD27A;animation:ambpulse 1.6s ease-in-out infinite;}
+.hero-working .hero-date{color:#C8EEE3;}
+.hero-working .hero-sub{color:#E5F4ED;}
+.hero-working-stats{display:flex;background:rgba(0,0,0,.22);border-radius:var(--radius-md);overflow:hidden;margin-bottom:14px;}
+.hero-working-stat{flex:1;padding:10px 4px;text-align:center;}
+.hero-working-stat+.hero-working-stat{border-left:1px solid rgba(255,255,255,.12);}
+.hero-working-stat-n{font-family:"DM Serif Display",serif;font-size:20px;line-height:1;color:#fff;}
+.hero-working-stat-lbl{font-size:9px;font-weight:600;color:#C8EEE3;text-transform:uppercase;letter-spacing:.07em;margin-top:4px;}
+.hero-working-actions{display:grid;grid-template-columns:2fr 1fr;gap:6px;}
+.hero-working-actions .hero-cta{height:42px;font-size:13px;}
+.hero-working-actions .hero-cta.secondary{background:transparent;border:1px solid rgba(255,255,255,.32);color:#FFD27A;}
+.hero-working-actions .hero-cta.secondary:hover{background:rgba(255,210,122,.12);}
+.live-pulse-dot{display:inline-block;}
+@keyframes livepulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(160,221,200,0.5);}
+  50%{box-shadow:0 0 0 5px rgba(160,221,200,0);}
+}
+@keyframes ambpulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(180,83,9,0.5);}
+  50%{box-shadow:0 0 0 5px rgba(180,83,9,0);}
+}
+
+/* Section labels */
+.sec-lbl{font-size:10px;font-weight:600;color:var(--text-tertiary);letter-spacing:.09em;text-transform:uppercase;margin:8px 0 9px;display:flex;align-items:center;gap:8px;}
+.sec-lbl > span:first-child{margin-right:auto;}
+.sec-lbl::after{content:"";flex:1;height:1px;background:var(--border);order:99;}
+.sec-lbl > .see-all-link{order:100;}
+
+/* Live stats panel */
+.live-stats{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;}
+.live-stats-hdr{padding:9px 14px;background:var(--brand-tint);border-bottom:1.5px solid var(--brand-b);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.live-stats-lbl{font-size:11px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.07em;}
+.live-stats-pulse{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.08em;}
+.live-stats-pulse .live-pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--brand);}
+.live-stats-body{display:flex;}
+.live-stats-cell{flex:1;padding:13px 4px 11px;text-align:center;}
+.live-stats-cell+.live-stats-cell{border-left:1px solid var(--rule);}
+.live-stats-cell-n{font-family:"DM Serif Display",serif;font-size:26px;line-height:1;color:var(--brand);letter-spacing:-.01em;}
+.live-stats-cell-lbl{font-size:9px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;}
+
+/* Quick actions row */
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;}
+
+/* Stations overview card — replaces quick action tiles when live */
+.stations-card{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:18px;}
+.stations-card-hdr{padding:9px 14px;background:var(--bg-card-alt);border-bottom:1.5px solid var(--rule);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.stations-card-lbl{font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.07em;}
+.stations-card-meta{font-size:10px;color:var(--text-tertiary);font-family:"DM Mono",monospace;}
+.stations-card-body{display:flex;flex-direction:column;}
+.station-card-row{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-top:1px solid var(--rule);transition:background .12s;}
+.station-card-row:first-child{border-top:none;}
+.station-card-row:hover{background:var(--bg-card-alt);}
+.station-card-row.busy{background:#FFF5E0;}
+.station-card-row.busy:hover{background:#FCEBC9;}
+.station-card-row.slow{background:#EFF6FA;}
+.station-card-row.slow:hover{background:#E2EEF5;}
+.station-card-name{flex:1;min-width:0;}
+.station-card-name-text{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.station-card-name-text.busy{color:var(--amber-b);}
+.station-card-name-text.slow{color:#3A6F8F;}
+.station-card-name-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;font-family:"DM Mono",monospace;letter-spacing:.02em;}
+.station-card-status{flex-shrink:0;display:flex;align-items:center;gap:6px;}
+.station-card-pip{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.station-card-pip.steady{background:var(--brand);}
+.station-card-pip.busy{background:var(--amber-b);animation:ambpulse 1.6s ease-in-out infinite;}
+.station-card-pip.slow{background:#5C9BC2;}
+.station-card-arrow{color:var(--text-tertiary);font-size:14px;flex-shrink:0;}
+.station-card-row.busy .station-card-arrow{color:var(--amber-b);}
+.station-card-row.slow .station-card-arrow{color:#5C9BC2;}
+
+/* Volunteer line — quiet info below stations card */
+.vol-line{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:transparent;border:1px solid transparent;border-radius:var(--radius-md);font-size:12px;color:var(--text-secondary);cursor:pointer;font-family:"DM Sans",sans-serif;width:100%;text-align:left;margin-bottom:14px;transition:background .12s,border-color .12s;}
+.vol-line:hover{background:#fff;border-color:var(--rule);}
+.vol-line-text{flex:1;}
+.vol-line-text strong{color:var(--text-primary);font-weight:600;}
+.vol-line-arrow{color:var(--text-tertiary);font-size:13px;flex-shrink:0;}
+
+/* Station detail page — investigation surface */
+.station-hero{border-radius:var(--radius-lg);padding:18px 18px 16px;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
+.station-hero.calm{background:#fff;border:1.5px solid var(--rule);color:var(--text-primary);}
+.station-hero.calm .station-hero-eyebrow{color:var(--brand);}
+.station-hero.calm .station-hero-pip{background:var(--brand);}
+.station-hero.slow{background:linear-gradient(160deg, #EFF6FA 0%, #DCEAF2 100%);border:1.5px solid #B5D2E2;color:#2A4A60;}
+.station-hero.slow .station-hero-eyebrow{color:#3A6F8F;}
+.station-hero.slow .station-hero-pip{background:#5C9BC2;}
+.station-hero.attn{background:linear-gradient(160deg, #FCEBC9 0%, #F5C76A 100%);border:1.5px solid #B8861A;color:#3D2806;}
+.station-hero.attn .station-hero-eyebrow{color:#7A4F0E;}
+.station-hero.attn .station-hero-pip{background:var(--amber-b);animation:ambpulse 1.6s ease-in-out infinite;}
+.station-hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-family:"DM Mono",monospace;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.station-hero-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.station-hero-title{font-family:"DM Serif Display",serif;font-size:28px;line-height:1.05;margin-bottom:4px;letter-spacing:-.005em;}
+.station-hero-meta{font-size:12px;opacity:.85;margin-bottom:12px;}
+.station-hero-stats{display:flex;background:rgba(0,0,0,.06);border-radius:var(--radius-md);overflow:hidden;}
+.station-hero-stat{flex:1;padding:11px 4px 9px;text-align:center;}
+.station-hero-stat+.station-hero-stat{border-left:1px solid rgba(0,0,0,.08);}
+.station-hero-stat-n{font-family:"DM Serif Display",serif;font-size:22px;line-height:1;}
+.station-hero-stat-lbl{font-size:9px;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.07em;margin-top:5px;}
+
+/* Station detail action buttons */
+.station-actions{display:grid;grid-template-columns:1fr;gap:6px;margin:14px 0 18px;}
+.station-actions.split{grid-template-columns:2fr 1fr;}
+.station-actions button{height:48px;border-radius:var(--radius-md);font-family:"DM Sans",sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:transform .12s,box-shadow .12s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.station-actions button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.station-actions .btn-join{background:var(--brand);color:#fff;}
+.station-actions .btn-join:hover{background:var(--brand-deep);}
+.station-actions .btn-step-away{background:transparent;border:1.5px solid var(--amber-b);color:var(--amber-b);}
+.station-actions .btn-step-away:hover{background:var(--amber-l);}
+.station-actions .btn-reassign{background:#fff;border:1.5px solid var(--rule);color:var(--text-primary);}
+.station-actions .btn-reassign:hover{border-color:var(--brand);}
+.station-actions .btn-coordinator{background:var(--brand-tint);border:1.5px solid var(--brand-b);color:var(--brand);}
+.station-actions .btn-coordinator:hover{background:#D4E6DD;border-color:var(--brand);}
+
+/* Activity placeholder */
+.activity-placeholder{padding:14px 16px;background:var(--bg-card-alt);border:1px dashed var(--rule);border-radius:var(--radius-md);text-align:center;font-size:11px;color:var(--text-tertiary);font-style:italic;line-height:1.5;}
+
+/* Queue placeholder — shown when coordinator is leading. Real queue tool would render here. */
+.queue-placeholder{background:var(--brand-tint);border:2px dashed var(--brand-b);border-radius:var(--radius-lg);padding:24px 20px;margin-bottom:16px;text-align:center;}
+.queue-placeholder-tag{display:inline-block;background:var(--brand);color:#fff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:999px;margin-bottom:14px;font-family:"DM Mono",monospace;}
+.queue-placeholder-title{font-family:"DM Serif Display",serif;font-size:22px;line-height:1.1;color:var(--brand);margin-bottom:8px;}
+.queue-placeholder-msg{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:14px;font-style:italic;}
+.queue-placeholder-meta{display:inline-block;font-size:11px;color:var(--brand);font-weight:600;font-family:"DM Mono",monospace;letter-spacing:.04em;background:#fff;border:1px solid var(--brand-b);padding:5px 12px;border-radius:999px;}
+.qa-btn{height:46px;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .12s;}
+.qa-btn:hover{border-color:var(--brand);background:var(--brand-tint);}
+.qa-btn-meta{font-size:10px;color:var(--text-tertiary);font-weight:400;}
+.qa-btn.warn{border-color:var(--amber-b);background:var(--amber-l);color:var(--amber-b);}
+.qa-btn.warn .qa-btn-meta{color:var(--amber-b);opacity:.75;}
+.qa-btn.warn:hover{background:#FCD9A0;}
+
+/* Check-in alert */
+.checkin-alert{background:#FCEBC9;border:1.5px solid #E5C088;border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:14px;cursor:pointer;}
+.checkin-alert-tag{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--amber-b);color:var(--amber-b);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:999px;margin-bottom:10px;}
+.checkin-alert-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--amber-b);animation:ambpulse 1.6s ease-in-out infinite;}
+.checkin-row{display:flex;align-items:center;gap:10px;}
+.avatar{display:flex;align-items:center;justify-content:center;font-family:"DM Sans",sans-serif;font-weight:600;flex-shrink:0;}
+.avatar-md{width:36px;height:36px;border-radius:50%;font-size:12px;}
+.avatar-sm{width:30px;height:30px;border-radius:50%;font-size:11px;}
+.avatar-lg{width:44px;height:44px;border-radius:50%;font-size:14px;}
+.avatar-amber{background:#F5C76A;color:#5C3D08;}
+.avatar-green{background:var(--brand-tint);color:var(--brand);}
+.checkin-name{font-size:14px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.checkin-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+
+/* Calendar-chip event row */
+.evt-row{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:10px 12px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .12s;}
+.evt-row:hover{border-color:var(--brand);}
+.evt-chip{flex-shrink:0;width:46px;height:46px;border-radius:8px;background:var(--bg-card-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;}
+.evt-chip-mo{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);}
+.evt-chip-d{font-family:"DM Serif Display",serif;font-size:20px;color:var(--text-primary);margin-top:2px;}
+.evt-rest{flex:1;min-width:0;}
+.evt-rest-name{font-size:13px;font-weight:500;color:var(--text-primary);line-height:1.25;}
+.evt-rest-meta{font-size:10px;color:var(--text-tertiary);margin-top:2px;font-family:"DM Mono",monospace;letter-spacing:.02em;}
+.evt-rest-arrow{color:var(--text-tertiary);font-size:14px;flex-shrink:0;}
+
+.evt-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+
+/* Status pill (for past/upcoming chip in headers) */
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.pill-upcoming{background:var(--brand-tint);color:var(--brand);}
+.pill-completed{background:#F5F5F5;color:var(--text-secondary);}
+.pill-live{background:var(--brand);color:#fff;}
+.pill-confirmed{background:var(--brand-tint);color:var(--brand);border:1px solid var(--brand-b);}
+.pill-pending{background:var(--amber-l);color:var(--amber-b);border:1px solid var(--amber-b);}
+.pill-on-pace{background:var(--brand-tint);color:var(--brand);border:1px solid var(--brand-b);}
+.pill-warn{background:var(--amber-l);color:var(--amber-b);border:1px solid var(--amber-b);}
+.pill-slow{background:#EFF6FA;color:#3A6F8F;border:1px solid #B5D2E2;}
+
+.pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
+
+/* Volunteer row */
+.vol-row{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:9px 12px;display:flex;align-items:center;gap:10px;}
+.vol-row.tappable{cursor:pointer;transition:border-color .12s,box-shadow .12s;}
+.vol-row.tappable:hover{border-color:var(--brand);box-shadow:0 1px 3px rgba(8,80,65,.08);}
+.vol-row.tappable:hover .vol-row-arrow{color:var(--brand);transform:translateX(2px);}
+.vol-row-body{flex:1;min-width:0;}
+.vol-name{font-size:13px;font-weight:500;color:var(--text-primary);line-height:1.2;}
+.vol-meta{font-size:10px;color:var(--text-tertiary);margin-top:2px;font-family:"DM Mono",monospace;letter-spacing:.02em;}
+.vol-row-arrow{color:var(--text-tertiary);font-size:18px;flex-shrink:0;line-height:1;font-weight:600;transition:color .12s,transform .12s;margin-left:2px;}
+
+/* Bottom tab nav */
+.bot-tabs{position:absolute;bottom:0;left:0;right:0;height:64px;background:#fff;border-top:1px solid var(--rule);display:flex;z-index:30;}
+.bot-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text-tertiary);transition:color .15s;padding:8px 4px 10px;}
+.bot-tab.active{color:var(--brand);}
+.bot-tab svg{width:18px;height:18px;flex-shrink:0;}
+.bot-tab-lbl{font-size:10px;font-weight:500;font-family:"DM Sans",sans-serif;}
+.bot-tab.active .bot-tab-lbl{font-weight:600;}
+.bot-tab-badge{position:absolute;top:7px;right:50%;margin-right:-22px;background:var(--amber-b);color:#fff;font-size:9px;font-weight:600;padding:2px 5px;border-radius:999px;line-height:1;min-width:14px;text-align:center;}
+
+/* Tab sub-nav inside Volunteers */
+.subtabs{display:flex;background:#fff;border:1.5px solid var(--rule);border-radius:999px;padding:3px;margin-bottom:14px;}
+.subtab{flex:1;height:32px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:500;color:var(--text-secondary);border-radius:999px;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .12s;}
+.subtab.active{background:var(--brand);color:#fff;}
+.subtab-count{font-size:10px;opacity:.8;}
+.subtab.active .subtab-count{opacity:1;}
+
+/* Search field */
+.search-field{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:12px;}
+.search-input{flex:1;border:none;outline:none;background:transparent;font-family:"DM Sans",sans-serif;font-size:13px;color:var(--text-primary);}
+.search-input::placeholder{color:var(--text-tertiary);}
+.search-clear{background:transparent;border:none;color:var(--text-tertiary);font-size:14px;cursor:pointer;padding:0 4px;line-height:1;font-family:"DM Sans",sans-serif;}
+.search-clear:hover{color:var(--text-secondary);}
+
+.station-group{margin-bottom:14px;}
+.station-group-hdr{display:flex;align-items:baseline;justify-content:space-between;padding:6px 4px;margin-bottom:6px;border-bottom:1px solid var(--rule);}
+.station-group-name{font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:var(--text-primary);text-transform:uppercase;letter-spacing:.06em;}
+.station-group-name.warn{color:var(--amber-b);}
+.station-group-name.floating{color:var(--brand);}
+.station-group-meta{font-size:10px;color:var(--text-tertiary);font-family:"DM Mono",monospace;letter-spacing:.02em;}
+.station-group-rows{display:flex;flex-direction:column;gap:5px;}
+.search-empty{padding:24px 16px;text-align:center;font-size:12px;color:var(--text-tertiary);font-style:italic;}
+
+/* Collapsible section header — tappable with chevron */
+.collapse-hdr{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:"DM Sans",sans-serif;width:100%;text-align:left;margin-bottom:10px;transition:border-color .12s;}
+.collapse-hdr:hover{border-color:var(--brand);}
+.collapse-hdr-title{flex:1;font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.collapse-hdr-meta{font-size:11px;color:var(--text-tertiary);font-family:"DM Mono",monospace;margin-right:6px;}
+.collapse-chevron{font-size:14px;color:var(--text-tertiary);transition:transform .15s;line-height:1;flex-shrink:0;}
+.collapse-chevron.open{transform:rotate(90deg);}
+.collapse-content{margin-bottom:14px;animation:expand .2s ease;}
+@keyframes expand{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* Event detail */
+.detail-back{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary);cursor:pointer;background:none;border:none;font-family:"DM Sans",sans-serif;padding:0;margin-bottom:6px;}
+.detail-back:hover{color:var(--text-secondary);}
+.detail-title{font-family:"DM Serif Display",serif;font-size:24px;line-height:1.1;margin-bottom:4px;}
+.detail-sub{font-size:12px;color:var(--text-secondary);margin-bottom:18px;}
+
+.detail-stats{display:flex;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;}
+.detail-stats-cell{flex:1;padding:12px 4px 10px;text-align:center;}
+.detail-stats-cell+.detail-stats-cell{border-left:1px solid var(--rule);}
+.detail-stats-n{font-family:"DM Serif Display",serif;font-size:22px;line-height:1;color:var(--brand);}
+.detail-stats-lbl{font-size:9px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;}
+
+.station-row{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.station-row.warn{border-color:var(--amber-b);background:var(--amber-l);}
+.station-row-body{flex:1;min-width:0;}
+.station-row-name{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.station-row-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.cap-dots{display:flex;gap:3px;flex-shrink:0;}
+.cap-dot{width:8px;height:8px;border-radius:50%;}
+.cap-dot.cap-filled{background:var(--brand);}
+.cap-dot.cap-empty{background:#fff;border:1.5px solid var(--rule);}
+.cap-dot.cap-empty-warn{background:#fff;border:1.5px solid var(--amber-b);}
+.result-num{font-family:"DM Serif Display",serif;font-size:18px;color:var(--brand);flex-shrink:0;line-height:1;min-width:24px;text-align:right;}
+
+/* Past event hero */
+.hero-impact{background:linear-gradient(160deg, var(--brand) 0%, var(--brand-deep) 100%);color:#fff;border-radius:var(--radius-lg);padding:22px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow-md);}
+.hero-impact-num{font-family:"DM Serif Display",serif;font-size:54px;line-height:1;letter-spacing:-.02em;}
+.hero-impact-lbl{font-size:13px;font-weight:500;color:#C8EEE3;margin-top:4px;letter-spacing:.04em;}
+.hero-impact-sub{font-size:11px;color:#A0DDC8;margin-top:6px;}
+
+/* Buttons */
+.btn-primary{width:100%;height:46px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .15s;}
+.btn-primary:hover{background:var(--brand-deep);}
+.btn-secondary{width:100%;height:46px;background:#fff;border:1.5px solid var(--rule);color:var(--text-primary);border-radius:var(--radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.btn-secondary:hover{border-color:var(--text-secondary);}
+.btn-amber{width:100%;height:46px;background:var(--amber-b);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.btn-amber:hover{background:#8C3F08;}
+.btn-amber:disabled{background:#D8C8A8;cursor:not-allowed;}
+
+.button-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto;padding-top:18px;}
+
+/* Form fields */
+.field{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:9px 12px;margin-bottom:10px;}
+.field-lbl{font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;}
+.field-val{font-size:13px;color:var(--text-primary);font-weight:500;}
+.field-input{width:100%;border:none;outline:none;background:transparent;font-family:"DM Sans",sans-serif;font-size:13px;color:var(--text-primary);font-weight:500;padding:0;}
+
+.chip{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;border:1.5px solid;}
+.chip-on{background:var(--brand);color:#fff;border-color:var(--brand);}
+.chip-off{background:#fff;color:var(--text-secondary);border-color:var(--rule);}
+.chip-off:hover{border-color:var(--brand);color:var(--brand);}
+
+/* Sheet (overlay for assign / reassign / send-reminder / create-event) */
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;}
+.sheet-backdrop.open{opacity:1;pointer-events:auto;}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg-canvas);border-radius:var(--radius-xl) var(--radius-xl) 0 0;z-index:41;transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.7,.3,1);max-height:88%;overflow-y:auto;display:flex;flex-direction:column;}
+.sheet.open{transform:translateY(0);}
+.sheet-handle{width:36px;height:4px;background:rgba(0,0,0,.18);border-radius:999px;margin:8px auto 4px;flex-shrink:0;}
+.sheet-body{padding:14px 18px 22px;flex:1;display:flex;flex-direction:column;}
+.sheet-title{font-family:"DM Serif Display",serif;font-size:22px;line-height:1.1;margin-bottom:4px;}
+.sheet-sub{font-size:12px;color:var(--text-secondary);margin-bottom:16px;line-height:1.4;}
+.sheet-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.06);border:none;color:var(--text-secondary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-family:"DM Sans",sans-serif;z-index:42;}
+.sheet-close:hover{background:rgba(0,0,0,.12);}
+
+/* Station picker grid (for assign + reassign sheets) */
+.station-picker-lbl{font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;margin-top:4px;}
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.station-opt{padding:11px 10px;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;text-align:left;transition:all .12s;}
+.station-opt:hover{border-color:var(--brand);}
+.station-opt.selected{background:var(--brand);color:#fff;border-color:var(--brand);}
+.station-opt-meta{font-size:10px;font-weight:400;color:var(--text-tertiary);margin-top:2px;}
+.station-opt.selected .station-opt-meta{color:#C8EEE3;}
+.station-opt:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Vol focus card (in reassign sheet) */
+.focus-card{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+
+/* Login overlay */
+.login{position:absolute;inset:0;background:var(--bg-canvas);padding:36px 22px 28px;display:flex;flex-direction:column;z-index:60;}
+/* Hard guarantee: login overlay is only ever visible when state is login.
+   Without this, edge-case race conditions can cause the empty wrapper to
+   intercept touches and visually appear over the app. */
+#login-overlay{display:none;}
+#login-overlay:not(:empty){display:flex;position:absolute;inset:0;z-index:60;}
+.login-eyebrow{font-size:11px;font-weight:500;color:var(--text-tertiary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-family:"DM Mono",monospace;}
+.login-h{font-family:"DM Serif Display",serif;font-size:26px;line-height:1.15;margin-bottom:6px;}
+.login-h em{font-style:italic;color:var(--brand);}
+.login-sub{font-size:13px;color:var(--text-secondary);line-height:1.4;margin-bottom:24px;}
+.login-form{display:flex;flex-direction:column;flex:1;}
+.login-label{font-size:12px;font-weight:600;color:var(--text-secondary);letter-spacing:.04em;text-transform:uppercase;margin-bottom:7px;display:block;}
+.login-input{width:100%;height:46px;padding:0 14px;border:1.5px solid var(--rule);border-radius:var(--radius-md);background:#fff;font-size:15px;font-family:"DM Sans",sans-serif;color:var(--text-primary);outline:none;transition:border-color .15s;}
+.login-input:focus{border-color:var(--brand);}
+.login-hint{font-size:11px;color:var(--text-tertiary);margin-top:6px;line-height:1.4;}
+.login-spacer{flex:1;min-height:24px;}
+.login-cta{width:100%;height:50px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:15px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .15s;}
+.login-cta:hover{background:var(--brand-deep);}
+.login-cta:disabled{background:#D8D8D8;cursor:not-allowed;}
+
+/* Toast */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:100;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* Live event banner — appears on every screen except live event detail itself */
+.live-banner{position:absolute;top:0;left:0;right:0;background:linear-gradient(90deg, var(--brand) 0%, var(--brand-deep) 100%);color:#fff;padding:9px 14px;font-size:12px;font-weight:500;align-items:center;gap:9px;cursor:pointer;z-index:32;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:background .2s;display:none;}
+.live-banner-dot{width:7px;height:7px;border-radius:50%;background:#A0DDC8;flex-shrink:0;animation:livepulse 1.6s ease-in-out infinite;}
+.live-banner-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}
+.live-banner-text strong{font-weight:600;}
+.live-banner-arrow{flex-shrink:0;font-size:14px;color:#A0DDC8;line-height:1;}
+.live-banner.urgent{background:linear-gradient(90deg, var(--amber-b) 0%, #8C3F08 100%);}
+.live-banner.urgent .live-banner-dot{background:#FFE5B0;animation:ambpulse 1.2s ease-in-out infinite;}
+.live-banner.urgent .live-banner-arrow{color:#FFE5B0;}
+.dash.has-banner{padding-top:36px;}
+
+/* Empty state */
+.empty{padding:32px 20px;text-align:center;}
+.empty-mark{font-size:32px;opacity:.3;margin-bottom:10px;}
+.empty-title{font-family:"DM Serif Display",serif;font-size:18px;color:var(--text-primary);margin-bottom:6px;}
+.empty-sub{font-size:12px;color:var(--text-secondary);line-height:1.5;}
+
+.anim{animation:si .25s ease;}
+@keyframes si{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none;}}
+</style>
+  <!-- Playground: auto-injected Microsoft Clarity for inside-iframe recording -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window,document,"clarity","script","weqc268a3f");
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      var sid = p.get('sid');
+      if (sid) window.clarity('set', 'session_id', sid);
+      var m = window.location.pathname.match(/\/prototypes\/([^/]+)\//);
+      if (m) window.clarity('set', 'prototype', m[1]);
+      window.clarity('set', 'context', 'prototype');
+    })();
+  </script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-mark" onclick="navTo('home')">
+      <div class="brand-logo">S</div>
+      <div class="brand-text">Coordinator<small>HMIS &middot; Pinellas Hope</small></div>
+    </div>
+  </div>
+</header>
+
+<div class="phone" id="phone-wrap">
+  <div class="live-banner" id="live-banner" onclick="openLiveEventFromBanner()"></div>
+  <div id="screen"></div>
+  <div class="bot-tabs" id="bot-tabs"></div>
+  <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet"></div>
+  <div id="login-overlay"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Coordinator app — user test prototype
+   Architecture:
+     - 4 bottom tabs: Home / Events / Volunteers / Reports
+     - Home is data-aware: shows live event when one's running, else planning view
+     - Sheets handle focused tasks: assign volunteer, reassign, send reminder, create event
+     - Sub-tabs inside Volunteers: All / Confirmed / Pending
+     - Drill-in pages: event detail (upcoming + past variants)
+   ============================================================ */
+
+// ---- Mock data ----
+var DATA_MODE = "live"; // locked — this is the live test file
+
+var EVENT_TODAY = {
+  id:"e0", name:"Friday Outreach", loc:"Main Pavilion",
+  startTime:"9:00 AM", endTime:"12:00 PM",
+  startedAgo:"Live &middot; 14 min",
+  status:"scheduled" // "scheduled" | "open" | "closed" — coordinator owns transitions
+};
+
+// Service-centric stats — "47 services · 23 waiting · 12 clients"
+// services = total service transactions delivered (one client may use 2-3 stations)
+// waiting = clients currently in any queue
+// clients = unique people served today
+// volunteers = on-site team count (informational secondary)
+var STATS_LIVE = { services:47, waiting:23, clients:12, volunteers:7, rostered:12 };
+
+// Station status: "slow" | "steady" | "busy"
+// NOTE: detection of slow/busy requires data we don't capture yet — currently demo placeholder
+var STATIONS_LIVE = [
+  {id:"showers",  name:"Showers",     vols:2, queue:4, status:"steady"},
+  {id:"clothes",  name:"Clothes",     vols:2, queue:3, status:"steady"},
+  {id:"haircuts", name:"Haircuts",    vols:2, queue:1, status:"slow"},
+  {id:"meal",     name:"Meal",        vols:1, queue:6, status:"busy"}
+];
+
+var ASSIGNED_VOLS = [
+  // Floating support — no station assignment, available for any need
+  {id:"v_f1", initials:"RC", name:"Robin Cole",   stationId:null, since:"9:01 AM"},
+  {id:"v_f2", initials:"KP", name:"Kim Park",     stationId:null, since:"9:04 AM"},
+  // Station-assigned
+  {id:"v1", initials:"JT", name:"Jordan Tate",   stationId:"showers",  since:"9:08 AM"},
+  {id:"v2", initials:"SP", name:"Sam Park",      stationId:"showers",  since:"9:11 AM"},
+  {id:"v3", initials:"LC", name:"Lin Carlos",    stationId:"haircuts", since:"9:05 AM"},
+  {id:"v4", initials:"CR", name:"Carlos Reyes",  stationId:"clothes",  since:"9:02 AM"},
+  {id:"v5", initials:"DW", name:"Devon Walsh",   stationId:"clothes",  since:"9:03 AM"},
+  {id:"v6", initials:"TR", name:"Tasha Rose",    stationId:"meal",     since:"9:07 AM"},
+  {id:"v7", initials:"AG", name:"Alex Greene",   stationId:"haircuts", since:"9:06 AM"}
+];
+
+var INCOMING_VOLS = [
+  {id:"in1", initials:"MR", name:"Maya Rodriguez", arrivedAt:"9:14 AM"},
+  {id:"in2", initials:"DP", name:"David Park",     arrivedAt:"9:15 AM"},
+  {id:"in3", initials:"AC", name:"Ana Chen",       arrivedAt:"9:15 AM"},
+  {id:"in4", initials:"BL", name:"Ben Lopez",      arrivedAt:"9:16 AM"},
+  {id:"in5", initials:"RH", name:"Rachel Hayes",   arrivedAt:"9:16 AM"}
+];
+var pendingAssignVolId = null; // which incoming vol is being assigned in the sheet
+
+// Full volunteer roster (for Volunteers tab)
+var VOLUNTEERS_ROSTER = [
+  // Live (currently on-site) — derived from ASSIGNED_VOLS
+  // Confirmed
+  {id:"r1", initials:"AK", name:"Ann Kim",        status:"confirmed", meta:"Confirmed for Apr 28 · Tuesday Service"},
+  {id:"r2", initials:"BW", name:"Beth Wallace",   status:"confirmed", meta:"Confirmed for Apr 28 · Tuesday Service"},
+  {id:"r3", initials:"MG", name:"Mike Garcia",    status:"confirmed", meta:"Confirmed for May 2 · Friday Outreach"},
+  // Pending
+  {id:"r4", initials:"DR", name:"David Reese",    status:"pending",   meta:"Invited Apr 22 · no reply"},
+  {id:"r5", initials:"JL", name:"Jessica Lin",    status:"pending",   meta:"Invited Apr 22 · no reply"},
+  {id:"r6", initials:"PM", name:"Paul Martin",    status:"pending",   meta:"Invited Apr 23 · no reply"},
+  {id:"r7", initials:"NF", name:"Nina Fox",       status:"pending",   meta:"Invited Apr 25 · no reply"}
+];
+
+var EVENTS_LIST = [
+  // Upcoming first (other than today's live one)
+  {id:"e1", name:"Tuesday Service",  mo:"APR", d:"28", dow:"TUE", time:"8:00 AM", loc:"Riverside",     status:"upcoming", confirmed:9, capacity:10},
+  {id:"e2", name:"Friday Outreach",  mo:"MAY", d:"2",  dow:"FRI", time:"9:00 AM", loc:"Main Pavilion", status:"upcoming", confirmed:7, capacity:12},
+  // Past
+  {id:"e_past1", name:"Friday Outreach", mo:"APR", d:"17", dow:"FRI", time:"9:00 AM", loc:"Main Pavilion", status:"past", served:94, vols:11, dur:"3h"},
+  {id:"e_past2", name:"Tuesday Service",  mo:"APR", d:"14", dow:"TUE", time:"8:00 AM", loc:"Riverside",     status:"past", served:42, vols:6,  dur:"2h"}
+];
+
+// Reports stats (cross-event)
+var REPORTS = {
+  totalServed:312, totalEvents:8, totalVolHours:184,
+  byStation: [
+    {name:"Showers", served:128},
+    {name:"Clothes", served:84},
+    {name:"Haircuts", served:62},
+    {name:"Meal", served:38}
+  ]
+};
+
+// ---- App state ----
+var state = "login";
+var coordName = "";
+var credentialDraft = "";
+var activeTab = "home";
+var volSubtab = "live"; // live event present — default to On-site
+var volSearchQuery = "";
+var confirmedVolsExpanded = false;
+var detailEventId = null;
+var detailStationId = null; // when on station_detail state
+var detailFrom = null; // "events" | "reports" — controls which buttons show on past event detail
+var sheetType = null;        // "assign" | "reassign" | "send_reminder" | "create_event" | "send_report"
+var pendingStation = null;
+var reassignVolId = null;
+var reassignTargetId = null;
+var sheetOpen = false;
+
+// Coordinator-working-a-station state
+var coordWorkingStation = null; // station id when coordinator is leading a station, else null
+var coordStartedAt = null;      // time string when she started
+var pendingWorkStation = null;  // selection in the work_station sheet
+
+// ---- Helpers ----
+function isValidCredential(v){
+  v = (v||"").trim();
+  if(v.length < 4) return false;
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return true;
+  var digits = v.replace(/\D/g,"");
+  return digits.length >= 7;
+}
+function deriveName(v){
+  v = (v||"").trim();
+  if(v.indexOf("@")>0){
+    var local = v.split("@")[0].split(/[._-]/)[0];
+    return local.charAt(0).toUpperCase() + local.slice(1);
+  }
+  return "Sarah";
+}
+function firstName(n){return (n||"").split(" ")[0];}
+
+function stationName(id){
+  var s = STATIONS_LIVE.filter(function(x){return x.id===id;})[0];
+  return s ? s.name : "—";
+}
+function stationById(id){
+  return STATIONS_LIVE.filter(function(x){return x.id===id;})[0];
+}
+
+function eventIsLiveToday(){
+  return DATA_MODE === "live" && EVENT_TODAY.status === "open";
+}
+function eventIsScheduledToday(){
+  return DATA_MODE === "live" && EVENT_TODAY.status === "scheduled";
+}
+function eventIsClosedToday(){
+  return DATA_MODE === "live" && EVENT_TODAY.status === "closed";
+}
+
+function backedUpCount(){
+  // Legacy alias — counts busy stations
+  return STATIONS_LIVE.filter(function(s){return s.status==="busy";}).length;
+}
+function busyCount(){
+  return STATIONS_LIVE.filter(function(s){return s.status==="busy";}).length;
+}
+function slowCount(){
+  return STATIONS_LIVE.filter(function(s){return s.status==="slow";}).length;
+}
+function statusLabel(status){
+  if(status === "busy") return "Busy";
+  if(status === "slow") return "Slow";
+  return "Steady";
+}
+
+// Recompute every station's status. Single source of truth — placeholder logic;
+// real impl would use throughput trends, wait time, etc.
+function recomputeStationStates(){
+  STATIONS_LIVE.forEach(function(s){
+    var ratio = s.queue / Math.max(s.vols, 1);
+    if(ratio > 3){
+      s.status = "busy";
+    } else if(s.queue <= 1){
+      s.status = "slow";
+    } else {
+      s.status = "steady";
+    }
+  });
+}
+
+function showToast(msg){
+  var t = document.getElementById("toast");
+  t.innerHTML = msg;
+  t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");}, 2400);
+}
+
+// ---- Navigation ----
+function navTo(tab){
+  activeTab = tab;
+  state = tab;
+  closeSheet();
+  detailEventId = null;
+  render();
+}
+function setEventStatus(s){
+  EVENT_TODAY.status = s;
+}
+function openEventNow(){
+  EVENT_TODAY.status = "open";
+  showToast("Event open &middot; doors are open");
+  render();
+}
+function closeEventNow(){
+  EVENT_TODAY.status = "closed";
+  // Wipe live banner urgency context — no more incoming, no more queues
+  showToast("Event closed &middot; thanks for leading today");
+  render();
+}
+function confirmCloseEvent(){
+  EVENT_TODAY.status = "closed";
+  closeSheet();
+  // Land on home so the coordinator sees the closed-state hero with the summary
+  state = "home";
+  activeTab = "home";
+  showToast("Event closed &middot; thanks for leading today");
+  render();
+}
+function reopenEvent(){
+  // Defensive: if coordinator wants to revert from "closed" back to "open"
+  EVENT_TODAY.status = "open";
+  render();
+}
+function openEventDetail(id, from){
+  detailEventId = id;
+  detailFrom = from || activeTab; // remember context: "events" | "reports" | "home"
+  state = "event_detail";
+  closeSheet();
+  render();
+}
+
+// Returns true if banner is visible (so dash can add padding)
+function renderLiveBanner(){
+  var banner = document.getElementById("live-banner");
+  if(!banner) return false;
+  // Hide banner if no live event today, or if user is currently viewing the live event itself
+  if(!eventIsLiveToday()){
+    banner.style.display = "none";
+    return false;
+  }
+  if(state === "event_detail" && detailEventId === "e0"){
+    banner.style.display = "none";
+    return false;
+  }
+  // Determine urgency
+  var bu = backedUpCount();
+  var pendingCount = INCOMING_VOLS.length;
+  var isUrgent = (pendingCount > 0) || (bu > 0);
+
+  banner.classList.toggle("urgent", isUrgent);
+  banner.style.display = "flex";
+
+  var workingSt = coordWorkingStation ? stationById(coordWorkingStation) : null;
+  var prefix = workingSt ? "<strong>At " + workingSt.name + "</strong>" : "<strong>" + EVENT_TODAY.name + "</strong>";
+
+  var text = "";
+  if(pendingCount > 0 && bu > 0){
+    text = prefix + " &middot; " + pendingCount + " waiting to assign &middot; " + bu + " station" + (bu===1?"":"s") + " busy";
+  } else if(pendingCount > 0){
+    if(pendingCount === 1){
+      text = prefix + " &middot; " + INCOMING_VOLS[0].name + " just checked in";
+    } else {
+      text = prefix + " &middot; " + pendingCount + " volunteers waiting to assign";
+    }
+  } else if(bu > 0){
+    text = prefix + " &middot; " + bu + " station" + (bu===1?"":"s") + " busy";
+  } else {
+    // Calm state
+    text = prefix + " &middot; " + STATS_LIVE.services + " services &middot; " + STATS_LIVE.waiting + " waiting";
+  }
+
+  banner.innerHTML =
+    "<span class='live-banner-dot'></span>" +
+    "<span class='live-banner-text'>" + text + "</span>" +
+    "<span class='live-banner-arrow'>&rsaquo;</span>";
+  return true;
+}
+
+function openLiveEventFromBanner(){
+  detailEventId = "e0";
+  detailFrom = activeTab;
+  state = "event_detail";
+  closeSheet();
+  render();
+}
+
+function openStationDetail(stationId){
+  detailStationId = stationId;
+  detailFrom = activeTab; // remember origin so back returns there
+  state = "station_detail";
+  closeSheet();
+  render();
+}
+
+// ---- Login ----
+function handleCredentialInput(v){
+  credentialDraft = v;
+  var btn = document.getElementById("login-cta");
+  if(btn) btn.disabled = !isValidCredential(credentialDraft);
+}
+function submitLogin(e){
+  if(e) e.preventDefault();
+  if(!isValidCredential(credentialDraft)) return;
+  coordName = deriveName(credentialDraft);
+  state = "home";
+  activeTab = "home";
+  render();
+}
+function signOut(){
+  state = "login";
+  coordName = "";
+  credentialDraft = "";
+  closeSheet();
+  render();
+}
+
+// ---- Sheets ----
+function openSheet(type, opts){
+  sheetType = type;
+  opts = opts || {};
+  if(type === "reassign"){
+    reassignVolId = opts.volId;
+    reassignTargetId = null;
+  }
+  if(type === "assign"){
+    pendingStation = null;
+    pendingAssignVolId = opts.volId || (INCOMING_VOLS[0] && INCOMING_VOLS[0].id);
+    if(!pendingAssignVolId) return; // nothing to assign
+  }
+  if(type === "work_station"){
+    pendingWorkStation = null;
+  }
+  sheetOpen = true;
+  renderSheet();
+}
+function closeSheet(){
+  sheetOpen = false;
+  sheetType = null;
+  pendingStation = null;
+  pendingAssignVolId = null;
+  pendingWorkStation = null;
+  reassignVolId = null;
+  reassignTargetId = null;
+  var bk = document.getElementById("sheet-backdrop");
+  var sh = document.getElementById("sheet");
+  if(bk) bk.classList.remove("open");
+  if(sh) sh.classList.remove("open");
+}
+function pickStation(s){
+  pendingStation = s;
+  renderSheet();
+}
+function confirmAssign(){
+  if(!pendingStation || !pendingAssignVolId) return;
+  var inVol = INCOMING_VOLS.filter(function(v){return v.id === pendingAssignVolId;})[0];
+  if(!inVol) return;
+  var isFloating = pendingStation === "_floating";
+  var st = isFloating ? null : stationById(pendingStation);
+  ASSIGNED_VOLS.unshift({
+    id:"v" + (ASSIGNED_VOLS.length + 1),
+    initials:inVol.initials,
+    name:inVol.name,
+    stationId:isFloating ? null : st.id,
+    since:inVol.arrivedAt
+  });
+  // Remove from incoming
+  INCOMING_VOLS = INCOMING_VOLS.filter(function(v){return v.id !== pendingAssignVolId;});
+  if(st){
+    st.vols++;
+    recomputeStationStates();
+  }
+  STATS_LIVE.volunteers++;
+  showToast(inVol.name + " assigned to " + (isFloating ? "floating support" : st.name));
+  closeSheet();
+  render();
+}
+function pickReassignTarget(s){ reassignTargetId = s; renderSheet(); }
+function confirmReassign(){
+  if(!reassignTargetId || !reassignVolId) return;
+  var v = ASSIGNED_VOLS.filter(function(x){return x.id === reassignVolId;})[0];
+  if(!v) return;
+  var movingToFloating = reassignTargetId === "_floating";
+  if((!movingToFloating && v.stationId === reassignTargetId) ||
+     (movingToFloating && v.stationId === null)) return;
+  var fromSt = stationById(v.stationId);
+  var toSt = movingToFloating ? null : stationById(reassignTargetId);
+  if(fromSt) fromSt.vols = Math.max(0, fromSt.vols - 1);
+  if(toSt) toSt.vols++;
+  recomputeStationStates();
+  v.stationId = movingToFloating ? null : reassignTargetId;
+  showToast(v.name + " moved to " + (movingToFloating ? "floating support" : toSt.name));
+  closeSheet();
+  render();
+}
+
+// ---- Coordinator-working-station handlers ----
+function pickWorkStation(id){ pendingWorkStation = id; renderSheet(); }
+function confirmWorkStation(){
+  if(!pendingWorkStation) return;
+  var st = stationById(pendingWorkStation);
+  if(!st) return;
+  coordWorkingStation = st.id;
+  // Use real time for "started X min ago"
+  var now = new Date();
+  var hh = now.getHours();
+  var mm = now.getMinutes();
+  var ampm = hh >= 12 ? "PM" : "AM";
+  var hh12 = (hh % 12) || 12;
+  coordStartedAt = hh12 + ":" + (mm < 10 ? "0" : "") + mm + " " + ampm;
+  // Coordinator counts as a volunteer at the station
+  st.vols++;
+  recomputeStationStates();
+  showToast("You're now leading " + st.name);
+  closeSheet();
+  render();
+}
+function stepAwayFromStation(){
+  if(!coordWorkingStation) return;
+  var st = stationById(coordWorkingStation);
+  if(st){
+    st.vols = Math.max(0, st.vols - 1);
+    recomputeStationStates();
+  }
+  var stationName = st ? st.name : "station";
+  coordWorkingStation = null;
+  coordStartedAt = null;
+  showToast("Stepped away from " + stationName);
+  render();
+}
+
+// ---- Render ----
+function render(){
+  var loginOv = document.getElementById("login-overlay");
+  var screen = document.getElementById("screen");
+  var bot = document.getElementById("bot-tabs");
+  var banner = document.getElementById("live-banner");
+
+  if(state === "login"){
+    loginOv.style.display = "flex";
+    bot.style.display = "none";
+    if(banner) banner.style.display = "none";
+    renderLogin();
+    screen.innerHTML = "";
+    return;
+  }
+  loginOv.style.display = "none";
+  loginOv.innerHTML = "";
+  bot.style.display = "flex";
+
+  renderBottomTabs();
+  var bannerVisible = renderLiveBanner();
+
+  var h = "<div class='dash anim" + (bannerVisible ? " has-banner" : "") + "'>";
+  h += "<div class='dash-body'>";
+
+  if(state === "home"){
+    h += renderHome();
+  } else if(state === "events"){
+    h += renderEvents();
+  } else if(state === "event_detail"){
+    h += renderEventDetail();
+  } else if(state === "station_detail"){
+    h += renderStationDetail();
+  } else if(state === "volunteers"){
+    h += renderVolunteers();
+  } else if(state === "reports"){
+    h += renderReports();
+  }
+
+  h += "</div></div>";
+  screen.innerHTML = h;
+}
+
+function renderBottomTabs(){
+  var tabs = document.getElementById("bot-tabs");
+  var bu = backedUpCount();
+  // Determine which "tab" is conceptually active. Station detail inherits its origin.
+  var activeBase = state;
+  if(state === "station_detail"){
+    activeBase = detailFrom || "home";
+  } else if(state === "event_detail"){
+    activeBase = (detailFrom === "events" || detailFrom == null) ? "events" : detailFrom;
+  }
+  var h = "";
+  h += "<div class='bot-tab " + (activeBase==='home'?'active':'') + "' onclick='navTo(\"home\")' style='position:relative;'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linejoin='round'><path d='M3 8L9 3L15 8V14C15 14.5 14.5 15 14 15H4C3.5 15 3 14.5 3 14V8Z'/></svg>";
+  h += "<span class='bot-tab-lbl'>Home</span>";
+  h += "</div>";
+  h += "<div class='bot-tab " + (activeBase==='events'?'active':'') + "' onclick='navTo(\"events\")'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'><rect x='3' y='4' width='12' height='11' rx='1.5'/><path d='M3 7H15M6 2V5M12 2V5'/></svg>";
+  h += "<span class='bot-tab-lbl'>Events</span>";
+  h += "</div>";
+  h += "<div class='bot-tab " + (activeBase==='volunteers'?'active':'') + "' onclick='navTo(\"volunteers\")'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'><circle cx='7' cy='6' r='2.5'/><path d='M2 15C2 12 4 10.5 7 10.5C10 10.5 12 12 12 15'/><circle cx='13' cy='7' r='2'/></svg>";
+  h += "<span class='bot-tab-lbl'>Volunteers</span>";
+  h += "</div>";
+  h += "<div class='bot-tab " + (activeBase==='reports'?'active':'') + "' onclick='navTo(\"reports\")'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'><path d='M3 14V8M7 14V5M11 14V10M15 14V3'/></svg>";
+  h += "<span class='bot-tab-lbl'>Reports</span>";
+  h += "</div>";
+  tabs.innerHTML = h;
+}
+
+// ----- HOME -----
+function renderHome(){
+  var d = new Date();
+  var dateStr = d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+  var timeStr = d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Hi, <em>" + firstName(coordName) + "</em></div>";
+  h += "<div class='info-meta'>" + dateStr + "<br>" + timeStr + " &middot; coordinator</div>";
+  h += "</div>";
+
+  // Today's event has three possible states: scheduled, open, closed.
+  // The "live" data file always has an event today; status drives which view.
+  if(eventIsScheduledToday()){
+    // ===== SCHEDULED HOME — event today, awaiting open =====
+    h += "<div class='hero hero-scheduled'>";
+    h += "<div class='hero-mark'>&#9728;</div>";
+    h += "<div class='hero-eyebrow'>Today &middot; " + EVENT_TODAY.startTime + "</div>";
+    h += "<div class='hero-date'>" + EVENT_TODAY.loc + "</div>";
+    h += "<div class='hero-title'>" + EVENT_TODAY.name + "</div>";
+    h += "<div class='hero-sub'>" + STATS_LIVE.rostered + " volunteers confirmed and ready. Open the doors when your team is set.</div>";
+    h += "<div class='hero-scheduled-actions'>";
+    h += "<button class='hero-cta primary' onclick='openEventNow()'>Open event</button>";
+    h += "<button class='hero-cta secondary' onclick='showToast(\"We&rsquo;ll wait until you&rsquo;re ready\")'>Not yet</button>";
+    h += "</div>";
+    h += "</div>";
+
+    // Pre-event readiness — gentle, supportive
+    h += "<div class='sec-lbl'><span>Getting ready</span></div>";
+    h += "<div class='evt-list'>";
+    h += "<div class='vol-row'>";
+    h += "<div class='avatar avatar-sm avatar-green'>&check;</div>";
+    h += "<div class='vol-row-body'>";
+    h += "<div class='vol-name'>Confirmed roster</div>";
+    h += "<div class='vol-meta'>" + STATS_LIVE.rostered + " volunteers ready</div>";
+    h += "</div>";
+    h += "<span class='pill pill-confirmed'>Ready</span>";
+    h += "</div>";
+    h += "<div class='vol-row'>";
+    h += "<div class='avatar avatar-sm avatar-green'>" + STATIONS_LIVE.length + "</div>";
+    h += "<div class='vol-row-body'>";
+    h += "<div class='vol-name'>Stations</div>";
+    h += "<div class='vol-meta'>Showers &middot; Clothes &middot; Haircuts &middot; Meal</div>";
+    h += "</div>";
+    h += "<span class='pill pill-confirmed'>Ready</span>";
+    h += "</div>";
+    h += "</div>";
+  }
+  else if(eventIsClosedToday()){
+    // ===== CLOSED HOME — event wrapped up =====
+    h += "<div class='hero hero-closed'>";
+    h += "<div class='hero-mark'>&#10003;</div>";
+    h += "<div class='hero-eyebrow'>Event closed &middot; " + (EVENT_TODAY.closedAt || "just now") + "</div>";
+    h += "<div class='hero-date'>" + EVENT_TODAY.startTime + " &ndash; " + EVENT_TODAY.endTime + " &middot; " + EVENT_TODAY.loc + "</div>";
+    h += "<div class='hero-title'>" + EVENT_TODAY.name + "</div>";
+    h += "<div class='hero-sub'>Thanks for leading today. Your numbers are saved to reports.</div>";
+    h += "<div class='hero-closed-stats'>";
+    h += "<div class='hero-closed-stat'><div class='hero-closed-stat-n'>" + STATS_LIVE.services + "</div><div class='hero-closed-stat-lbl'>Services</div></div>";
+    h += "<div class='hero-closed-stat'><div class='hero-closed-stat-n'>" + STATS_LIVE.clients + "</div><div class='hero-closed-stat-lbl'>Clients</div></div>";
+    h += "<div class='hero-closed-stat'><div class='hero-closed-stat-n'>" + STATS_LIVE.volunteers + "</div><div class='hero-closed-stat-lbl'>Volunteers</div></div>";
+    h += "</div>";
+    h += "<button class='hero-cta' onclick='showToast(\"Summary view coming soon\")'>View summary</button>";
+    h += "</div>";
+
+    h += "<div class='sec-lbl'><span>What&rsquo;s next</span></div>";
+    h += "<div class='evt-list'>";
+    h += "<div class='evt-row' onclick='openSheet(\"create_event\")'>";
+    h += "<div class='evt-chip' style='background:var(--brand-tint);'><div class='evt-chip-mo'>NEW</div><div class='evt-chip-d' style='font-size:18px;'>+</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>Plan another event</div>";
+    h += "<div class='evt-rest-meta'>Duplicate today&rsquo;s setup or start fresh</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+    h += "</div>";
+  }
+  else if(eventIsLiveToday()){
+    // ===== LIVE-DAY HOME =====
+    var bu = backedUpCount();
+    var workingSt = coordWorkingStation ? stationById(coordWorkingStation) : null;
+
+    // Close-event prompt — appears at the top when scheduled end time has passed
+    if(workingSt){
+      // Coordinator is working a station — primary hero shifts focus to her station role
+      // Whole hero is tappable to drill into event detail. Step away stays as explicit secondary action.
+      h += "<div class='hero hero-working hero-tappable' onclick='openEventDetail(\"e0\")'>";
+      h += "<div class='hero-mark'>&#9733;</div>";
+      h += "<div class='hero-eyebrow'><span class='live-pulse-dot'></span> You&rsquo;re leading &middot; started " + (coordStartedAt || "just now") + "</div>";
+      h += "<div class='hero-date'>" + EVENT_TODAY.name + " &middot; " + EVENT_TODAY.loc + "</div>";
+      h += "<div class='hero-title'>" + workingSt.name + "</div>";
+      h += "<div class='hero-working-stats'>";
+      h += "<div class='hero-working-stat'><div class='hero-working-stat-n'>" + workingSt.queue + "</div><div class='hero-working-stat-lbl'>In queue</div></div>";
+      h += "<div class='hero-working-stat'><div class='hero-working-stat-n'>" + workingSt.vols + "</div><div class='hero-working-stat-lbl'>Volunteers</div></div>";
+      var workingStateLabel = statusLabel(workingSt.status);
+      var workingStateGlyph = workingSt.status === "busy" ? "&#9888;" : (workingSt.status === "slow" ? "&#9728;" : "&#10003;");
+      h += "<div class='hero-working-stat'><div class='hero-working-stat-n'>" + workingStateGlyph + "</div><div class='hero-working-stat-lbl'>" + workingStateLabel + "</div></div>";
+      h += "</div>";
+      h += "<button class='hero-cta secondary' style='width:100%;margin-top:4px;' onclick='event.stopPropagation();stepAwayFromStation()'>Step away from " + workingSt.name + "</button>";
+      h += "</div>";
+    } else {
+      // Live event hero — whole card tappable, stats embedded directly inside
+      h += "<div class='hero hero-live hero-tappable' onclick='openEventDetail(\"e0\")'>";
+      h += "<div class='hero-mark'>&#9728;</div>";
+      h += "<div class='hero-eyebrow'><span class='live-pulse-dot'></span> " + EVENT_TODAY.startedAgo + "</div>";
+      h += "<div class='hero-date'>" + EVENT_TODAY.startTime + " &middot; " + EVENT_TODAY.loc + "</div>";
+      h += "<div class='hero-title'>" + EVENT_TODAY.name + "</div>";
+      // Embedded stats — service-centric, dark translucent band on green
+      h += "<div class='hero-embedded-stats'>";
+      h += "<div class='hero-embedded-stat'><div class='hero-embedded-stat-n'>" + STATS_LIVE.services + "</div><div class='hero-embedded-stat-lbl'>Services</div></div>";
+      h += "<div class='hero-embedded-stat'><div class='hero-embedded-stat-n'>" + STATS_LIVE.waiting + "</div><div class='hero-embedded-stat-lbl'>Waiting</div></div>";
+      h += "<div class='hero-embedded-stat'><div class='hero-embedded-stat-n'>" + STATS_LIVE.clients + "</div><div class='hero-embedded-stat-lbl'>Clients</div></div>";
+      h += "</div>";
+      h += "</div>";
+    }
+
+    // Stations overview — replaces the old volunteer-count + backed-up tiles
+    var busyN = busyCount();
+    var slowN = slowCount();
+    var hdrMeta;
+    if(busyN > 0 && slowN > 0){
+      hdrMeta = busyN + " busy &middot; " + slowN + " slow";
+    } else if(busyN > 0){
+      hdrMeta = busyN + " busy";
+    } else if(slowN > 0){
+      hdrMeta = slowN + " slow";
+    } else {
+      hdrMeta = "all steady";
+    }
+    h += "<div class='stations-card'>";
+    h += "<div class='stations-card-hdr'>";
+    h += "<div class='stations-card-lbl'>Stations</div>";
+    h += "<div class='stations-card-meta'>" + hdrMeta + "</div>";
+    h += "</div>";
+    h += "<div class='stations-card-body'>";
+    STATIONS_LIVE.forEach(function(s){
+      var stateCls = s.status === "busy" ? " busy" : (s.status === "slow" ? " slow" : "");
+      h += "<div class='station-card-row" + stateCls + "' onclick='openStationDetail(\"" + s.id + "\")'>";
+      h += "<div class='station-card-name'>";
+      h += "<div class='station-card-name-text" + stateCls + "'>" + s.name + "</div>";
+      h += "<div class='station-card-name-meta'>" + s.vols + " vol" + (s.vols===1?"":"s") + " &middot; " + s.queue + " waiting</div>";
+      h += "</div>";
+      h += "<div class='station-card-status'>";
+      h += "<span class='station-card-pip " + s.status + "'></span>";
+      h += "<span class='station-card-arrow'>&rsaquo;</span>";
+      h += "</div>";
+      h += "</div>";
+    });
+    h += "</div>";
+    h += "</div>";
+
+    // Volunteer line — quiet info, tappable to Volunteers tab
+    var floatingCount = ASSIGNED_VOLS.filter(function(v){return v.stationId === null;}).length;
+    h += "<button class='vol-line' onclick='navTo(\"volunteers\")'>";
+    h += "<span class='vol-line-text'><strong>" + ASSIGNED_VOLS.length + " of " + STATS_LIVE.rostered + " volunteers</strong> on-site";
+    if(floatingCount > 0){
+      h += " &middot; " + floatingCount + " floating";
+    }
+    h += "</span>";
+    h += "<span class='vol-line-arrow'>&rsaquo;</span>";
+    h += "</button>";
+
+    // Needs attention — show all incoming volunteers
+    if(INCOMING_VOLS.length > 0){
+      h += "<div class='sec-lbl'><span>Needs attention &middot; " + INCOMING_VOLS.length + "</span></div>";
+      h += "<div style='display:flex;flex-direction:column;gap:6px;'>";
+      INCOMING_VOLS.forEach(function(iv){
+        h += "<div class='checkin-alert' onclick='openSheet(\"assign\",{volId:\"" + iv.id + "\"})'>";
+        h += "<span class='checkin-alert-tag'><span class='checkin-alert-tag-dot'></span> New check-in</span>";
+        h += "<div class='checkin-row'>";
+        h += "<div class='avatar avatar-md avatar-amber'>" + iv.initials + "</div>";
+        h += "<div style='flex:1;'>";
+        h += "<div class='checkin-name'>" + iv.name + "</div>";
+        h += "<div class='checkin-meta'>Just arrived &middot; " + iv.arrivedAt + " &middot; <strong>Assign now &rarr;</strong></div>";
+        h += "</div>";
+        h += "</div>";
+        h += "</div>";
+      });
+      h += "</div>";
+    }
+  }
+  else {
+    // ===== PLANNING-DAY HOME =====
+    var nextEvent = EVENTS_LIST.filter(function(e){return e.status==="upcoming";})[0];
+    h += "<div class='hero hero-planning'>";
+    h += "<div class='hero-mark'>&#9728;</div>";
+    h += "<div class='hero-eyebrow'>Next event</div>";
+    h += "<div class='hero-date'>" + nextEvent.dow + ", " + nextEvent.mo + " " + nextEvent.d + " &middot; " + nextEvent.time + "</div>";
+    h += "<div class='hero-title'>" + nextEvent.name + "</div>";
+    h += "<div class='hero-sub'>" + nextEvent.confirmed + " of " + nextEvent.capacity + " volunteers confirmed &middot; plan ahead.</div>";
+    h += "<button class='hero-cta' onclick='openEventDetail(\"" + nextEvent.id + "\")'>Open event &rarr;</button>";
+    h += "</div>";
+
+    h += "<div class='quick-actions'>";
+    h += "<button class='qa-btn' onclick='openSheet(\"create_event\")'>+ New event</button>";
+    h += "<button class='qa-btn' onclick='navTo(\"volunteers\")'>Volunteer roster<span class='qa-btn-meta'>" + (VOLUNTEERS_ROSTER.length + ASSIGNED_VOLS.length) + " people</span></button>";
+    h += "</div>";
+
+    h += "<div class='sec-lbl'><span>Coming up</span></div>";
+    h += "<div class='evt-list'>";
+    EVENTS_LIST.filter(function(e){return e.status==="upcoming";}).forEach(function(e){
+      h += "<div class='evt-row' onclick='openEventDetail(\"" + e.id + "\")'>";
+      h += "<div class='evt-chip'><div class='evt-chip-mo'>" + e.mo + "</div><div class='evt-chip-d'>" + e.d + "</div></div>";
+      h += "<div class='evt-rest'>";
+      h += "<div class='evt-rest-name'>" + e.name + "</div>";
+      h += "<div class='evt-rest-meta'>" + e.dow + " &middot; " + e.time + " &middot; " + e.confirmed + "/" + e.capacity + " confirmed</div>";
+      h += "</div>";
+      h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+      h += "</div>";
+    });
+    h += "</div>";
+  }
+  return h;
+}
+
+// ----- EVENTS LIST -----
+function renderEvents(){
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Events</div>";
+  h += "<div class='info-meta'>upcoming &middot; past</div>";
+  h += "</div>";
+
+  // New event button at top
+  h += "<button class='btn-primary' onclick='openSheet(\"create_event\")' style='margin-bottom:18px;'>+ New event</button>";
+
+  // Today's live event (if live)
+  if(eventIsLiveToday()){
+    h += "<div class='sec-lbl'><span>Today</span></div>";
+    h += "<div class='evt-list'>";
+    h += "<div class='evt-row' onclick='openEventDetail(\"e0\")' style='border-color:var(--brand);background:var(--brand-tint);'>";
+    h += "<div class='evt-chip' style='background:var(--brand);'><div class='evt-chip-mo' style='color:#C8EEE3;'>NOW</div><div class='evt-chip-d' style='color:#fff;'>&#9679;</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + EVENT_TODAY.name + "</div>";
+    h += "<div class='evt-rest-meta' style='color:var(--brand);'>Live &middot; " + EVENT_TODAY.startTime + " &middot; " + STATS_LIVE.services + " services so far</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+    h += "</div>";
+  }
+
+  h += "<div class='sec-lbl'><span>Upcoming</span></div>";
+  h += "<div class='evt-list'>";
+  EVENTS_LIST.filter(function(e){return e.status==="upcoming";}).forEach(function(e){
+    h += "<div class='evt-row' onclick='openEventDetail(\"" + e.id + "\")'>";
+    h += "<div class='evt-chip'><div class='evt-chip-mo'>" + e.mo + "</div><div class='evt-chip-d'>" + e.d + "</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + e.name + "</div>";
+    h += "<div class='evt-rest-meta'>" + e.dow + " &middot; " + e.time + " &middot; " + e.confirmed + "/" + e.capacity + " confirmed</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+  });
+  h += "</div>";
+
+  h += "<div class='sec-lbl'><span>Past</span></div>";
+  h += "<div class='evt-list'>";
+  EVENTS_LIST.filter(function(e){return e.status==="past";}).forEach(function(e){
+    h += "<div class='evt-row' onclick='openEventDetail(\"" + e.id + "\")'>";
+    h += "<div class='evt-chip'><div class='evt-chip-mo'>" + e.mo + "</div><div class='evt-chip-d'>" + e.d + "</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + e.name + "</div>";
+    h += "<div class='evt-rest-meta'>" + e.dow + " &middot; " + e.served + " served &middot; " + e.vols + " vols</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+  });
+  h += "</div>";
+  return h;
+}
+
+// ----- EVENT DETAIL -----
+function renderEventDetail(){
+  var h = "";
+  // Find event — could be e0 (today's live) or from EVENTS_LIST
+  var ev;
+  if(detailEventId === "e0"){
+    ev = {id:"e0", name:EVENT_TODAY.name, loc:EVENT_TODAY.loc, time:EVENT_TODAY.startTime, status:"live"};
+  } else {
+    ev = EVENTS_LIST.filter(function(e){return e.id === detailEventId;})[0];
+    if(!ev){ ev = EVENTS_LIST[0]; }
+  }
+
+  var backTab = detailFrom || "events";
+  var backLabel = backTab === "reports" ? "Reports" : (backTab === "home" ? "Home" : "Events");
+  h += "<button class='detail-back' onclick='navTo(\"" + backTab + "\")'>&lsaquo; " + backLabel + "</button>";
+
+  // Header — pill + title + sub
+  if(ev.status === "live"){
+    h += "<span class='status-pill pill-live'><span class='live-pulse-dot' style='background:#fff;'></span> Live now</span>";
+  } else if(ev.status === "upcoming"){
+    h += "<span class='status-pill pill-upcoming'>Upcoming &middot; " + ev.dow + " " + ev.mo + " " + ev.d + "</span>";
+  } else {
+    h += "<span class='status-pill pill-completed'>Completed &middot; " + ev.mo + " " + ev.d + "</span>";
+  }
+  h += "<div class='detail-title'>" + ev.name + "</div>";
+
+  if(ev.status === "live"){
+    h += "<div class='detail-sub'>" + EVENT_TODAY.startTime + " &ndash; " + EVENT_TODAY.endTime + " &middot; " + EVENT_TODAY.loc + "</div>";
+
+    // Live stats
+    h += "<div class='detail-stats'>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + STATS_LIVE.services + "</div><div class='detail-stats-lbl'>Services</div></div>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + STATS_LIVE.waiting + "</div><div class='detail-stats-lbl'>Waiting</div></div>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + STATS_LIVE.clients + "</div><div class='detail-stats-lbl'>Clients</div></div>";
+    h += "</div>";
+
+    // Stations with status
+    h += "<div class='sec-lbl'><span>Stations</span></div>";
+    h += "<div class='evt-list'>";
+    STATIONS_LIVE.forEach(function(s){
+      var stateCls = s.status === "busy" ? " warn" : "";
+      h += "<div class='station-row" + stateCls + "' style='cursor:pointer;' onclick='openStationDetail(\"" + s.id + "\")'>";
+      h += "<div class='station-row-body'>";
+      h += "<div class='station-row-name'>" + s.name + "</div>";
+      h += "<div class='station-row-meta'>" + s.vols + " volunteer" + (s.vols===1?"":"s") + " &middot; " + s.queue + " in queue</div>";
+      h += "</div>";
+      var pillCls;
+      if(s.status === "busy") pillCls = "pill-warn";
+      else if(s.status === "slow") pillCls = "pill-slow";
+      else pillCls = "pill-on-pace";
+      h += "<span class='pill " + pillCls + "'>" + statusLabel(s.status) + "</span>";
+      h += "<span class='vol-row-arrow' style='margin-left:6px;'>&rsaquo;</span>";
+      h += "</div>";
+    });
+    h += "</div>";
+
+    if(backedUpCount() > 0){
+      h += "<div style='margin-top:14px;'><button class='btn-primary' onclick='navTo(\"volunteers\")'>Fix staffing</button></div>";
+    }
+
+    // End event — quietly tucked at bottom. Coordinator-controlled, deliberate.
+    h += "<div class='end-event-wrap'>";
+    h += "<button class='btn-end-event' onclick='openSheet(\"close_event\")'>End event</button>";
+    h += "<div class='end-event-hint'>Closes Friday Outreach &middot; numbers save to reports</div>";
+    h += "</div>";
+  }
+  else if(ev.status === "upcoming"){
+    h += "<div class='detail-sub'>" + ev.dow + " " + ev.mo + " " + ev.d + " &middot; " + ev.time + " &middot; " + ev.loc + "</div>";
+
+    h += "<div class='detail-stats'>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + ev.confirmed + "/" + ev.capacity + "</div><div class='detail-stats-lbl'>Confirmed</div></div>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>4</div><div class='detail-stats-lbl'>Stations</div></div>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + (ev.capacity - ev.confirmed) + "</div><div class='detail-stats-lbl'>Open slots</div></div>";
+    h += "</div>";
+
+    // Stations with capacity dots
+    h += "<div class='sec-lbl'><span>Stations</span></div>";
+    h += "<div class='evt-list'>";
+    var stationPlan = [
+      {name:"Showers",  filled:2, capacity:2, vols:"Maya, Jordan"},
+      {name:"Clothes",  filled:1, capacity:2, vols:"Sam Park"},
+      {name:"Haircuts", filled:2, capacity:2, vols:"Lin, Carlos"},
+      {name:"Meal",     filled:0, capacity:1, vols:"Open · needs 1 volunteer"}
+    ];
+    stationPlan.forEach(function(s){
+      var warnCls = (s.filled < s.capacity && s.capacity - s.filled > 0) ? " warn" : "";
+      h += "<div class='station-row" + warnCls + "'>";
+      h += "<div class='station-row-body'>";
+      h += "<div class='station-row-name'>" + s.name + "</div>";
+      h += "<div class='station-row-meta'>" + s.filled + " of " + s.capacity + " filled &middot; " + s.vols + "</div>";
+      h += "</div>";
+      h += "<div class='cap-dots'>";
+      for(var i = 0; i < s.capacity; i++){
+        var dotCls = i < s.filled ? "cap-filled" : (warnCls ? "cap-empty-warn" : "cap-empty");
+        h += "<span class='cap-dot " + dotCls + "'></span>";
+      }
+      h += "</div>";
+      h += "</div>";
+    });
+    h += "</div>";
+
+    // Confirmed volunteers for THIS event — collapsible to save scroll
+    var eventConfirmed = [
+      {initials:"AK", name:"Ann Kim",       station:"Showers"},
+      {initials:"BW", name:"Beth Wallace",  station:"Showers"},
+      {initials:"MG", name:"Mike Garcia",   station:"Clothes"},
+      {initials:"JT", name:"Jordan Tate",   station:"Haircuts"},
+      {initials:"LC", name:"Lin Carlos",    station:"Haircuts"}
+    ];
+    h += "<button class='collapse-hdr' onclick='toggleConfirmedVols()'>";
+    h += "<div class='collapse-hdr-title'>Confirmed volunteers</div>";
+    h += "<div class='collapse-hdr-meta'>" + eventConfirmed.length + "</div>";
+    h += "<div class='collapse-chevron" + (confirmedVolsExpanded?" open":"") + "'>&rsaquo;</div>";
+    h += "</button>";
+    if(confirmedVolsExpanded){
+      h += "<div class='collapse-content'>";
+      h += "<div style='display:flex;flex-direction:column;gap:5px;'>";
+      eventConfirmed.forEach(function(v){
+        h += "<div class='vol-row'>";
+        h += "<div class='avatar avatar-sm avatar-green'>" + v.initials + "</div>";
+        h += "<div class='vol-row-body'>";
+        h += "<div class='vol-name'>" + v.name + "</div>";
+        h += "<div class='vol-meta'>" + v.station + "</div>";
+        h += "</div>";
+        h += "<span class='pill pill-confirmed'>Confirmed</span>";
+        h += "</div>";
+      });
+      h += "</div>";
+      h += "</div>";
+    }
+
+    h += "<div class='button-row'>";
+    h += "<button class='btn-secondary' onclick='showToast(\"Edit event coming soon\")'>Edit event</button>";
+    h += "<button class='btn-primary' onclick='openSheet(\"send_reminder\")'>Send reminder</button>";
+    h += "</div>";
+  }
+  else {
+    // Past event
+    h += "<div class='detail-sub'>" + ev.dow + " " + ev.mo + " " + ev.d + " &middot; " + ev.time + " &middot; " + ev.loc + "</div>";
+
+    h += "<div class='hero-impact'>";
+    h += "<div class='hero-impact-num'>" + ev.served + "</div>";
+    h += "<div class='hero-impact-lbl'>People served</div>";
+    h += "<div class='hero-impact-sub'>across 4 stations &middot; " + ev.vols + " volunteers &middot; " + ev.dur + "</div>";
+    h += "</div>";
+
+    h += "<div class='sec-lbl'><span>By station</span></div>";
+    h += "<div class='evt-list'>";
+    var pastBreakdown = [
+      {name:"Showers",  vols:3, dur:"2 hr 58 min", served:38},
+      {name:"Clothes",  vols:2, dur:"3 hr 04 min", served:28},
+      {name:"Haircuts", vols:2, dur:"2 hr 41 min", served:22},
+      {name:"Meal",     vols:4, dur:"1 hr 50 min", served:6}
+    ];
+    pastBreakdown.forEach(function(s){
+      h += "<div class='station-row'>";
+      h += "<div class='station-row-body'>";
+      h += "<div class='station-row-name'>" + s.name + "</div>";
+      h += "<div class='station-row-meta'>" + s.vols + " volunteers &middot; " + s.dur + "</div>";
+      h += "</div>";
+      h += "<div class='result-num'>" + s.served + "</div>";
+      h += "</div>";
+    });
+    h += "</div>";
+
+    h += "<div class='button-row'>";
+    h += "<button class='btn-secondary' onclick='showToast(\"Export coming soon\")'>Export report</button>";
+    if(detailFrom === "reports"){
+      h += "<button class='btn-primary' onclick='openSheet(\"send_report\")'>Send report</button>";
+    } else {
+      h += "<button class='btn-primary' onclick='showToast(\"Duplicated &mdash; redirecting to new event\")'>Duplicate event</button>";
+    }
+    h += "</div>";
+  }
+  return h;
+}
+
+// ----- STATION DETAIL — investigation + Join/Step away surface -----
+function renderStationDetail(){
+  var h = "";
+  var st = stationById(detailStationId);
+  if(!st){ navTo("home"); return ""; }
+
+  var iAmHere = (coordWorkingStation === st.id);
+  // Hero treatment is based purely on the station's status — leading no longer
+  // changes the visual mode. Coordinator's role is shown by her row in the volunteer list.
+  var heroCls;
+  if(st.status === "busy") heroCls = "attn";
+  else if(st.status === "slow") heroCls = "slow";
+  else heroCls = "calm";
+
+  // Back button — context-aware
+  var backTab = detailFrom || "home";
+  var backLabel = backTab === "events" ? "Events" : (backTab === "volunteers" ? "Volunteers" : "Home");
+  h += "<button class='detail-back' onclick='navTo(\"" + backTab + "\")'>&lsaquo; " + backLabel + "</button>";
+
+  // Hero — three flavors based on station status: calm/steady, slow, busy
+  h += "<div class='station-hero " + heroCls + "'>";
+  h += "<div class='station-hero-eyebrow'><span class='station-hero-pip'></span> " + statusLabel(st.status) + "</div>";
+  h += "<div class='station-hero-title'>" + st.name + "</div>";
+  h += "<div class='station-hero-meta'>" + EVENT_TODAY.name + " &middot; " + EVENT_TODAY.loc + "</div>";
+  h += "<div class='station-hero-stats'>";
+  h += "<div class='station-hero-stat'><div class='station-hero-stat-n'>" + st.queue + "</div><div class='station-hero-stat-lbl'>Waiting</div></div>";
+  h += "<div class='station-hero-stat'><div class='station-hero-stat-n'>" + st.vols + "</div><div class='station-hero-stat-lbl'>" + (st.vols===1?"Volunteer":"Volunteers") + "</div></div>";
+  // Demo: services-at-this-station number — placeholder; real impl would track per-station
+  var stServed = Math.max(1, Math.floor(STATS_LIVE.services / STATIONS_LIVE.length));
+  h += "<div class='station-hero-stat'><div class='station-hero-stat-n'>" + stServed + "</div><div class='station-hero-stat-lbl'>Services</div></div>";
+  h += "</div>";
+  h += "</div>";
+
+  // Primary actions — Join or Step away, plus context action
+  h += "<div class='station-actions split'>";
+  if(iAmHere){
+    h += "<button class='btn-step-away' onclick='stepAwayFromStation()'>Step away from " + st.name + "</button>";
+    h += "<button class='btn-coordinator' onclick='openEventDetail(\"e0\",\"home\")'>Back to coordinating</button>";
+  } else {
+    h += "<button class='btn-join' onclick='joinStationFromDetail(\"" + st.id + "\")'>&#9733; Join this station</button>";
+    h += "<button class='btn-reassign' onclick='navTo(\"volunteers\")'>Reassign</button>";
+  }
+  h += "</div>";
+
+  // Queue tool placeholder — only when leading. The real queue tool for this
+  // station would render here. Each station has its own workflow (showers vs
+  // clothes vs haircuts vs meal) so building the actual UIs is its own scope.
+  if(iAmHere){
+    h += "<div class='queue-placeholder'>";
+    h += "<div class='queue-placeholder-tag'>Queue here</div>";
+    h += "<div class='queue-placeholder-title'>" + st.name + " queue</div>";
+    h += "<div class='queue-placeholder-msg'>The volunteer&rsquo;s queue tool for " + st.name + " would render here &mdash; check-ins, next-up, and station-specific workflow.</div>";
+    h += "<div class='queue-placeholder-meta'>" + st.queue + " waiting</div>";
+    h += "</div>";
+  }
+
+  // Activity placeholder — flow data not yet captured
+  h += "<div class='sec-lbl'><span>Recent activity</span></div>";
+  h += "<div class='activity-placeholder'>";
+  h += "Throughput trends, wait-time, and upstream/downstream signals will land here.<br>";
+  h += "We don&rsquo;t capture this data yet.";
+  h += "</div>";
+
+  return h;
+}
+
+function joinStationFromDetail(stationId){
+  pendingWorkStation = stationId;
+  confirmWorkStation();
+}
+
+// ----- VOLUNTEERS -----
+function renderVolunteers(){
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Volunteers</div>";
+  var totalCount = ASSIGNED_VOLS.length + VOLUNTEERS_ROSTER.length;
+  h += "<div class='info-meta'>" + totalCount + " total<br>" + ASSIGNED_VOLS.length + " on-site now</div>";
+  h += "</div>";
+
+  // Search field — at the top so it's the first thing the eye lands on
+  var qEsc = (volSearchQuery || "").replace(/"/g,"&quot;");
+  h += "<div class='search-field'>";
+  h += "<svg width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='currentColor' stroke-width='1.5'><circle cx='6' cy='6' r='4'/><path d='M9.5 9.5L13 13' stroke-linecap='round'/></svg>";
+  h += "<input class='search-input' type='text' placeholder='Search by name' value=\"" + qEsc + "\" oninput='handleVolSearch(this.value)'>";
+  if(volSearchQuery){
+    h += "<button class='search-clear' onclick='clearVolSearch()' aria-label='Clear search'>&times;</button>";
+  }
+  h += "</div>";
+
+  // Sub-tabs
+  var liveCount = ASSIGNED_VOLS.length;
+  var confirmedCount = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='confirmed';}).length;
+  var pendingCount = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='pending';}).length;
+  var allCount = liveCount + confirmedCount + pendingCount;
+  h += "<div class='subtabs'>";
+  h += "<div class='subtab " + (volSubtab==='all'?'active':'') + "' onclick='setVolSubtab(\"all\")'>All <span class='subtab-count'>&middot; " + allCount + "</span></div>";
+  if(eventIsLiveToday()){
+    h += "<div class='subtab " + (volSubtab==='live'?'active':'') + "' onclick='setVolSubtab(\"live\")'>On-site <span class='subtab-count'>&middot; " + liveCount + "</span></div>";
+  }
+  h += "<div class='subtab " + (volSubtab==='confirmed'?'active':'') + "' onclick='setVolSubtab(\"confirmed\")'>Confirmed <span class='subtab-count'>&middot; " + confirmedCount + "</span></div>";
+  h += "<div class='subtab " + (volSubtab==='pending'?'active':'') + "' onclick='setVolSubtab(\"pending\")'>Pending <span class='subtab-count'>&middot; " + pendingCount + "</span></div>";
+  h += "</div>";
+
+  // Filter helper — match against name (case-insensitive)
+  var q = (volSearchQuery || "").trim().toLowerCase();
+  function nameMatches(v){
+    if(!q) return true;
+    return v.name.toLowerCase().indexOf(q) >= 0;
+  }
+
+  var resultCount = 0;
+  var contentHtml = "";
+
+  // ===== On-site (Live + All sub-tabs) — grouped by station, Floating Support on top =====
+  if(volSubtab === "all" || volSubtab === "live"){
+    if(eventIsLiveToday() && ASSIGNED_VOLS.length){
+      // Floating Support first
+      var floating = ASSIGNED_VOLS.filter(function(v){return v.stationId === null && nameMatches(v);});
+      if(floating.length){
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name floating'>&#9733; Floating support</div>";
+        contentHtml += "<div class='station-group-meta'>" + floating.length + " available</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+        floating.forEach(function(v){
+          contentHtml += "<div class='vol-row tappable' onclick='openSheet(\"reassign\",{volId:\"" + v.id + "\"})'>";
+          contentHtml += "<div class='avatar avatar-sm avatar-amber'>" + v.initials + "</div>";
+          contentHtml += "<div class='vol-row-body'>";
+          contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+          contentHtml += "<div class='vol-meta'>Floating &middot; available since " + v.since + "</div>";
+          contentHtml += "</div>";
+          contentHtml += "<span class='pill pill-live'>On-site</span>";
+          contentHtml += "<span class='vol-row-arrow' aria-label='Reassign'>&rsaquo;</span>";
+          contentHtml += "</div>";
+        });
+        contentHtml += "</div>";
+        contentHtml += "</div>";
+        resultCount += floating.length;
+      }
+      // Then by station
+      STATIONS_LIVE.forEach(function(st){
+        var rows = ASSIGNED_VOLS.filter(function(v){return v.stationId === st.id && nameMatches(v);});
+        if(rows.length === 0) return;
+        var warnCls = st.status === "busy" ? " warn" : "";
+        var glyph = st.status === "busy" ? "&#9888;&#65039; " : "";
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name" + warnCls + "'>" + glyph + st.name + "</div>";
+        contentHtml += "<div class='station-group-meta'>" + rows.length + " vol" + (rows.length===1?"":"s") + " &middot; " + st.queue + " in queue &middot; " + statusLabel(st.status).toLowerCase() + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+        rows.forEach(function(v){
+          contentHtml += "<div class='vol-row tappable' onclick='openSheet(\"reassign\",{volId:\"" + v.id + "\"})'>";
+          contentHtml += "<div class='avatar avatar-sm avatar-amber'>" + v.initials + "</div>";
+          contentHtml += "<div class='vol-row-body'>";
+          contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+          contentHtml += "<div class='vol-meta'>At " + st.name + " &middot; since " + v.since + "</div>";
+          contentHtml += "</div>";
+          contentHtml += "<span class='pill pill-live'>On-site</span>";
+          contentHtml += "<span class='vol-row-arrow' aria-label='Reassign'>&rsaquo;</span>";
+          contentHtml += "</div>";
+        });
+        contentHtml += "</div>";
+        contentHtml += "</div>";
+        resultCount += rows.length;
+      });
+    }
+  }
+
+  // ===== Confirmed (All + Confirmed sub-tabs) — flat list, no station grouping (RSVP for future) =====
+  if(volSubtab === "all" || volSubtab === "confirmed"){
+    var confirmed = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='confirmed' && nameMatches(v);});
+    if(confirmed.length){
+      if(volSubtab === "all"){
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name'>Confirmed for upcoming events</div>";
+        contentHtml += "<div class='station-group-meta'>" + confirmed.length + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+      } else {
+        contentHtml += "<div style='display:flex;flex-direction:column;gap:5px;margin-bottom:14px;'>";
+      }
+      confirmed.forEach(function(v){
+        contentHtml += "<div class='vol-row'>";
+        contentHtml += "<div class='avatar avatar-sm avatar-green'>" + v.initials + "</div>";
+        contentHtml += "<div class='vol-row-body'>";
+        contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+        contentHtml += "<div class='vol-meta'>" + v.meta + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<span class='pill pill-confirmed'>Confirmed</span>";
+        contentHtml += "</div>";
+      });
+      contentHtml += volSubtab === "all" ? "</div></div>" : "</div>";
+      resultCount += confirmed.length;
+    }
+  }
+
+  // ===== Pending (All + Pending sub-tabs) — flat list =====
+  if(volSubtab === "all" || volSubtab === "pending"){
+    var pending = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='pending' && nameMatches(v);});
+    if(pending.length){
+      if(volSubtab === "all"){
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name'>Invited &middot; not replied</div>";
+        contentHtml += "<div class='station-group-meta'>" + pending.length + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+      } else {
+        contentHtml += "<div style='display:flex;flex-direction:column;gap:5px;margin-bottom:14px;'>";
+      }
+      pending.forEach(function(v){
+        contentHtml += "<div class='vol-row'>";
+        contentHtml += "<div class='avatar avatar-sm avatar-green'>" + v.initials + "</div>";
+        contentHtml += "<div class='vol-row-body'>";
+        contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+        contentHtml += "<div class='vol-meta'>" + v.meta + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<span class='pill pill-pending'>Pending</span>";
+        contentHtml += "</div>";
+      });
+      contentHtml += volSubtab === "all" ? "</div></div>" : "</div>";
+      resultCount += pending.length;
+    }
+  }
+
+  // Empty state when search returns nothing
+  if(resultCount === 0){
+    if(q){
+      h += "<div class='search-empty'>No volunteers match &ldquo;" + qEsc + "&rdquo;</div>";
+    } else {
+      h += "<div class='search-empty'>No volunteers in this view yet.</div>";
+    }
+  } else {
+    h += contentHtml;
+  }
+
+  h += "<button class='btn-primary' onclick='showToast(\"Invite flow coming soon\")'>+ Invite volunteers</button>";
+  return h;
+}
+function setVolSubtab(t){ volSubtab = t; render(); }
+function handleVolSearch(v){ volSearchQuery = v; render(); }
+function clearVolSearch(){ volSearchQuery = ""; render(); }
+function toggleConfirmedVols(){ confirmedVolsExpanded = !confirmedVolsExpanded; render(); }
+
+// ----- REPORTS -----
+function renderReports(){
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Reports</div>";
+  h += "<div class='info-meta'>this year<br>across all events</div>";
+  h += "</div>";
+
+  // Hero stats
+  h += "<div class='hero-impact'>";
+  h += "<div class='hero-impact-num'>" + REPORTS.totalServed + "</div>";
+  h += "<div class='hero-impact-lbl'>People served</div>";
+  h += "<div class='hero-impact-sub'>across " + REPORTS.totalEvents + " events &middot; " + REPORTS.totalVolHours + " volunteer hours</div>";
+  h += "</div>";
+
+  h += "<div class='sec-lbl'><span>By station</span></div>";
+  h += "<div class='evt-list'>";
+  REPORTS.byStation.forEach(function(s){
+    h += "<div class='station-row'>";
+    h += "<div class='station-row-body'>";
+    h += "<div class='station-row-name'>" + s.name + "</div>";
+    h += "<div class='station-row-meta'>" + Math.round(s.served / REPORTS.totalEvents) + " avg per event</div>";
+    h += "</div>";
+    h += "<div class='result-num'>" + s.served + "</div>";
+    h += "</div>";
+  });
+  h += "</div>";
+
+  h += "<div class='sec-lbl'><span>Recent events</span></div>";
+  h += "<div class='evt-list'>";
+  EVENTS_LIST.filter(function(e){return e.status==='past';}).forEach(function(e){
+    h += "<div class='evt-row' onclick='openEventDetail(\"" + e.id + "\",\"reports\")'>";
+    h += "<div class='evt-chip'><div class='evt-chip-mo'>" + e.mo + "</div><div class='evt-chip-d'>" + e.d + "</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + e.name + "</div>";
+    h += "<div class='evt-rest-meta'>" + e.served + " served &middot; " + e.vols + " volunteers</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+  });
+  h += "</div>";
+
+  return h;
+}
+
+// ----- SHEET RENDER -----
+function renderSheet(){
+  var bk = document.getElementById("sheet-backdrop");
+  var sh = document.getElementById("sheet");
+  if(!sheetOpen){ bk.classList.remove("open"); sh.classList.remove("open"); return; }
+  bk.classList.add("open");
+  sh.classList.add("open");
+
+  var h = "";
+  h += "<div class='sheet-handle'></div>";
+  h += "<button class='sheet-close' onclick='closeSheet()'>&times;</button>";
+  h += "<div class='sheet-body'>";
+
+  if(sheetType === "assign"){
+    var inVol = INCOMING_VOLS.filter(function(v){return v.id === pendingAssignVolId;})[0];
+    if(!inVol){ closeSheet(); return; }
+    h += "<div class='sheet-title'>Assign volunteer</div>";
+    h += "<div class='sheet-sub'>Select a station</div>";
+    h += "<div class='checkin-alert' style='cursor:default;'>";
+    h += "<span class='checkin-alert-tag'><span class='checkin-alert-tag-dot'></span> New check-in</span>";
+    h += "<div class='checkin-row'>";
+    h += "<div class='avatar avatar-md avatar-amber'>" + inVol.initials + "</div>";
+    h += "<div style='flex:1;'>";
+    h += "<div class='checkin-name'>" + inVol.name + "</div>";
+    h += "<div class='checkin-meta'>Just arrived &middot; " + inVol.arrivedAt + "</div>";
+    h += "</div>";
+    h += "</div>";
+    h += "</div>";
+    h += "<div class='station-picker-lbl' style='margin-top:14px;'>Send to station</div>";
+    h += "<div class='station-grid'>";
+    STATIONS_LIVE.forEach(function(s){
+      var sel = pendingStation === s.id;
+      h += "<button class='station-opt" + (sel?" selected":"") + "' onclick='pickStation(\"" + s.id + "\")'>";
+      h += s.name;
+      h += "<div class='station-opt-meta'>" + s.vols + " vol &middot; " + s.queue + " in queue</div>";
+      h += "</button>";
+    });
+    // Floating support — spans both columns visually
+    var floatSel = pendingStation === "_floating";
+    var floatCount = ASSIGNED_VOLS.filter(function(v){return v.stationId === null;}).length;
+    h += "<button class='station-opt" + (floatSel?" selected":"") + "' style='grid-column:span 2;' onclick='pickStation(\"_floating\")'>";
+    h += "&#9733; Floating support";
+    h += "<div class='station-opt-meta'>" + floatCount + " available &middot; ready to help anywhere</div>";
+    h += "</button>";
+    h += "</div>";
+    h += "<button class='btn-amber' " + (pendingStation?"":"disabled") + " onclick='confirmAssign()'>";
+    h += pendingStation ? "Assign to " + (pendingStation === "_floating" ? "floating support" : stationName(pendingStation)) : "Select a station";
+    h += "</button>";
+  }
+
+  else if(sheetType === "reassign"){
+    var v = ASSIGNED_VOLS.filter(function(x){return x.id === reassignVolId;})[0];
+    if(!v){ closeSheet(); return; }
+    var fromSt = stationById(v.stationId);
+    h += "<div class='sheet-title'>Reassign volunteer</div>";
+    var fromLabel = fromSt ? fromSt.name : "Floating support";
+    h += "<div class='sheet-sub'>Currently " + (fromSt ? "at " + fromSt.name : "in floating support") + ". Pick a station.</div>";
+    h += "<div class='focus-card'>";
+    h += "<div class='avatar avatar-lg avatar-green'>" + v.initials + "</div>";
+    h += "<div style='flex:1;'>";
+    h += "<div class='vol-name' style='font-size:15px;'>" + v.name + "</div>";
+    h += "<div class='vol-meta'>" + (fromSt ? "At " + fromSt.name : "Floating support") + " &middot; since " + v.since + "</div>";
+    h += "</div>";
+    h += "</div>";
+    h += "<div class='station-picker-lbl'>Move to</div>";
+    h += "<div class='station-grid'>";
+    STATIONS_LIVE.forEach(function(s){
+      var sel = reassignTargetId === s.id;
+      var current = s.id === v.stationId;
+      var clickHandler = current ? "" : "pickReassignTarget('" + s.id + "')";
+      h += "<button class='station-opt" + (sel?" selected":"") + "' " + (current?"disabled":"") + " onclick=\"" + clickHandler + "\">";
+      h += s.name + (current?" (current)":"");
+      h += "<div class='station-opt-meta'>" + s.vols + " vol &middot; " + s.queue + " in queue</div>";
+      h += "</button>";
+    });
+    // Floating support option
+    var floatSel = reassignTargetId === "_floating";
+    var floatCurrent = v.stationId === null;
+    var floatClick = floatCurrent ? "" : "pickReassignTarget('_floating')";
+    var floatCount = ASSIGNED_VOLS.filter(function(x){return x.stationId === null;}).length;
+    h += "<button class='station-opt" + (floatSel?" selected":"") + "' style='grid-column:span 2;' " + (floatCurrent?"disabled":"") + " onclick=\"" + floatClick + "\">";
+    h += "&#9733; Floating support" + (floatCurrent?" (current)":"");
+    h += "<div class='station-opt-meta'>" + floatCount + " available &middot; ready to help anywhere</div>";
+    h += "</button>";
+    h += "</div>";
+    h += "<button class='btn-primary' " + (reassignTargetId?"":"disabled") + " onclick='confirmReassign()'>";
+    h += reassignTargetId
+      ? "Move " + firstName(v.name) + " to " + (reassignTargetId === "_floating" ? "floating support" : stationName(reassignTargetId))
+      : "Select a station";
+    h += "</button>";
+  }
+
+  else if(sheetType === "send_reminder"){
+    h += "<div class='sheet-title'>Send reminder</div>";
+    h += "<div class='sheet-sub'>Notify volunteers about an upcoming event.</div>";
+    h += "<div class='field'><div class='field-lbl'>Recipients</div><div class='field-val'>All confirmed &middot; 12 volunteers</div></div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;'>Message preview</div>";
+    h += "<div style='background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:12px;font-size:13px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px;'>Reminder: you&rsquo;re scheduled for Friday Outreach this Friday at 9 AM at Main Pavilion. Tap &ldquo;I&rsquo;m here&rdquo; when you arrive.</div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;'>When to send</div>";
+    h += "<div style='display:flex;flex-direction:column;gap:6px;margin-bottom:14px;'>";
+    h += "<button class='station-opt selected' style='text-align:left;'>24 hours before event<div class='station-opt-meta'>Recommended</div></button>";
+    h += "<button class='station-opt' style='text-align:left;' onclick='showToast(\"Will send now\")'>Send now</button>";
+    h += "</div>";
+    h += "<button class='btn-primary' onclick='confirmSendReminder()'>Schedule reminder</button>";
+  }
+
+  else if(sheetType === "work_station"){
+    h += "<div class='sheet-title'>Work a station</div>";
+    h += "<div class='sheet-sub'>You&rsquo;ll be counted as a volunteer at this station for the rest of the event. Bottom tabs and the live banner stay available so you can manage things while you work.</div>";
+    h += "<div class='station-picker-lbl' style='margin-top:4px;'>Pick a station</div>";
+    h += "<div class='station-grid'>";
+    STATIONS_LIVE.forEach(function(s){
+      var sel = pendingWorkStation === s.id;
+      var note = s.status === "busy" ? " &middot; busy" : (s.status === "slow" ? " &middot; slow" : "");
+      var glyph = s.status === "busy" ? " &#9888;&#65039;" : "";
+      h += "<button class='station-opt" + (sel?" selected":"") + "' onclick='pickWorkStation(\"" + s.id + "\")'>";
+      h += s.name + glyph;
+      h += "<div class='station-opt-meta'>" + s.vols + " vol &middot; " + s.queue + " in queue" + note + "</div>";
+      h += "</button>";
+    });
+    h += "</div>";
+    h += "<button class='btn-primary' " + (pendingWorkStation?"":"disabled") + " onclick='confirmWorkStation()'>";
+    h += pendingWorkStation ? "Start leading " + stationName(pendingWorkStation) : "Pick a station";
+    h += "</button>";
+  }
+
+  else if(sheetType === "close_event"){
+    h += "<div class='sheet-title'>End " + EVENT_TODAY.name + "?</div>";
+    h += "<div class='sheet-sub'>This wraps up the day. Numbers will save to reports and the event will move to your past events list.</div>";
+    h += "<div class='field' style='background:var(--brand-tint);border-color:var(--brand-b);margin-bottom:14px;'>";
+    h += "<div class='field-lbl' style='color:var(--brand);'>Today&rsquo;s impact</div>";
+    h += "<div style='display:flex;gap:14px;margin-top:6px;'>";
+    h += "<div><div style='font-family:\"DM Serif Display\",serif;font-size:22px;color:var(--brand);line-height:1;'>" + STATS_LIVE.services + "</div><div style='font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;'>Services</div></div>";
+    h += "<div><div style='font-family:\"DM Serif Display\",serif;font-size:22px;color:var(--brand);line-height:1;'>" + STATS_LIVE.clients + "</div><div style='font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;'>Clients</div></div>";
+    h += "<div><div style='font-family:\"DM Serif Display\",serif;font-size:22px;color:var(--brand);line-height:1;'>" + STATS_LIVE.volunteers + "</div><div style='font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;'>Volunteers</div></div>";
+    h += "</div>";
+    h += "</div>";
+    h += "<div style='display:grid;grid-template-columns:1fr 2fr;gap:6px;'>";
+    h += "<button class='btn-secondary' onclick='closeSheet()'>Not yet</button>";
+    h += "<button class='btn-primary' onclick='confirmCloseEvent()'>End event</button>";
+    h += "</div>";
+  }
+
+  else if(sheetType === "send_report"){
+    var ev = EVENTS_LIST.filter(function(e){return e.id === detailEventId;})[0];
+    var evName = ev ? ev.name : "this event";
+    var evMeta = ev ? (ev.dow + " " + ev.mo + " " + ev.d + " &middot; " + ev.served + " people served") : "";
+    h += "<div class='sheet-title'>Send report</div>";
+    h += "<div class='sheet-sub'>Email this report to recipients. Includes the impact summary and station breakdown.</div>";
+    h += "<div class='field'><div class='field-lbl'>Report</div><div class='field-val'>" + evName + "</div><div style='font-size:11px;color:var(--text-tertiary);margin-top:2px;'>" + evMeta + "</div></div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;margin-top:4px;'>Send to</div>";
+    h += "<div style='display:flex;flex-direction:column;gap:6px;margin-bottom:12px;'>";
+    h += "<button class='station-opt selected' style='text-align:left;'>Board members<div class='station-opt-meta'>5 people &middot; recommended</div></button>";
+    h += "<button class='station-opt' style='text-align:left;'>Lead pastor<div class='station-opt-meta'>Reverend Hill</div></button>";
+    h += "<button class='station-opt' style='text-align:left;'>Custom recipients<div class='station-opt-meta'>Pick from your contacts</div></button>";
+    h += "</div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;'>Add a note (optional)</div>";
+    h += "<div class='field' style='padding:10px 12px;'><textarea class='field-input' rows='2' placeholder='e.g. Great event this week — thanks to everyone who served.' style='width:100%;border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:var(--text-primary);resize:none;'></textarea></div>";
+    h += "<div class='login-spacer' style='flex:1;min-height:8px;'></div>";
+    h += "<button class='btn-primary' onclick='confirmSendReport()'>Send report</button>";
+  }
+
+  else if(sheetType === "create_event"){
+    h += "<div class='sheet-title'>New event</div>";
+    h += "<div class='sheet-sub'>Set up a recurring outreach event.</div>";
+    h += "<div class='field'><div class='field-lbl'>Event name</div><input class='field-input' type='text' placeholder='e.g. Friday Outreach' value=''></div>";
+    h += "<div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;'>";
+    h += "<div class='field'><div class='field-lbl'>Date</div><input class='field-input' type='text' placeholder='May 15' value=''></div>";
+    h += "<div class='field'><div class='field-lbl'>Start</div><input class='field-input' type='text' placeholder='9:00 AM' value=''></div>";
+    h += "</div>";
+    h += "<div class='field'><div class='field-lbl'>Location</div><input class='field-input' type='text' placeholder='Main Pavilion' value=''></div>";
+    h += "<div class='station-picker-lbl' style='margin-top:6px;'>Stations</div>";
+    h += "<div style='display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;'>";
+    h += "<span class='chip chip-on'>Showers</span>";
+    h += "<span class='chip chip-on'>Clothes</span>";
+    h += "<span class='chip chip-on'>Haircuts</span>";
+    h += "<span class='chip chip-on'>Meal</span>";
+    h += "<span class='chip chip-off'>+ Add</span>";
+    h += "</div>";
+    h += "<button class='btn-primary' onclick='confirmCreateEvent()'>Create event</button>";
+  }
+
+  h += "</div>";
+  sh.innerHTML = h;
+}
+
+function confirmSendReport(){
+  showToast("Report sent &middot; recipients notified");
+  closeSheet();
+}
+function confirmSendReminder(){
+  showToast("Reminder scheduled &middot; sends 24 hr before event");
+  closeSheet();
+}
+function confirmCreateEvent(){
+  showToast("Event created &middot; added to upcoming");
+  closeSheet();
+}
+
+// ----- LOGIN -----
+function renderLogin(){
+  var loginOv = document.getElementById("login-overlay");
+  var canSubmit = isValidCredential(credentialDraft);
+  var h = "";
+  h += "<div class='login'>";
+  h += "<div class='login-eyebrow'>HMIS &middot; Pinellas Hope</div>";
+  h += "<div class='login-h'>Coordinator <em>sign in</em></div>";
+  h += "<div class='login-sub'>Use the email or phone number associated with your account.</div>";
+  h += "<form class='login-form' onsubmit='submitLogin(event)'>";
+  h += "<label class='login-label' for='cred-inp'>Email or phone</label>";
+  h += "<input id='cred-inp' class='login-input' type='text' inputmode='email' autocomplete='username' autocapitalize='off' spellcheck='false' placeholder='you@example.com or (555) 555-1234' value='" + (credentialDraft||"") + "' oninput='handleCredentialInput(this.value)'>";
+  h += "<div class='login-hint'>We&rsquo;ll send a code to verify it&rsquo;s you.</div>";
+  h += "<div class='login-spacer'></div>";
+  h += "<button id='login-cta' class='login-cta' type='button' onclick='submitLogin()' " + (canSubmit?"":"disabled") + ">Continue</button>";
+  h += "</form>";
+  h += "</div>";
+  loginOv.innerHTML = h;
+  setTimeout(function(){
+    var inp = document.getElementById("cred-inp");
+    if(inp && !credentialDraft) inp.focus();
+  }, 50);
+}
+
+render();
+</script>
+</body>
+</html>
