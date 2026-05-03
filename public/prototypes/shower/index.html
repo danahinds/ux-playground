@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMIS · Shower Queue</title>
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Shared design tokens (mirrored from Serve513 Welcome desk) */
+  --bg-canvas:#F5F0E5;
+  --bg-card:#FFFFFF;
+  --bg-card-alt:#F1EFE8;
+  --brand:#085041;
+  --brand-deep:#063A2F;
+  --brand-tint:#E5EFE9;
+  --text-primary:#1A1A1A;
+  --text-secondary:#5F5E5A;
+  --text-tertiary:#8B8578;
+  --text-light:#FBF7EE;
+  --border:rgba(26,26,26,0.08);
+  --border-strong:rgba(26,26,26,0.18);
+  --radius-sm:4px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg:0 12px 32px rgba(0,0,0,0.18);
+
+  /* Legacy app-internal tokens (in-phone UI) */
+  --green:#085041;--green-l:#0F6E56;--green-xl:#E3F4EC;--green-b:#2D8653;
+  --amber:#F59E0B;--amber-l:#FEF3C7;--amber-b:#B45309;
+  --red:#B91C1C;--red-l:#FEE2E2;
+  --blue:#0284C7;--blue-l:#E0F2FE;
+  --ink:#111111;--ink-2:#595959;--ink-3:#595959;
+  --rule:#E8E8E8;--bg:#F0EFEB;--card:#fff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"DM Sans",sans-serif;background:var(--bg-canvas);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 40px;-webkit-font-smoothing:antialiased;}
+
+/* ===== Outer topbar (matches Serve513 Welcome topbar pattern) ===== */
+.topbar{width:100%;background:var(--bg-canvas);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;margin-bottom:24px;}
+.topbar-inner{max-width:460px;margin:0 auto;padding:14px 0;display:flex;align-items:center;gap:16px;}
+.brand-mark{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.brand-logo{width:32px;height:32px;background:var(--brand);color:var(--text-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",Georgia,serif;font-size:16px;}
+.brand-text{font-size:14px;font-weight:500;line-height:1.1;color:var(--text-primary);}
+.brand-text small{display:block;font-weight:400;color:var(--text-tertiary);font-size:11px;margin-top:2px;}
+.topbar-meta{font-size:12px;color:var(--text-tertiary);margin-left:auto;text-align:right;line-height:1.3;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.live-badge{display:inline-flex;align-items:center;gap:5px;background:var(--amber);border-radius:999px;padding:3px 10px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#1a1a1a;animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.live-txt{font-size:9px;font-weight:600;color:#1a1a1a;letter-spacing:.04em;}
+.sync-txt{font-size:11px;color:var(--text-tertiary);}
+
+.phone{width:100%;max-width:380px;height:720px;max-height:calc(100vh - 120px);background:var(--bg);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;position:relative;flex-shrink:0;}
+#phone{display:flex;flex-direction:column;flex:1;min-height:0;}
+.queue-section{min-height:0;}
+
+/* Nav */
+.app-nav{background:var(--green);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.nav-title{font-size:12px;font-weight:500;color:#C8EEE3;letter-spacing:.05em;text-transform:uppercase;}
+.nav-stats{display:flex;align-items:center;gap:5px;}
+.nav-stat{background:rgba(255,255,255,.12);border-radius:999px;padding:2px 8px;font-size:12px;color:#C8EEE3;}
+.nav-stat-n{font-weight:500;}
+
+/* Stalls — compact reference panel */
+.stalls-section{background:var(--green-l);padding:8px 12px 10px;flex-shrink:0;}
+.stalls-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.stalls-lbl{font-size:11px;font-weight:600;color:#C8EEE3;text-transform:uppercase;letter-spacing:.07em;}
+.add-btn{height:24px;padding:0 9px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:rgba(255,255,255,.08);color:#C8EEE3;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.add-btn:hover{background:rgba(255,255,255,.16);}
+.stalls-row{display:flex;gap:6px;flex-wrap:wrap;}
+.no-stalls-prompt{width:100%;background:rgba(255,255,255,.1);border:1.5px dashed rgba(255,255,255,.3);border-radius:8px;padding:14px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;font-family:"DM Sans",sans-serif;color:#C8EEE3;transition:background .15s,border-color .15s;}
+.no-stalls-prompt:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.5);}
+.no-stalls-prompt-ico{font-size:20px;flex-shrink:0;}
+.no-stalls-prompt-body{flex:1;min-width:0;}
+.no-stalls-prompt-title{font-size:13px;font-weight:600;color:#fff;line-height:1.2;}
+.no-stalls-prompt-sub{font-size:12px;color:#C8EEE3;margin-top:2px;line-height:1.3;}
+.no-stalls-prompt-arrow{font-size:14px;color:#C8EEE3;flex-shrink:0;}
+
+/* Stall pill */
+.stall-pill{border-radius:8px;overflow:hidden;min-width:70px;flex:1;}
+.stall-pill.empty{background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.2);padding:7px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative;min-height:72px;}
+.sp-empty-ico{font-size:13px;opacity:.5;}
+.sp-empty-lbl{font-size:11px;color:rgba(255,255,255,.5);font-style:italic;}
+.sp-remove{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.14);border:none;color:rgba(255,255,255,.7);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:all .15s;}
+.sp-remove:hover{background:rgba(255,255,255,.28);color:#fff;}
+.sp-remove-lbl{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.05em;text-transform:uppercase;pointer-events:none;}
+.stall-pill.occ{background:var(--card);border:1.5px solid var(--green-b);transition:background .5s,border-color .5s;}
+.stall-pill.occ.warn{background:var(--amber-l);border-color:var(--amber-b);}
+.stall-pill.occ.over{background:var(--red-l);border-color:var(--red);}
+.sp-occ-body{padding:6px 8px 4px;}
+.sp-name{font-size:12px;font-weight:500;color:var(--ink);line-height:1.2;}
+.sp-flags{display:flex;gap:2px;margin-top:2px;}
+.spf{font-size:12px;}
+.sp-times{display:flex;align-items:center;padding:2px 8px 4px;}
+.sp-in{font-size:11px;color:var(--ink-3);font-family:"DM Mono",monospace;}
+.sp-elapsed{font-size:11px;font-weight:500;font-family:"DM Mono",monospace;margin-left:auto;}
+.sp-elapsed.ok{color:var(--green-b);}
+.sp-elapsed.warn{color:var(--amber-b);}
+.sp-elapsed.over{color:var(--red);}
+.sp-out-btn{width:100%;border-top:1px solid rgba(0,0,0,.07);height:26px;border-left:none;border-right:none;border-bottom:none;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;background:rgba(0,0,0,.04);color:var(--ink-2);display:flex;align-items:center;justify-content:center;gap:3px;}
+.sp-out-btn:hover{background:rgba(0,0,0,.09);}
+.stall-pill.occ.warn .sp-out-btn{color:var(--amber-b);}
+.stall-pill.occ.over .sp-out-btn{color:var(--red);}
+
+/* Queue */
+.queue-section{flex:1;overflow-y:auto;}
+.q-tabs{display:flex;border-bottom:2px solid var(--rule);background:var(--card);}
+.q-tab{flex:1;height:42px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--ink-3);cursor:pointer;position:relative;gap:4px;}
+.q-tab.act{color:var(--green);}
+.q-tab.act::after{content:"";position:absolute;bottom:-2px;left:10px;right:10px;height:2px;background:var(--green);border-radius:1px;}
+.tbdg{height:15px;min-width:15px;padding:0 4px;border-radius:8px;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;}
+.tbdg-w{background:var(--green-xl);color:#1A5C38;border:1px solid var(--green-b);}
+.tbdg-m{background:var(--amber-l);color:var(--amber-b);border:1px solid var(--amber-b);}
+.tbdg-d{background:#F5F5F5;color:var(--ink-3);border:1px solid #DADADA;}
+
+/* Queue cards — action lives here */
+.q-card{margin:6px 10px;background:var(--card);border-radius:12px;border:1.5px solid var(--rule);overflow:hidden;}
+.q-card.next-up{border-color:var(--green);border-width:2px;}
+.qc-top{padding:10px 12px 7px;display:flex;align-items:flex-start;gap:8px;}
+.qc-pos{width:24px;height:24px;border-radius:7px;background:#F5F5F5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--ink-3);flex-shrink:0;}
+.qc-pos.next{background:var(--green);color:#C8EEE3;}
+.qc-name{font-family:"DM Serif Display",serif;font-size:16px;color:var(--ink);line-height:1.1;}
+.qc-meta{font-size:11px;color:var(--ink-3);font-family:"DM Mono",monospace;margin-top:2px;}
+.qc-flags{display:flex;gap:4px;flex-wrap:wrap;padding:0 12px 8px;}
+.qcf{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;}
+.qcf-h{background:#FEE2E2;color:#7F1D1D;border:1px solid #B91C1C;}
+.qcf-m{background:#EDE9FE;color:#5B21B6;border:1px solid #7C3AED;}
+.qcf-v{background:var(--blue-l);color:#0C5D8A;border:1px solid var(--blue);}
+.qcf-c{background:var(--green-xl);color:#1A5C38;border:1px solid var(--green-b);}
+
+/* Card actions */
+.qc-actions{border-top:1px solid var(--rule);display:flex;}
+.qca{flex:1;height:42px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;font-family:"DM Sans",sans-serif;gap:5px;transition:background .12s;}
+.qca+.qca{border-left:1px solid var(--rule);}
+.qca-send{color:var(--green);background:var(--green-xl);}
+.qca-send:hover{background:#C8EEE3;}
+.qca-missed{color:var(--amber-b);}
+.qca-missed:hover{background:var(--amber-l);}
+.qca-back{color:var(--green);}
+.qca-back:hover{background:var(--green-xl);}
+.chk{width:9px;height:6px;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg) translateY(-1px);}
+
+/* Done cards */
+.done-card{margin:6px 10px;background:var(--card);border-radius:11px;border:1.5px solid var(--rule);padding:10px 12px;opacity:.85;}
+.dc-name{font-family:"DM Serif Display",serif;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.dc-times{display:flex;align-items:center;gap:8px;}
+.dc-t{font-size:11px;color:var(--ink-3);font-family:"DM Mono",monospace;}
+.dc-dur{font-size:11px;font-weight:500;color:var(--green);margin-left:auto;font-family:"DM Mono",monospace;}
+.dc-clothing{display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;background:var(--green-xl);color:#1A5C38;border:1px solid var(--green-b);}
+
+/* Sheet */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;border-radius:24px;overflow:hidden;z-index:10;}
+.sheet{background:var(--card);border-radius:14px 14px 0 0;width:100%;padding:14px 14px 22px;}
+.sh-handle{width:34px;height:3px;background:#DADADA;border-radius:2px;margin:0 auto 12px;}
+.sh-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.sh-sub{font-size:13px;color:var(--ink-3);margin-bottom:12px;line-height:1.5;}
+
+/* Client preview in sheet */
+.cp-box{background:#F8F8F8;border-radius:9px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.cp-av{width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#C8EEE3;flex-shrink:0;}
+.cp-name{font-size:13px;font-weight:500;color:var(--ink);}
+.cp-meta{font-size:12px;color:var(--ink-3);margin-top:2px;font-family:"DM Mono",monospace;}
+
+/* Stall options in sheet */
+.no-stalls-box{background:var(--green-xl);border:1px dashed var(--green-b);border-radius:12px;padding:18px 16px;text-align:center;margin:6px 0 2px;}
+.no-stalls-ico{font-size:26px;margin-bottom:6px;}
+.no-stalls-title{font-size:13px;font-weight:600;color:var(--green);margin-bottom:3px;}
+.no-stalls-txt{font-size:13px;color:var(--green-l);line-height:1.45;}
+
+/* Setup stepper + reminder */
+.stepper{display:flex;align-items:center;justify-content:center;gap:20px;padding:22px 0 10px;}
+.step-btn{width:48px;height:48px;border-radius:50%;border:1.5px solid var(--rule);background:#fff;font-size:22px;color:var(--ink);cursor:pointer;font-family:"DM Sans",sans-serif;font-weight:500;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.step-btn:hover:not(:disabled){border-color:var(--green-b);color:var(--green-l);}
+.step-btn:disabled{opacity:.3;cursor:not-allowed;}
+.step-val{text-align:center;min-width:92px;}
+.step-n{font-family:"DM Serif Display",serif;font-size:54px;line-height:1;color:var(--ink);}
+.step-lbl{font-size:11px;color:var(--ink-2);letter-spacing:.04em;text-transform:uppercase;margin-top:4px;}
+.reminder-box{background:var(--amber-l);border-radius:10px;padding:11px 13px;display:flex;align-items:flex-start;gap:10px;margin:10px 0 14px;}
+.rmd-ico{font-size:15px;flex-shrink:0;line-height:1.3;}
+.rmd-txt{font-size:13px;color:var(--amber-b);line-height:1.45;}
+.rmd-txt strong{color:var(--amber-b);}
+.stall-opt{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--rule);cursor:pointer;}
+.stall-opt:last-of-type{border-bottom:none;}
+.so-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.so-ico.empty-s{background:var(--green-xl);}
+.so-ico.occ-s{background:var(--amber-l);}
+.so-lbl{flex:1;}
+.so-name-s{font-size:13px;font-weight:500;color:var(--ink);}
+.so-meta-s{font-size:12px;color:var(--ink-3);margin-top:1px;}
+.so-meta-s.warn-s{color:var(--amber-b);font-weight:500;}
+.so-radio{width:18px;height:18px;border-radius:50%;border:2px solid #DADADA;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.so-radio.sel{border-color:var(--green);background:var(--green);}
+.so-inner{width:7px;height:7px;border-radius:50%;background:#fff;}
+
+.warn-box{background:var(--amber-l);border:1.5px solid var(--amber-b);border-radius:9px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;}
+.warn-txt{font-size:13px;color:var(--amber-b);line-height:1.5;flex:1;}
+.clothing-note{background:var(--green-xl);border:1px solid var(--green-b);border-radius:8px;padding:8px 11px;margin-bottom:10px;font-size:13px;color:#1A5C38;font-weight:500;}
+
+/* Back-in-line position picker */
+.pos-presets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.pos-preset{background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 6px;cursor:pointer;font-family:"DM Sans",sans-serif;text-align:center;transition:all 0.12s;}
+.pos-preset:hover{background:#FAFAFA;}
+.pos-preset.sel{background:var(--green-xl);border-color:var(--green-b);border-width:1.5px;padding:8.5px 5.5px;}
+.pos-lbl{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;line-height:1.2;}
+.pos-preset.sel .pos-lbl{color:#1A5C38;}
+.pos-sub{font-size:12px;color:var(--ink-3);line-height:1.2;}
+.pos-preset.sel .pos-sub{color:#2D7A4C;}
+
+.pos-custom{background:#FAFAFA;border-radius:9px;padding:10px;margin-bottom:10px;}
+.pos-custom-lbl{font-size:12px;color:var(--ink-3);margin-bottom:8px;text-align:center;text-transform:uppercase;letter-spacing:0.5px;font-weight:500;}
+.pos-stepper{display:flex;align-items:center;justify-content:center;gap:14px;}
+.pos-step{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px;color:var(--ink);cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}
+.pos-step:hover:not(:disabled){background:#F5F5F5;}
+.pos-step:disabled{opacity:0.35;cursor:not-allowed;}
+.pos-val{font-size:22px;font-weight:500;color:var(--ink);min-width:70px;text-align:center;}
+.pos-of{font-size:13px;color:var(--ink-3);font-weight:400;}
+
+.pos-context{background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:12px;}
+.pos-ctx-row{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:13px;color:var(--ink-2);}
+.pos-ctx-n{display:inline-block;width:24px;font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:12px;}
+.pos-ctx-name{color:var(--ink-2);}
+.pos-ctx-me{color:var(--ink);}
+.pos-ctx-me .pos-ctx-n{color:#1A5C38;font-weight:500;}
+
+.cb-primary{width:100%;height:42px;background:var(--green);border:none;border-radius:9px;font-size:13px;font-weight:500;color:#fff;cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:7px;}
+.cb-secondary{width:100%;height:38px;background:#F5F5F5;border:none;border-radius:9px;font-size:13px;color:var(--ink-3);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:6px;}
+.cb-cancel{width:100%;height:34px;background:transparent;border:none;font-size:13px;color:var(--ink-3);cursor:pointer;font-family:"DM Sans",sans-serif;}
+
+.empty-state{padding:24px 14px;text-align:center;}
+.empty-lbl{font-size:13px;color:var(--ink-3);}
+.empty-sub{font-size:12px;color:var(--ink-3);opacity:.7;margin-top:4px;}
+
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:100;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;}
+.anim{animation:si .18s ease;}
+@keyframes si{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* Observer panel (facilitator-only) */
+.obs-panel{position:fixed;top:16px;right:16px;width:320px;max-height:calc(100vh - 32px);background:#0B2A23;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.5);z-index:200;display:flex;flex-direction:column;font-family:"DM Sans",sans-serif;animation:si .2s ease;}
+.obs-head{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.1);}
+.obs-eyebrow{font-size:9px;font-weight:600;color:#9FE1CB;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
+.obs-title{font-family:"DM Serif Display",serif;font-size:17px;line-height:1.1;}
+.obs-close{background:none;border:none;color:#C8EEE3;font-size:22px;line-height:1;cursor:pointer;padding:0;width:24px;height:24px;}
+.obs-body{padding:12px 16px 16px;overflow-y:auto;}
+.obs-section{padding:10px 0;border-bottom:1px dashed rgba(255,255,255,.1);}
+.obs-section:last-of-type{border-bottom:none;}
+.obs-lbl{font-size:9px;font-weight:600;color:#9FE1CB;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+.obs-big{font-family:"DM Serif Display",serif;font-size:28px;color:#fff;margin-bottom:6px;}
+.obs-stats{display:flex;flex-wrap:wrap;gap:4px;}
+.obs-stat{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:4px;background:rgba(255,255,255,.06);font-size:10px;}
+.obs-stat-n{font-family:"DM Mono",monospace;color:#9FE1CB;font-weight:500;}
+.obs-stat-k{color:#C8EEE3;}
+.obs-evt{display:grid;grid-template-columns:56px 90px 1fr;gap:6px;padding:4px 0;font-size:10px;align-items:baseline;border-bottom:.5px solid rgba(255,255,255,.05);}
+.obs-evt-t{color:rgba(255,255,255,.5);font-family:"DM Mono",monospace;font-size:9px;}
+.obs-evt-k{color:#9FE1CB;font-weight:500;}
+.obs-evt-d{color:rgba(255,255,255,.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.obs-empty{font-size:10px;color:rgba(255,255,255,.4);font-style:italic;padding:4px 0;}
+.obs-actions{display:flex;flex-direction:column;gap:5px;padding-top:4px;}
+.obs-btn{width:100%;height:34px;border-radius:7px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#C8EEE3;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.obs-btn:hover{background:rgba(255,255,255,.1);}
+.obs-btn.primary{background:#9FE1CB;border-color:#9FE1CB;color:#0B3D32;font-weight:600;}
+.obs-btn.primary:hover{filter:brightness(1.08);}
+.obs-btn.danger{color:#FCA5A5;border-color:rgba(220,38,38,.3);}
+.obs-hint{font-size:9px;color:rgba(255,255,255,.45);margin-top:10px;line-height:1.5;}
+.obs-hint kbd{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-family:"DM Mono",monospace;font-size:9px;}
+
+/* ========== Login screen ========== */
+.login{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:40;}
+.login-top{padding:28px 24px 0;}
+.login-eyebrow{font-size:9px;font-weight:500;color:var(--green-l);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+.login-date{font-size:11px;color:var(--ink-2);margin-bottom:22px;font-family:"DM Mono",monospace;}
+.login-h{font-family:"DM Serif Display",serif;font-size:30px;line-height:1.1;color:var(--ink);margin-bottom:6px;}
+.login-h em{font-style:italic;color:var(--green-l);}
+.login-sub{font-size:13px;color:var(--ink-2);line-height:1.4;max-width:260px;}
+.login-body{flex:1;padding:28px 24px 16px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;}
+.login-label{font-size:12px;font-weight:600;color:var(--ink-2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px;display:block;}
+.login-input{width:100%;height:46px;padding:0 14px;border:1.5px solid var(--rule);border-radius:10px;background:#fff;font-size:15px;font-family:"DM Sans",sans-serif;color:var(--ink);outline:none;transition:border-color .15s;}
+.login-input:focus{border-color:var(--green-b);}
+.login-input::placeholder{color:#B8B8B8;}
+.login-role-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.login-role{height:46px;border:1.5px solid var(--rule);border-radius:10px;background:#fff;font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;font-family:"DM Sans",sans-serif;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0 8px;}
+.login-role:hover{border-color:var(--green-b);color:var(--ink);}
+.login-role.sel{border-color:var(--green-b);background:var(--green-xl);color:var(--green-l);}
+.login-age-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.login-age{height:40px;border:1.5px solid var(--rule);border-radius:9px;background:#fff;font-size:12px;font-weight:500;color:var(--ink-2);cursor:pointer;font-family:"DM Sans",sans-serif;transition:all .12s;padding:0;}
+.login-age:hover{border-color:var(--green-b);color:var(--ink);}
+.login-age.sel{border-color:var(--green-b);background:var(--green-xl);color:var(--green-l);}
+.login-role-title{font-size:13px;font-weight:600;line-height:1.1;}
+.login-role-sub{font-size:11px;opacity:.7;line-height:1;}
+.login-context{background:var(--green-xl);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;}
+.login-context-ico{font-size:16px;flex-shrink:0;margin-top:1px;}
+.login-context-txt{font-size:13px;color:var(--green-l);line-height:1.45;}
+.login-context-txt strong{color:var(--green);}
+.login-footer{padding:14px 24px 22px;border-top:.5px solid var(--rule);background:#fff;}
+.login-cta{width:100%;height:48px;border:none;border-radius:10px;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .15s;}
+.login-cta:hover:not(:disabled){background:var(--green-l);}
+.login-cta:disabled{background:#C8C8C8;cursor:not-allowed;}
+.login-hint{text-align:center;font-size:11px;color:var(--ink-3);margin-top:10px;}
+
+/* ========== Post-session survey ==========
+   Two presentations:
+   - Narrow viewport (mobile/phone-only view): fills the phone frame like the login.
+   - Wide viewport (desktop, facilitator laptop): floats as a centered modal.
+   Controlled by .srv-wide class on the root. */
+.srv{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:45;overflow:hidden;}
+.srv.srv-wide{position:fixed;inset:0;background:rgba(12,28,24,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:32px 16px;z-index:100;}
+.srv-card{flex:1;display:flex;flex-direction:column;min-height:0;}
+.srv.srv-wide .srv-card{flex:initial;width:min(560px,100%);max-height:calc(100vh - 64px);background:#fff;border-radius:16px;box-shadow:0 32px 96px rgba(0,0,0,.35);overflow:hidden;}
+.srv-top{padding:28px 24px 0;}
+.srv-eyebrow{font-size:9px;font-weight:500;color:var(--green-l);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+.srv-h{font-family:"DM Serif Display",serif;font-size:26px;line-height:1.1;color:var(--ink);margin-bottom:8px;}
+.srv-h em{font-style:italic;color:var(--green-l);}
+.srv-sub{font-size:12px;color:var(--ink-2);line-height:1.5;max-width:280px;margin-bottom:4px;}
+.srv-body{flex:1;padding:22px 24px 16px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
+.srv-q{}
+.srv-q-label{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;line-height:1.35;}
+.srv-q-help{font-size:10px;color:var(--ink-3);margin-bottom:10px;line-height:1.4;}
+.srv-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;}
+.srv-scale-btn{height:46px;border:1.5px solid var(--rule);border-radius:9px;background:#fff;font-size:16px;font-weight:500;color:var(--ink-2);cursor:pointer;font-family:"DM Sans",sans-serif;transition:all .12s;display:flex;align-items:center;justify-content:center;padding:0;}
+.srv-scale-btn:hover{border-color:var(--green-b);}
+.srv-scale-btn.sel{border-color:var(--green-b);background:var(--green-xl);color:var(--green-l);font-weight:600;}
+.srv-scale-ends{display:flex;justify-content:space-between;font-size:9px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+.srv-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.srv-chip{padding:7px 11px;border:1.5px solid var(--rule);border-radius:18px;background:#fff;font-size:11px;color:var(--ink-2);cursor:pointer;font-family:"DM Sans",sans-serif;transition:all .12s;}
+.srv-chip:hover{border-color:var(--green-b);color:var(--ink);}
+.srv-chip.sel{border-color:var(--green-b);background:var(--green-xl);color:var(--green-l);font-weight:500;}
+.srv-textarea{width:100%;min-height:70px;padding:10px 12px;border:1.5px solid var(--rule);border-radius:9px;background:#fff;font-size:12px;font-family:"DM Sans",sans-serif;color:var(--ink);outline:none;resize:vertical;line-height:1.45;}
+.srv-textarea:focus{border-color:var(--green-b);}
+.srv-textarea::placeholder{color:#B8B8B8;}
+.srv-footer{padding:14px 24px 22px;border-top:.5px solid var(--rule);background:#fff;}
+.srv-cta{width:100%;height:46px;border:none;border-radius:10px;background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.srv-cta:hover:not(:disabled){background:var(--green-l);}
+.srv-cta:disabled{background:#C8C8C8;cursor:not-allowed;}
+.srv-skip{width:100%;margin-top:8px;background:transparent;border:none;font-size:11px;color:var(--ink-3);cursor:pointer;font-family:"DM Sans",sans-serif;padding:6px;}
+.srv-thanks{padding:40px 28px;text-align:center;}
+.srv-thanks-ico{font-size:40px;margin-bottom:14px;}
+.srv-thanks-h{font-family:"DM Serif Display",serif;font-size:24px;color:var(--ink);margin-bottom:8px;}
+.srv-thanks-sub{font-size:12px;color:var(--ink-2);line-height:1.5;max-width:260px;margin:0 auto;}
+</style>
+  <!-- Playground: auto-injected Microsoft Clarity for inside-iframe recording -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window,document,"clarity","script","weqc268a3f");
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      var sid = p.get('sid');
+      if (sid) window.clarity('set', 'session_id', sid);
+      var m = window.location.pathname.match(/\/prototypes\/([^/]+)\//);
+      if (m) window.clarity('set', 'prototype', m[1]);
+      window.clarity('set', 'context', 'prototype');
+    })();
+  </script>
+</head>
+<body>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#085041"/>
+  <g transform="translate(60,60)">
+    <rect x="0" y="0" width="80" height="80" rx="12" fill="#F0EFEB"/>
+    <rect x="10" y="14" width="26" height="22" rx="4" fill="#FEF3C7" stroke="#B45309" stroke-width="1.5"/>
+    <rect x="44" y="14" width="26" height="22" rx="4" fill="#fff" stroke="#2D8653" stroke-width="1.5"/>
+    <rect x="10" y="44" width="60" height="6" rx="2" fill="#085041"/>
+    <rect x="10" y="56" width="60" height="6" rx="2" fill="#DADADA"/>
+    <rect x="10" y="66" width="40" height="6" rx="2" fill="#DADADA"/>
+  </g>
+</svg>
+</template>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-mark">
+      <div class="brand-logo">S</div>
+      <div class="brand-text">Shower queue<small>HMIS &middot; Pinellas Hope</small></div>
+    </div>
+    <div class="topbar-meta">
+      <div class="live-badge"><div class="live-dot"></div><div class="live-txt">LIVE</div></div>
+      <div class="sync-txt">Synced just now</div>
+    </div>
+  </div>
+</header>
+
+<div class="phone" id="phone-wrap">
+  <div id="phone"></div>
+  <div id="login-overlay"></div>
+</div>
+<div id="survey-overlay"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var activeTab = "waiting";
+var pendingSheet = null; // {type:"sendto"|"markout", clientId?, stallIdx?}
+var selectedStall = null;
+
+var stalls = [];
+
+var waiting = [
+  {id:"C003",name:"Patricia Kim",    flags:["mobility"],           checkin:"10:22 AM",clothing:false},
+  {id:"C001",name:"Diana Rivera",    flags:["hearing"],            checkin:"10:28 AM",clothing:true},
+  {id:"C004",name:"George Allen",    flags:["veteran"],            checkin:"10:31 AM",clothing:true},
+  {id:"C005",name:"Linda Martinez",  flags:["hearing","mobility"], checkin:"10:38 AM",clothing:true},
+  {id:"C006",name:"Robert Harris",   flags:[],                     checkin:"10:44 AM",clothing:false},
+  {id:"C007",name:"James Carter",    flags:[],                     checkin:"10:49 AM",clothing:false},
+  {id:"C010",name:"Maria Gonzales",  flags:["mobility"],           checkin:"10:52 AM",clothing:false},
+  {id:"C011",name:"Andre Johnson",   flags:["veteran"],            checkin:"10:55 AM",clothing:true},
+  {id:"C012",name:"Beatrice Nolan",  flags:[],                     checkin:"10:57 AM",clothing:false},
+  {id:"C013",name:"Carlos Mendes",   flags:["hearing"],            checkin:"11:01 AM",clothing:true},
+  {id:"C014",name:"Elena Fischer",   flags:[],                     checkin:"11:03 AM",clothing:false},
+  {id:"C015",name:"Darnell Woods",   flags:["veteran","mobility"], checkin:"11:06 AM",clothing:true},
+  {id:"C016",name:"Sophia Laurent",  flags:[],                     checkin:"11:09 AM",clothing:false},
+  {id:"C017",name:"Kenji Watanabe",  flags:[],                     checkin:"11:12 AM",clothing:true},
+  {id:"C018",name:"Ruth Okonkwo",    flags:["hearing"],            checkin:"11:14 AM",clothing:false}
+];
+var missed = [
+  {id:"C002",name:"Marcus Thompson",flags:[],checkin:"10:18 AM",clothing:true}
+];
+var done = [
+  {id:"C008",name:"Sarah Webb",inTime:"10:05 AM",outTime:"10:17 AM",duration:"12 min",clothing:false},
+  {id:"C009",name:"Tom Reyes", inTime:"10:08 AM",outTime:"10:22 AM",duration:"14 min",clothing:true}
+];
+
+function getInitials(n){return n.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();}
+function formatElapsed(ms){var m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);return(m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function elapsedClass(ms){var s=ms/1000;return s>=90?"over":s>=45?"warn":"ok";}
+
+// Live timer update
+setInterval(function(){
+  stalls.forEach(function(s,i){
+    if(s&&s.inTs){
+      var ms=Date.now()-s.inTs;
+      var el=document.getElementById("el-"+i);
+      var pill=document.getElementById("sp-"+i);
+      if(el){el.textContent=formatElapsed(ms);el.className="sp-elapsed "+elapsedClass(ms);}
+      if(pill){var ec=elapsedClass(ms);pill.className="stall-pill occ"+(ec==="warn"?" warn":ec==="over"?" over":"");}
+    }
+  });
+},1000);
+
+function openSendTo(clientId){
+  pendingSheet={type:"sendto",clientId:clientId};
+  selectedStall=null;
+  render();
+}
+function openMarkOut(stallIdx){
+  pendingSheet={type:"markout",stallIdx:stallIdx};
+  render();
+}
+function selectStall(i){selectedStall=i;render();}
+function cancelAction(){pendingSheet=null;selectedStall=null;render();}
+
+function findClient(id){
+  var c = waiting.filter(function(x){return x.id===id;})[0];
+  if(c) return {client: c, source: "waiting"};
+  c = missed.filter(function(x){return x.id===id;})[0];
+  if(c) return {client: c, source: "missed"};
+  return null;
+}
+function removeClientFrom(source, id){
+  if(source==="waiting") waiting = waiting.filter(function(x){return x.id!==id;});
+  else if(source==="missed") missed = missed.filter(function(x){return x.id!==id;});
+}
+
+function confirmSendTo(){
+  if(selectedStall===null||!pendingSheet) return;
+  var i=selectedStall;
+  var found = findClient(pendingSheet.clientId);
+  if(!found) return;
+  var client = found.client;
+
+  // Auto close previous if occupied
+  if(stalls[i]){
+    var prev=stalls[i];
+    var outTime=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+    var ms=Date.now()-prev.inTs;
+    done.unshift({id:prev.id,name:prev.name,inTime:prev.inTime,outTime:outTime,duration:Math.floor(ms/60000)+" min",clothing:prev.clothing});
+    if(prev.clothing) showToast(prev.name+" auto-marked out \u2014 clothing flagged \uD83D\uDEBF");
+  }
+
+  var inTime=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+  stalls[i]={id:client.id,name:client.name,flags:client.flags,inTime:inTime,inTs:Date.now(),clothing:client.clothing};
+  removeClientFrom(found.source, client.id);
+  showToast(client.name+" sent to stall"+(found.source==="missed"?" (was missed)":""));
+  pendingSheet=null;selectedStall=null;
+  render();
+}
+
+function confirmMarkOut(){
+  if(!pendingSheet) return;
+  var i=pendingSheet.stallIdx;
+  var s=stalls[i];if(!s) return;
+  var outTime=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+  var ms=Date.now()-s.inTs;
+  done.unshift({id:s.id,name:s.name,inTime:s.inTime,outTime:outTime,duration:Math.floor(ms/60000)+" min",clothing:s.clothing});
+  stalls[i]=null;
+  if(s.clothing) showToast(s.name+" done \u2014 clothing flagged \uD83D\uDEBF");
+  else showToast(s.name+" marked out");
+  pendingSheet=null;
+  render();
+}
+
+function markMissed(id){
+  var c=null;
+  waiting=waiting.filter(function(x){if(x.id===id){c=x;return false;}return true;});
+  if(c){missed.push(c);showToast(c.name+" marked missed");render();}
+}
+function backInLine(id){
+  // Programmatic fallback \u2014 defaults to end of line (used if anyone calls it directly)
+  var c=null;
+  missed=missed.filter(function(x){if(x.id===id){c=x;return false;}return true;});
+  if(c){waiting.push(c);showToast(c.name+" back in queue");render();}
+}
+
+// "Back in line" with volunteer-chosen position
+var backInLinePos = 1; // 1-indexed position; set when opening
+
+function openBackInLine(id){
+  var c = missed.filter(function(x){return x.id===id;})[0];
+  if(!c) return;
+  // Sensible default: position 3 (or end of line if fewer than 3 waiting)
+  backInLinePos = Math.min(3, waiting.length + 1);
+  pendingSheet = {type:"backinline", clientId: id};
+  logEvent("open-back-in-line", {clientId: id, queueLen: waiting.length});
+  render();
+}
+
+function setBackPos(p){
+  var max = waiting.length + 1;
+  backInLinePos = Math.max(1, Math.min(max, p));
+  render();
+}
+
+function setBackPosFromInput(v){
+  var n = parseInt(v, 10);
+  if(isNaN(n)) return;
+  setBackPos(n);
+}
+
+function confirmBackInLine(){
+  if(!pendingSheet || pendingSheet.type !== "backinline") return;
+  var id = pendingSheet.clientId;
+  var c = missed.filter(function(x){return x.id===id;})[0];
+  if(!c) return;
+  missed = missed.filter(function(x){return x.id !== id;});
+  var insertIdx = Math.max(0, Math.min(waiting.length, backInLinePos - 1));
+  waiting.splice(insertIdx, 0, c);
+  logEvent("back-in-line-placed", {clientId: id, position: backInLinePos, queueLen: waiting.length});
+  showToast(c.name.split(" ")[0]+" placed at #"+backInLinePos);
+  pendingSheet = null;
+  activeTab = "waiting"; // switch to Waiting so volunteer sees the result
+  render();
+}
+function addStall(){stalls.push(null);render();}
+
+// Setup flow (first-time stall configuration)
+var stallSetupCount = 2; // default suggestion
+
+function openStallSetup(){
+  stallSetupCount = 2;
+  pendingSheet = {type:"setup", fromClientId: (pendingSheet && pendingSheet.clientId) || null};
+  logEvent("open-setup", {fromClientId: pendingSheet.fromClientId});
+  render();
+}
+
+function setupCountChange(delta){
+  stallSetupCount = Math.max(1, Math.min(6, stallSetupCount + delta));
+  render();
+}
+
+function confirmStallSetup(){
+  var n = stallSetupCount;
+  for(var k = 0; k < n; k++) stalls.push(null);
+  logEvent("setup-stalls", {count: n});
+
+  // If the user got here from trying to send a specific client, resume that flow
+  var fromClientId = pendingSheet && pendingSheet.fromClientId;
+  if(fromClientId){
+    pendingSheet = {type:"sendto", clientId: fromClientId};
+    selectedStall = 0; // pre-select the first new stall
+    showToast(n+" stall"+(n===1?"":"s")+" set up \u2014 confirm to send");
+  } else {
+    pendingSheet = null;
+    selectedStall = null;
+    showToast(n+" stall"+(n===1?"":"s")+" set up");
+  }
+  render();
+}
+
+function addStallFromSheet(){
+  // Legacy name \u2014 delegate to the full setup flow now
+  openStallSetup();
+}
+function confirmCloseStall(i){
+  if(stalls[i]){
+    // Occupied — shouldn't happen since hint only shows on empty, but guard
+    showToast("Mark client out first, then close stall");
+    return;
+  }
+  pendingSheet = {type:"closestall", stallIdx: i};
+  logEvent("open-close-stall", {stall: i+1});
+  render();
+}
+
+function doCloseStall(){
+  if(!pendingSheet || pendingSheet.type !== "closestall") return;
+  var i = pendingSheet.stallIdx;
+  stalls.splice(i, 1);
+  logEvent("close-stall", {stall: i+1, remaining: stalls.length});
+  pendingSheet = null;
+  showToast("Stall closed (out of service)");
+  render();
+}
+
+function removeStall(i){
+  if(stalls[i]){showToast("Mark client out first");return;}
+  stalls.splice(i,1);render();
+}
+function setTab(t){activeTab=t;render();}
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.innerHTML=msg;t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},3000);
+}
+
+function render(){
+  var occupied=stalls.filter(function(s){return s!==null;}).length;
+  var h="";
+
+  // Nav
+  h+="<div class='app-nav'><div class='nav-title'>Shower station</div>";
+  h+="<div class='nav-stats'>";
+  h+="<span class='nav-stat'><span class='nav-stat-n'>"+waiting.length+"</span> waiting</span>";
+  h+="<span class='nav-stat'><span class='nav-stat-n'>"+occupied+"/"+stalls.length+"</span> in stalls</span>";
+  h+="<span class='nav-stat'><span class='nav-stat-n'>"+done.length+"</span> done</span>";
+  h+="</div></div>";
+
+  // Stalls — compact reference panel
+  h+="<div class='stalls-section'>";
+  h+="<div class='stalls-hdr'><div class='stalls-lbl'>Stalls</div><button class='add-btn' onclick='"+(stalls.length===0?"openStallSetup()":"addStall()")+"'>+ Add</button></div>";
+  h+="<div class='stalls-row'>";
+
+  if(stalls.length === 0){
+    h+="<button class='no-stalls-prompt' onclick='openStallSetup()'>";
+    h+="<span class='no-stalls-prompt-ico'>&#128704;</span>";
+    h+="<span class='no-stalls-prompt-body'>";
+    h+="<span class='no-stalls-prompt-title'>Set up stalls to begin</span>";
+    h+="<span class='no-stalls-prompt-sub'>Tell the app how many showers are open today.</span>";
+    h+="</span>";
+    h+="<span class='no-stalls-prompt-arrow'>&rarr;</span>";
+    h+="</button>";
+  }
+
+  stalls.forEach(function(s,i){
+    if(s){
+      var ms=Date.now()-s.inTs;
+      var ec=elapsedClass(ms);
+      h+="<div id='sp-"+i+"' class='stall-pill occ"+(ec==="warn"?" warn":ec==="over"?" over":"")+"'>";
+      h+="<div class='sp-occ-body'><div class='sp-name'>"+s.name.split(" ")[0]+"</div>";
+      var fl="";
+      if(s.flags.indexOf("hearing")>-1)  fl+="<span class='spf' title='Hearing assistance' aria-label='Hearing assistance'>&#128263;</span>";
+      if(s.flags.indexOf("mobility")>-1) fl+="<span class='spf' title='Mobility assistance' aria-label='Mobility assistance'>&#9855;</span>";
+      if(fl) h+="<div class='sp-flags'>"+fl+"</div>";
+      h+="</div>";
+      h+="<div class='sp-times'><span class='sp-in'>"+s.inTime+"</span><span id='el-"+i+"' class='sp-elapsed "+ec+"'>"+formatElapsed(ms)+"</span></div>";
+      h+="<button class='sp-out-btn' onclick='openMarkOut("+i+")'><div class='chk'></div> Out</button>";
+      h+="</div>";
+    } else {
+      h+="<div class='stall-pill empty'>";
+      h+="<button class='sp-remove' onclick='confirmCloseStall("+i+")' title='Close this stall (out of service)' aria-label='Close stall "+(i+1)+"'>&times;</button>";
+      h+="<span class='sp-empty-ico'>&#128704;</span>";
+      h+="<span class='sp-empty-lbl'>Empty</span>";
+      h+="</div>";
+    }
+  });
+  h+="</div></div>";
+
+  // Queue
+  h+="<div class='queue-section'>";
+  h+="<div class='q-tabs'>";
+  h+="<div class='q-tab "+(activeTab==="waiting"?"act":"")+"' onclick='setTab(\"waiting\")'>Waiting <div class='tbdg tbdg-w'>"+waiting.length+"</div></div>";
+  h+="<div class='q-tab "+(activeTab==="missed"?"act":"")+"' onclick='setTab(\"missed\")'>Missed <div class='tbdg tbdg-m'>"+missed.length+"</div></div>";
+  h+="<div class='q-tab "+(activeTab==="done"?"act":"")+"' onclick='setTab(\"done\")'>Done <div class='tbdg tbdg-d'>"+done.length+"</div></div>";
+  h+="</div>";
+
+  if(activeTab==="waiting"){
+    if(waiting.length){
+      waiting.forEach(function(c,idx){
+        var isNext=idx===0;
+        h+="<div class='q-card"+(isNext?" next-up":"")+" anim'>";
+        h+="<div class='qc-top'>";
+        h+="<div class='qc-pos "+(isNext?"next":"")+"'>"+(idx+1)+"</div>";
+        h+="<div style='flex:1;'><div class='qc-name'>"+c.name+"</div><div class='qc-meta'>Check-in "+c.checkin+"</div></div>";
+        h+="</div>";
+        var fl="";
+        if(c.flags.indexOf("hearing")>-1)  fl+="<div class='qcf qcf-h'>&#128263; Hearing</div>";
+        if(c.flags.indexOf("mobility")>-1) fl+="<div class='qcf qcf-m'>&#9855; Mobility</div>";
+        if(c.flags.indexOf("veteran")>-1)  fl+="<div class='qcf qcf-v'>&#9733; Veteran</div>";
+        if(c.clothing) fl+="<div class='qcf qcf-c'>&#128060; Clothing order</div>";
+        if(fl) h+="<div class='qc-flags'>"+fl+"</div>";
+        h+="<div class='qc-actions'>";
+        h+="<button class='qca qca-send' onclick='openSendTo(\""+c.id+"\")'><div class='chk'></div> Send to stall</button>";
+        h+="<button class='qca qca-missed' onclick='markMissed(\""+c.id+"\")'>Missed</button>";
+        h+="</div></div>";
+      });
+    } else {
+      h+="<div class='empty-state'><div class='empty-lbl'>No one waiting</div></div>";
+    }
+  } else if(activeTab==="missed"){
+    if(missed.length){
+      missed.forEach(function(c){
+        h+="<div class='q-card anim'><div class='qc-top'>";
+        h+="<div class='qc-pos'>&mdash;</div>";
+        h+="<div style='flex:1;'><div class='qc-name'>"+c.name+"</div><div class='qc-meta'>Check-in "+c.checkin+"</div></div>";
+        h+="</div>";
+        var fl="";
+        if(c.flags.indexOf("hearing")>-1)  fl+="<div class='qcf qcf-h'>&#128263; Hearing</div>";
+        if(c.flags.indexOf("mobility")>-1) fl+="<div class='qcf qcf-m'>&#9855; Mobility</div>";
+        if(fl) h+="<div class='qc-flags'>"+fl+"</div>";
+        h+="<div class='qc-actions'>";
+        h+="<button class='qca qca-send' onclick='openSendTo(\""+c.id+"\")'><div class='chk'></div> Send to stall</button>";
+        h+="<button class='qca qca-back' onclick='openBackInLine(\""+c.id+"\")'>Back in line&hellip;</button>";
+        h+="</div>";
+        h+="</div>";
+      });
+    } else {
+      h+="<div class='empty-state'><div class='empty-lbl'>No missed clients</div><div class='empty-sub'>Everyone responded when called</div></div>";
+    }
+  } else {
+    if(done.length){
+      done.forEach(function(c){
+        h+="<div class='done-card anim'><div class='dc-name'>"+c.name+"</div>";
+        h+="<div class='dc-times'><span class='dc-t'>In "+c.inTime+"</span><span class='dc-t'>&rarr; Out "+c.outTime+"</span><span class='dc-dur'>"+c.duration+"</span></div>";
+        if(c.clothing) h+="<div class='dc-clothing'>&#128060; Clothing order flagged</div>";
+        h+="</div>";
+      });
+    } else {
+      h+="<div class='empty-state'><div class='empty-lbl'>No completed showers yet</div></div>";
+    }
+  }
+  h+="</div>";
+
+  document.getElementById("phone").innerHTML=h;
+
+  // Sheet
+  var wrap=document.getElementById("phone-wrap");
+  var old=wrap.querySelector(".sheet-overlay");
+  if(old) wrap.removeChild(old);
+
+  if(pendingSheet){
+    var sh="<div class='sheet'><div class='sh-handle'></div>";
+
+    if(pendingSheet.type==="sendto"){
+      var found = findClient(pendingSheet.clientId);
+      if(!found){pendingSheet=null;return;}
+      var client = found.client;
+      var wasMissed = found.source === "missed";
+      sh+="<div class='sh-title'>Send "+client.name+" to a stall</div>";
+      sh+="<div class='sh-sub'>"+(wasMissed?"Previously missed \u2014 sending straight to a stall":"Choose an available stall")+"</div>";
+      sh+="<div class='cp-box'><div class='cp-av'>"+getInitials(client.name)+"</div>";
+      sh+="<div><div class='cp-name'>"+client.name+"</div><div class='cp-meta'>Check-in "+client.checkin+"</div></div></div>";
+
+      // Stall options
+      var noStalls = stalls.length === 0;
+      if(noStalls){
+        sh+="<div class='no-stalls-box'>"+
+              "<div class='no-stalls-ico'>&#128704;</div>"+
+              "<div class='no-stalls-title'>No shower stalls yet</div>"+
+              "<div class='no-stalls-txt'>You need to set up at least one stall before you can send "+client.name.split(" ")[0]+" in.</div>"+
+            "</div>";
+      }
+      stalls.forEach(function(s,i){
+        var isSel=selectedStall===i;
+        var isOcc=!!s;
+        var ms=isOcc?Date.now()-s.inTs:0;
+        var ec=isOcc?elapsedClass(ms):"";
+        sh+="<div class='stall-opt' onclick='selectStall("+i+")'>";
+        sh+="<div class='so-ico "+(isOcc?"occ-s":"empty-s")+"'>"+(isOcc?"&#128265;":"&#128704;")+"</div>";
+        sh+="<div class='so-lbl'><div class='so-name-s'>Stall "+(i+1)+"</div>";
+        if(isOcc) sh+="<div class='so-meta-s"+(ec!=="ok"?" warn-s":"")+"'>"+s.name+" \u00b7 "+formatElapsed(ms)+(ec!=="ok"?" \u2022 "+ec:"")+"</div>";
+        else sh+="<div class='so-meta-s' style='color:var(--green-b);'>Empty \u2014 ready</div>";
+        sh+="</div>";
+        sh+="<div class='so-radio "+(isSel?"sel":"")+"'>"+(isSel?"<div class='so-inner'></div>":"")+"</div>";
+        sh+="</div>";
+      });
+
+      // Warning if occupied stall selected
+      if(selectedStall!==null&&stalls[selectedStall]){
+        var prev=stalls[selectedStall];
+        sh+="<div class='warn-box'><div style='font-size:16px;'>&#9888;&#65039;</div><div class='warn-txt'><strong>"+prev.name+" is still inside.</strong> They will be automatically marked out when you confirm.</div></div>";
+        if(prev.clothing) sh+="<div class='clothing-note'>&#128060; "+prev.name+" has a clothing order \u2014 will be flagged</div>";
+      }
+
+      if(noStalls){
+        sh+="<button class='cb-primary' onclick='addStallFromSheet()'>+ Set up a shower stall</button>";
+      } else {
+        var canConfirm=selectedStall!==null;
+        sh+="<button class='cb-primary' "+(canConfirm?"":"style='opacity:.45;cursor:not-allowed;'")+" onclick='confirmSendTo()'>Confirm \u2014 send to stall &rarr;</button>";
+      }
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+
+    } else if(pendingSheet.type==="setup"){
+      sh+="<div class='sh-title'>Set up shower stalls</div>";
+      sh+="<div class='sh-sub'>How many stalls are available today?</div>";
+      sh+="<div class='stepper'>"+
+            "<button class='step-btn' onclick='setupCountChange(-1)' "+(stallSetupCount<=1?"disabled":"")+">&minus;</button>"+
+            "<div class='step-val'><div class='step-n'>"+stallSetupCount+"</div><div class='step-lbl'>stall"+(stallSetupCount===1?"":"s")+"</div></div>"+
+            "<button class='step-btn' onclick='setupCountChange(1)' "+(stallSetupCount>=6?"disabled":"")+">+</button>"+
+          "</div>";
+      sh+="<div class='reminder-box'>"+
+            "<div class='rmd-ico'>&#128161;</div>"+
+            "<div class='rmd-txt'><strong>Not sure?</strong> Pick your best guess \u2014 you can close a stall later if one goes out of service, or add more anytime.</div>"+
+          "</div>";
+      sh+="<button class='cb-primary' onclick='confirmStallSetup()'>Set up "+stallSetupCount+" stall"+(stallSetupCount===1?"":"s")+" &rarr;</button>";
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+    } else if(pendingSheet.type==="backinline"){
+      var bc = missed.filter(function(x){return x.id===pendingSheet.clientId;})[0];
+      if(!bc){pendingSheet=null;return;}
+      var qLen = waiting.length;
+      var maxPos = qLen + 1;
+      var curPos = backInLinePos;
+      sh+="<div class='sh-title'>Put "+bc.name.split(" ")[0]+" back in line</div>";
+      sh+="<div class='sh-sub'>Where should they go? There "+(qLen===1?"is 1 person":"are "+qLen+" people")+" waiting.</div>";
+      sh+="<div class='cp-box'><div class='cp-av'>"+getInitials(bc.name)+"</div>";
+      sh+="<div><div class='cp-name'>"+bc.name+"</div><div class='cp-meta'>Checked in "+bc.checkin+" \u00b7 missed their call</div></div></div>";
+
+      // Preset positions
+      var presets = [
+        {label: "Next up",              sub: "#1 in line",                   val: 1},
+        {label: "After a couple people",sub: "#"+Math.min(3,maxPos)+" in line", val: Math.min(3, maxPos)},
+        {label: "End of line",          sub: "#"+maxPos+" in line",          val: maxPos}
+      ];
+      // Dedupe (e.g. if queue is 0, all presets collapse)
+      var seen = {};
+      presets = presets.filter(function(p){if(seen[p.val])return false;seen[p.val]=1;return true;});
+
+      sh+="<div class='pos-presets'>";
+      presets.forEach(function(p){
+        var sel = curPos === p.val ? " sel" : "";
+        sh+="<button class='pos-preset"+sel+"' onclick='setBackPos("+p.val+")'>";
+        sh+="<div class='pos-lbl'>"+p.label+"</div>";
+        sh+="<div class='pos-sub'>"+p.sub+"</div>";
+        sh+="</button>";
+      });
+      sh+="</div>";
+
+      // Custom position picker
+      sh+="<div class='pos-custom'>";
+      sh+="<div class='pos-custom-lbl'>Or pick any spot:</div>";
+      sh+="<div class='pos-stepper'>";
+      sh+="<button class='pos-step' onclick='setBackPos("+(curPos-1)+")' "+(curPos<=1?"disabled":"")+">&minus;</button>";
+      sh+="<div class='pos-val'>#"+curPos+"<span class='pos-of'> of "+maxPos+"</span></div>";
+      sh+="<button class='pos-step' onclick='setBackPos("+(curPos+1)+")' "+(curPos>=maxPos?"disabled":"")+">+</button>";
+      sh+="</div>";
+      sh+="</div>";
+
+      // Context: who will be immediately before / after
+      var before = curPos > 1 ? waiting[curPos-2] : null;
+      var after  = curPos <= qLen ? waiting[curPos-1] : null;
+      if(before || after){
+        sh+="<div class='pos-context'>";
+        if(before) sh+="<div class='pos-ctx-row'><span class='pos-ctx-n'>#"+(curPos-1)+"</span> <span class='pos-ctx-name'>"+before.name.split(" ")[0]+"</span></div>";
+        sh+="<div class='pos-ctx-row pos-ctx-me'><span class='pos-ctx-n'>#"+curPos+"</span> <span class='pos-ctx-name'><strong>"+bc.name.split(" ")[0]+"</strong> \u2190 placed here</span></div>";
+        if(after) sh+="<div class='pos-ctx-row'><span class='pos-ctx-n'>#"+(curPos+1)+"</span> <span class='pos-ctx-name'>"+after.name.split(" ")[0]+"</span></div>";
+        sh+="</div>";
+      }
+
+      sh+="<button class='cb-primary' onclick='confirmBackInLine()'>Place "+bc.name.split(" ")[0]+" at #"+curPos+"</button>";
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+    } else if(pendingSheet.type==="closestall"){
+      var ci = pendingSheet.stallIdx;
+      sh+="<div class='sh-title'>Close stall "+(ci+1)+"?</div>";
+      sh+="<div class='sh-sub'>Mark it as out of service for the rest of the shift.</div>";
+      sh+="<div class='close-ill'>"+
+            "<div class='close-ill-ico'>&#128683;</div>"+
+            "<div class='close-ill-txt'>This stall won't show up as available until you add it back.</div>"+
+          "</div>";
+      sh+="<div class='reminder-box'>"+
+            "<div class='rmd-ico'>&#128161;</div>"+
+            "<div class='rmd-txt'>Use this when a stall is broken, out of soap/towels, or being cleaned. You can tap <strong>+ Add</strong> anytime to open it again.</div>"+
+          "</div>";
+      sh+="<button class='cb-primary danger' onclick='doCloseStall()'>Close stall "+(ci+1)+"</button>";
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+    } else if(pendingSheet.type==="markout"){
+      var i=pendingSheet.stallIdx;
+      var s=stalls[i];
+      if(!s){pendingSheet=null;return;}
+      var ms=Date.now()-s.inTs;
+      var mins=Math.floor(ms/60000);
+      sh+="<div class='sh-title'>Mark out</div>";
+      sh+="<div class='cp-box'><div class='cp-av'>"+getInitials(s.name)+"</div>";
+      sh+="<div><div class='cp-name'>"+s.name+"</div><div class='cp-meta'>In "+s.inTime+" \u00b7 "+mins+" min</div></div></div>";
+      if(s.clothing) sh+="<div class='clothing-note'>&#128060; Has a clothing order \u2014 will be flagged as shower complete</div>";
+      sh+="<button class='cb-primary' onclick='confirmMarkOut()'>Confirm mark out</button>";
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+    }
+
+    sh+="</div>";
+    var overlay=document.createElement("div");
+    overlay.className="sheet-overlay";
+    overlay.innerHTML=sh;
+    wrap.appendChild(overlay);
+  }
+}
+
+/* ========== Tester instrumentation ========== */
+var TESTER_LOG_KEY = "hmis-tester-log";
+var TESTER_SESSION_KEY = "hmis-tester-session";
+var SESSION_ID = null;
+var lastInteractionTs = Date.now();
+var hesitationTimer = null;
+var INITIAL_STATE_SNAPSHOT = null;
+
+try {
+  SESSION_ID = localStorage.getItem(TESTER_SESSION_KEY);
+  if(!SESSION_ID){
+    SESSION_ID = "s_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,6);
+    localStorage.setItem(TESTER_SESSION_KEY, SESSION_ID);
+  }
+} catch(e){ SESSION_ID = "s_nostore_" + Date.now(); }
+
+// Volunteer session (persisted per browser so refreshes don't lose login mid-test)
+var VOLUNTEER_NAME = null;
+var VOLUNTEER_ROLE = null;
+var VOLUNTEER_AGE = null;
+var selectedRole = null;
+var selectedAge = null;
+try {
+  VOLUNTEER_NAME = localStorage.getItem("hmis-vol-name");
+  VOLUNTEER_ROLE = localStorage.getItem("hmis-vol-role");
+  VOLUNTEER_AGE  = localStorage.getItem("hmis-vol-age");
+} catch(e){}
+
+function logEvent(type, details){
+  var entry = {
+    t: Date.now(),
+    iso: new Date().toISOString(),
+    session: SESSION_ID,
+    volunteer: VOLUNTEER_NAME || null,
+    role: VOLUNTEER_ROLE || null,
+    age: VOLUNTEER_AGE || null,
+    type: type,
+    details: details || {}
+  };
+  try {
+    var raw = localStorage.getItem(TESTER_LOG_KEY);
+    var arr = raw ? JSON.parse(raw) : [];
+    arr.push(entry);
+    // cap at 5000 entries per session
+    if(arr.length > 5000) arr = arr.slice(-5000);
+    localStorage.setItem(TESTER_LOG_KEY, JSON.stringify(arr));
+  } catch(e){}
+  lastInteractionTs = Date.now();
+}
+
+function describeTarget(el){
+  if(!el) return {tag:"none"};
+  var d = {tag: el.tagName ? el.tagName.toLowerCase() : "?"};
+  if(el.className && typeof el.className === "string") d.cls = el.className.slice(0, 80);
+  var txt = (el.textContent || "").trim().slice(0, 60);
+  if(txt) d.text = txt;
+  // Attach a semantic label when we can identify the element
+  if(el.closest){
+    if(el.closest(".qca-send")) d.action = "send-to-stall";
+    else if(el.closest(".qca-missed")) d.action = "mark-missed";
+    else if(el.closest(".qca-back")) d.action = "back-in-line";
+    else if(el.closest(".sp-out-btn")) d.action = "mark-out";
+    else if(el.closest(".q-tab")) d.action = "switch-tab";
+    else if(el.closest(".stall-opt")) d.action = "pick-stall";
+    else if(el.closest(".cb-primary")) d.action = "confirm";
+    else if(el.closest(".cb-cancel")) d.action = "cancel";
+    else if(el.closest(".add-btn")) d.action = "add-stall";
+    else if(el.closest(".sp-remove")) d.action = "remove-stall";
+  }
+  return d;
+}
+
+var clickHistory = [];
+document.addEventListener("click", function(e){
+  var target = describeTarget(e.target);
+  var inside = !!e.target.closest && !!e.target.closest(".phone, .header");
+  var isInteractive = !!(target.action || e.target.closest && e.target.closest("button, [onclick], input"));
+  logEvent(isInteractive ? "click" : "dead-click", {
+    x: e.clientX, y: e.clientY, target: target, insidePhone: inside
+  });
+
+  // Rage-click detection: 3+ clicks within 1.5s in same ~40px radius
+  var now = Date.now();
+  clickHistory.push({x:e.clientX, y:e.clientY, t:now});
+  clickHistory = clickHistory.filter(function(c){ return now - c.t < 1500; });
+  if(clickHistory.length >= 3){
+    var last = clickHistory[clickHistory.length-1];
+    var close = clickHistory.filter(function(c){
+      return Math.abs(c.x-last.x) < 40 && Math.abs(c.y-last.y) < 40;
+    });
+    if(close.length >= 3){
+      logEvent("rage-click", {x:last.x, y:last.y, count: close.length, target: target});
+      clickHistory = [];
+    }
+  }
+}, true);
+
+// Hesitation: no interaction for 8+ seconds
+function armHesitation(){
+  if(hesitationTimer) clearTimeout(hesitationTimer);
+  hesitationTimer = setTimeout(function(){
+    logEvent("hesitation", {sinceLast: Date.now() - lastInteractionTs});
+    armHesitation();
+  }, 8000);
+}
+document.addEventListener("click", armHesitation, true);
+document.addEventListener("touchstart", armHesitation, true);
+document.addEventListener("scroll", function(){ lastInteractionTs = Date.now(); }, true);
+armHesitation();
+
+// Tab visibility
+document.addEventListener("visibilitychange", function(){
+  logEvent("visibility", {hidden: document.hidden});
+});
+
+// Log initial state
+setTimeout(function(){
+  logEvent("session-start", {
+    waiting: waiting.length, missed: missed.length, done: done.length,
+    stalls: stalls.length, viewport: {w: window.innerWidth, h: window.innerHeight},
+    ua: navigator.userAgent.slice(0,120)
+  });
+},100);
+
+// Wrap action functions to log semantic events
+(function(){
+  var _openSendTo = openSendTo; openSendTo = function(id){ var c=waiting.filter(function(x){return x.id===id;})[0]; logEvent("open-send-sheet", {client: c && c.name, flags: c && c.flags, clothing: c && c.clothing}); return _openSendTo(id); };
+  var _openMarkOut = openMarkOut; openMarkOut = function(i){ var s=stalls[i]; logEvent("open-markout-sheet", {stall: i+1, client: s && s.name}); return _openMarkOut(i); };
+  var _selectStall = selectStall; selectStall = function(i){ logEvent("pick-stall", {stall: i+1, occupied: !!stalls[i]}); return _selectStall(i); };
+  var _confirmSendTo = confirmSendTo; confirmSendTo = function(){ logEvent("confirm-send", {stall: selectedStall!==null?selectedStall+1:null}); return _confirmSendTo(); };
+  var _confirmMarkOut = confirmMarkOut; confirmMarkOut = function(){ var i=pendingSheet&&pendingSheet.stallIdx; var s=stalls[i]; logEvent("confirm-markout", {stall: i+1, client: s&&s.name}); return _confirmMarkOut(); };
+  var _cancelAction = cancelAction; cancelAction = function(){ logEvent("cancel-sheet", {}); return _cancelAction(); };
+  var _markMissed = markMissed; markMissed = function(id){ logEvent("mark-missed", {clientId: id}); return _markMissed(id); };
+  var _backInLine = backInLine; backInLine = function(id){ logEvent("back-in-line", {clientId: id}); return _backInLine(id); };
+  var _setTab = setTab; setTab = function(t){ logEvent("tab-switch", {tab: t}); return _setTab(t); };
+  var _addStall = addStall; addStall = function(){ logEvent("add-stall", {}); return _addStall(); };
+  var _removeStall = removeStall; removeStall = function(i){ logEvent("remove-stall", {stall: i+1}); return _removeStall(i); };
+})();
+
+/* ========== Hidden observer gestures (for test facilitator only) ==========
+   • Triple-tap the small org line (HMIS · Pinellas Hope) under the brand → open observer panel
+   • Keyboard: press "O" (when no input focused) → open observer panel
+*/
+var headerTaps = [];
+document.addEventListener("click", function(e){
+  var hOrg = e.target.closest(".brand-text small");
+  if(!hOrg) return;
+  var now = Date.now();
+  headerTaps.push(now);
+  headerTaps = headerTaps.filter(function(t){ return now - t < 1200; });
+  if(headerTaps.length >= 3){ headerTaps = []; openObserverPanel(); }
+});
+document.addEventListener("keydown", function(e){
+  if(e.target && /input|textarea/i.test(e.target.tagName)) return;
+  if(e.key === "o" || e.key === "O") openObserverPanel();
+});
+
+function snapshotState(){
+  return {
+    stalls: JSON.parse(JSON.stringify(stalls)),
+    waiting: JSON.parse(JSON.stringify(waiting)),
+    missed: JSON.parse(JSON.stringify(missed)),
+    done: JSON.parse(JSON.stringify(done))
+  };
+}
+INITIAL_STATE_SNAPSHOT = snapshotState();
+
+function resetScenario(){
+  var snap = INITIAL_STATE_SNAPSHOT;
+  stalls  = JSON.parse(JSON.stringify(snap.stalls));
+  waiting = JSON.parse(JSON.stringify(snap.waiting));
+  missed  = JSON.parse(JSON.stringify(snap.missed));
+  done    = JSON.parse(JSON.stringify(snap.done));
+  activeTab = "waiting"; pendingSheet = null; selectedStall = null;
+  logEvent("reset-scenario", {});
+  render();
+}
+
+function newSession(){
+  try { localStorage.removeItem(TESTER_LOG_KEY); } catch(e){}
+  SESSION_ID = "s_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,6);
+  try { localStorage.setItem(TESTER_SESSION_KEY, SESSION_ID); } catch(e){}
+  // Clear volunteer so next tester signs in fresh
+  VOLUNTEER_NAME = null; VOLUNTEER_ROLE = null; VOLUNTEER_AGE = null; selectedRole = null; selectedAge = null;
+  window.__volNameDraft = "";
+  try { localStorage.removeItem("hmis-vol-name"); localStorage.removeItem("hmis-vol-role"); localStorage.removeItem("hmis-vol-age"); } catch(e){}
+  resetScenario();
+  logEvent("session-start-new", {});
+  closeObserverPanel();
+  renderLogin();
+  showToast("New session \u2014 please sign in");
+}
+
+function exportLog(){
+  var raw = "[]";
+  try { raw = localStorage.getItem(TESTER_LOG_KEY) || "[]"; } catch(e){}
+  var blob = new Blob([raw], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "hmis-shower-queue-log-" + SESSION_ID + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+}
+
+function copyLogToClipboard(){
+  var raw = "[]";
+  try { raw = localStorage.getItem(TESTER_LOG_KEY) || "[]"; } catch(e){}
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(raw).then(function(){
+      showToast("Log copied to clipboard");
+    });
+  } else {
+    showToast("Clipboard not available \u2014 use Download");
+  }
+}
+
+function openObserverPanel(){
+  if(document.getElementById("obs-panel")) return;
+  var raw = "[]"; try{ raw = localStorage.getItem(TESTER_LOG_KEY) || "[]"; }catch(e){}
+  var events = JSON.parse(raw);
+  var total = events.length;
+  var counts = {};
+  events.forEach(function(e){ counts[e.type] = (counts[e.type]||0)+1; });
+  var summary = Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];})
+    .map(function(k){ return "<div class='obs-stat'><span class='obs-stat-n'>"+counts[k]+"</span><span class='obs-stat-k'>"+k+"</span></div>"; }).join("");
+
+  var last = events.slice(-8).reverse().map(function(e){
+    var time = new Date(e.t).toLocaleTimeString();
+    var det = e.details && (e.details.target && e.details.target.text || e.details.action || e.details.client || e.details.tab || "");
+    if(typeof det !== "string") det = JSON.stringify(det).slice(0,40);
+    return "<div class='obs-evt'><span class='obs-evt-t'>"+time+"</span><span class='obs-evt-k'>"+e.type+"</span><span class='obs-evt-d'>"+(det||"")+"</span></div>";
+  }).join("");
+
+  var volLabel = VOLUNTEER_NAME
+    ? (VOLUNTEER_NAME + " \u00b7 " + (VOLUNTEER_ROLE || "?"))
+    : "<em style='opacity:.6;font-style:italic;'>not signed in</em>";
+  var html =
+    "<div id='obs-panel' class='obs-panel'>"+
+      "<div class='obs-head'>"+
+        "<div><div class='obs-eyebrow'>Observer \u00b7 facilitator only</div><div class='obs-title'>Session "+SESSION_ID.slice(-6)+"</div></div>"+
+        "<button class='obs-close' onclick='closeObserverPanel()'>&times;</button>"+
+      "</div>"+
+      "<div class='obs-body'>"+
+        "<div class='obs-section'><div class='obs-lbl'>Signed in as</div><div style='font-size:13px;color:#fff;margin-top:2px;'>"+volLabel+"</div></div>"+
+        "<div class='obs-section'><div class='obs-lbl'>Events captured</div><div class='obs-big'>"+total+"</div>"+
+        "<div class='obs-stats'>"+summary+"</div></div>"+
+        "<div class='obs-section'><div class='obs-lbl'>Recent</div>"+
+        (last || "<div class='obs-empty'>No events yet</div>")+
+        "</div>"+
+        "<div class='obs-actions'>"+
+          "<button class='obs-btn primary' onclick='exportLog()'>Download log (.json)</button>"+
+          "<button class='obs-btn' onclick='copyLogToClipboard()'>Copy log</button>"+
+          "<button class='obs-btn' onclick='resetScenario();closeObserverPanel();showToast(\"Scenario reset\")'>Reset scenario</button>"+
+          "<button class='obs-btn' onclick='closeObserverPanel();openEndSurvey()'>End session \u2192 survey</button>"+
+          "<button class='obs-btn' onclick='closeObserverPanel();logoutVolunteer()'>Sign out (keep log)</button>"+
+          "<button class='obs-btn danger' onclick='newSession()'>Start new tester (clears log)</button>"+
+        "</div>"+
+        "<div class='obs-hint'>Triple-tap \"HMIS \u00b7 Pinellas Hope\" or press <kbd>O</kbd> to reopen.</div>"+
+      "</div>"+
+    "</div>";
+  var d = document.createElement("div");
+  d.innerHTML = html;
+  document.body.appendChild(d.firstChild);
+  logEvent("observer-opened", {});
+}
+function closeObserverPanel(){
+  var p = document.getElementById("obs-panel");
+  if(p) p.remove();
+}
+
+/* ========== Login screen ========== */
+function getShiftLabel(){
+  var now = new Date();
+  var hr = now.getHours();
+  var shift = hr < 11 ? "Morning shift" : hr < 16 ? "Midday shift" : "Evening shift";
+  var day = now.toLocaleDateString("en-US", {weekday:"long", month:"long", day:"numeric"});
+  return shift + " \u00b7 " + day;
+}
+
+function selectRole(role){
+  selectedRole = role;
+  renderLogin();
+  // Keep focus on the name field after re-render
+  var inp = document.getElementById("vol-name-inp");
+  if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+}
+
+function selectAge(age){
+  selectedAge = age;
+  renderLogin();
+  var inp = document.getElementById("vol-name-inp");
+  if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+}
+
+function handleNameInput(v){
+  // Store WITHOUT re-rendering (would kill focus). Just toggle CTA state.
+  window.__volNameDraft = v;
+  var cta = document.getElementById("login-cta");
+  if(cta){
+    var ok = v.trim().length >= 2 && !!selectedRole && !!selectedAge;
+    cta.disabled = !ok;
+  }
+}
+
+function submitLogin(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var name = (window.__volNameDraft || "").trim();
+  if(name.length < 2 || !selectedRole || !selectedAge) return;
+  VOLUNTEER_NAME = name;
+  VOLUNTEER_ROLE = selectedRole;
+  VOLUNTEER_AGE  = selectedAge;
+  try {
+    localStorage.setItem("hmis-vol-name", VOLUNTEER_NAME);
+    localStorage.setItem("hmis-vol-role", VOLUNTEER_ROLE);
+    localStorage.setItem("hmis-vol-age",  VOLUNTEER_AGE);
+  } catch(err){}
+  logEvent("login", {name: VOLUNTEER_NAME, role: VOLUNTEER_ROLE, age: VOLUNTEER_AGE, shift: getShiftLabel()});
+  var ov = document.getElementById("login-overlay");
+  if(ov) ov.innerHTML = "";
+  render();
+}
+
+function logoutVolunteer(){
+  logEvent("logout", {});
+  VOLUNTEER_NAME = null;
+  VOLUNTEER_ROLE = null;
+  VOLUNTEER_AGE  = null;
+  selectedRole = null;
+  selectedAge  = null;
+  window.__volNameDraft = "";
+  try {
+    localStorage.removeItem("hmis-vol-name");
+    localStorage.removeItem("hmis-vol-role");
+    localStorage.removeItem("hmis-vol-age");
+  } catch(e){}
+  renderLogin();
+}
+
+/* ========== Post-session survey ========== */
+var surveyState = {
+  techComfort: null,         // 1-5
+  appFrequency: null,        // chip
+  easiestPart: "",
+  confusingPart: "",
+  missingPart: "",
+  overall: ""
+};
+
+function openEndSurvey(){
+  surveyState = {techComfort:null, appFrequency:null, easiestPart:"", confusingPart:"", missingPart:"", overall:""};
+  logEvent("survey-opened", {});
+  renderSurvey();
+}
+
+function setSurveyScale(n){
+  surveyState.techComfort = n;
+  renderSurvey();
+}
+
+function setSurveyChip(val){
+  surveyState.appFrequency = val;
+  renderSurvey();
+}
+
+function updateSurveyText(field, val){
+  surveyState[field] = val;
+  // Update CTA state only; avoid re-render to preserve cursor
+  var cta = document.getElementById("srv-cta");
+  if(cta) cta.disabled = !(surveyState.techComfort && surveyState.appFrequency);
+}
+
+function submitSurvey(){
+  if(!surveyState.techComfort || !surveyState.appFrequency) return;
+  logEvent("survey-submitted", {
+    techComfort: surveyState.techComfort,
+    appFrequency: surveyState.appFrequency,
+    easiestPart: surveyState.easiestPart.trim(),
+    confusingPart: surveyState.confusingPart.trim(),
+    missingPart: surveyState.missingPart.trim(),
+    overall: surveyState.overall.trim()
+  });
+  renderSurveyThanks();
+}
+
+function skipSurvey(){
+  logEvent("survey-skipped", {});
+  closeSurvey();
+}
+
+function closeSurvey(){
+  var ov = document.getElementById("survey-overlay");
+  if(ov) ov.innerHTML = "";
+}
+
+function renderSurvey(){
+  var ov = document.getElementById("survey-overlay");
+  if(!ov) return;
+  var s = surveyState;
+  var canSubmit = !!s.techComfort && !!s.appFrequency;
+  var wide = window.innerWidth >= 720;
+
+  var h = "";
+  h += "<div class='srv"+(wide?" srv-wide":"")+"'>";
+  h += "<div class='srv-card'>";
+  h += "<div class='srv-top'>";
+  h += "<div class='srv-eyebrow'>Wrap up \u00b7 quick feedback</div>";
+  h += "<div class='srv-h'>Thanks for trying it.<br><em>A few quick questions.</em></div>";
+  h += "<div class='srv-sub'>Takes about a minute. There are no wrong answers \u2014 your honest reactions help us make this better.</div>";
+  h += "</div>";
+  h += "<div class='srv-body'>";
+
+  // Q1: Tech comfort 1-5
+  h += "<div class='srv-q'>";
+  h += "<div class='srv-q-label'>How comfortable did you feel using this tool?</div>";
+  h += "<div class='srv-q-help'>1 = not at all comfortable, 5 = very comfortable</div>";
+  h += "<div class='srv-scale'>";
+  for(var i=1;i<=5;i++){
+    var sel = s.techComfort === i ? " sel" : "";
+    h += "<button type='button' class='srv-scale-btn"+sel+"' onclick='setSurveyScale("+i+")'>"+i+"</button>";
+  }
+  h += "</div>";
+  h += "<div class='srv-scale-ends'><span>Not at all</span><span>Very comfortable</span></div>";
+  h += "</div>";
+
+  // Q2: App frequency
+  h += "<div class='srv-q'>";
+  h += "<div class='srv-q-label'>In daily life, how often do you use apps like this?</div>";
+  h += "<div class='srv-chips'>";
+  var freq = [
+    {k:"rarely",       t:"Rarely / never"},
+    {k:"occasionally", t:"Occasionally"},
+    {k:"daily",        t:"Most days"},
+    {k:"constantly",   t:"Constantly"}
+  ];
+  freq.forEach(function(f){
+    var sel = s.appFrequency === f.k ? " sel" : "";
+    h += "<button type='button' class='srv-chip"+sel+"' onclick='setSurveyChip(\""+f.k+"\")'>"+f.t+"</button>";
+  });
+  h += "</div>";
+  h += "</div>";
+
+  // Q3-5 open text
+  h += "<div class='srv-q'>";
+  h += "<div class='srv-q-label'>What felt easiest or most clear?</div>";
+  h += "<textarea class='srv-textarea' placeholder='e.g. I liked that\u2026' oninput='updateSurveyText(\"easiestPart\", this.value)'>"+escapeHtml(s.easiestPart)+"</textarea>";
+  h += "</div>";
+
+  h += "<div class='srv-q'>";
+  h += "<div class='srv-q-label'>What was confusing or frustrating?</div>";
+  h += "<textarea class='srv-textarea' placeholder='Any moment you got stuck or had to guess\u2026' oninput='updateSurveyText(\"confusingPart\", this.value)'>"+escapeHtml(s.confusingPart)+"</textarea>";
+  h += "</div>";
+
+  h += "<div class='srv-q'>";
+  h += "<div class='srv-q-label'>Anything you looked for and couldn't find?</div>";
+  h += "<textarea class='srv-textarea' placeholder='A button, info, or option you expected\u2026' oninput='updateSurveyText(\"missingPart\", this.value)'>"+escapeHtml(s.missingPart)+"</textarea>";
+  h += "</div>";
+
+  h += "<div class='srv-q'>";
+  h += "<div class='srv-q-label'>Anything else you want to share?</div>";
+  h += "<textarea class='srv-textarea' placeholder='Optional \u2014 open thoughts\u2026' oninput='updateSurveyText(\"overall\", this.value)'></textarea>";
+  h += "</div>";
+
+  h += "</div>";
+  h += "<div class='srv-footer'>";
+  h += "<button id='srv-cta' class='srv-cta' type='button' onclick='submitSurvey()'"+(canSubmit?"":" disabled")+">Submit feedback</button>";
+  h += "<button class='srv-skip' type='button' onclick='skipSurvey()'>Skip survey</button>";
+  h += "</div>";
+  h += "</div>"; // .srv-card
+  h += "</div>"; // .srv
+  ov.innerHTML = h;
+}
+
+function renderSurveyThanks(){
+  var ov = document.getElementById("survey-overlay");
+  if(!ov) return;
+  var wide = window.innerWidth >= 720;
+  ov.innerHTML = "<div class='srv"+(wide?" srv-wide":"")+"'><div class='srv-card'><div class='srv-thanks'>"+
+    "<div class='srv-thanks-ico'>\ud83c\udf3f</div>"+
+    "<div class='srv-thanks-h'>Thank you.</div>"+
+    "<div class='srv-thanks-sub'>Your feedback is saved to the session log. You can close this tab, or let the facilitator take over.</div>"+
+    "</div></div></div>";
+}
+
+function escapeHtml(s){
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// Re-render survey on resize so narrow↔wide presentation flips correctly
+window.addEventListener("resize", function(){
+  var ov = document.getElementById("survey-overlay");
+  if(ov && ov.children.length && ov.querySelector(".srv-thanks")){
+    renderSurveyThanks();
+  } else if(ov && ov.children.length){
+    // Preserve in-progress answers by re-rendering from surveyState
+    renderSurvey();
+  }
+});
+
+function renderLogin(){
+  var ov = document.getElementById("login-overlay");
+  if(!ov) return;
+  var draft = window.__volNameDraft || "";
+  var canSubmit = draft.trim().length >= 2 && !!selectedRole && !!selectedAge;
+  var h = "";
+  h += "<div class='login'>";
+  h += "<div class='login-top'>";
+  h += "<div class='login-eyebrow'>HMIS \u00b7 Pinellas Hope</div>";
+  h += "<div class='login-date'>" + getShiftLabel() + "</div>";
+  h += "<div class='login-h'>Good morning.<br><em>Sign in to start your shift.</em></div>";
+  h += "</div>";
+  h += "<form class='login-body' onsubmit='submitLogin(event)'>";
+  h += "<div>";
+  h += "<label class='login-label' for='vol-name-inp'>Your name</label>";
+  h += "<input id='vol-name-inp' class='login-input' type='text' autocomplete='off' autocapitalize='words' spellcheck='false' placeholder='e.g. Jamie Rodriguez' value='" + draft.replace(/'/g,"&#39;") + "' oninput='handleNameInput(this.value)'>";
+  h += "</div>";
+  h += "<div>";
+  h += "<label class='login-label'>Your role today</label>";
+  h += "<div class='login-role-row'>";
+  var roles = [
+    {k:"volunteer", t:"Volunteer", s:"Running showers"},
+    {k:"staff",     t:"Staff",     s:"Case manager"}
+  ];
+  roles.forEach(function(r){
+    var sel = selectedRole === r.k ? " sel" : "";
+    h += "<button type='button' class='login-role" + sel + "' onclick='selectRole(\"" + r.k + "\")'>";
+    h += "<span class='login-role-title'>" + r.t + "</span>";
+    h += "<span class='login-role-sub'>" + r.s + "</span>";
+    h += "</button>";
+  });
+  h += "</div></div>";
+
+  // Age range picker
+  h += "<div>";
+  h += "<label class='login-label'>Your age range</label>";
+  h += "<div class='login-age-row'>";
+  var ages = [
+    {k:"under25", t:"Under 25"},
+    {k:"25-34",   t:"25\u201334"},
+    {k:"35-44",   t:"35\u201344"},
+    {k:"45-54",   t:"45\u201354"},
+    {k:"55-64",   t:"55\u201364"},
+    {k:"65plus",  t:"65+"}
+  ];
+  ages.forEach(function(a){
+    var sel = selectedAge === a.k ? " sel" : "";
+    h += "<button type='button' class='login-age" + sel + "' onclick='selectAge(\"" + a.k + "\")'>" + a.t + "</button>";
+  });
+  h += "</div></div>";
+
+  h += "<div class='login-context'>";
+  h += "<div class='login-context-ico'>&#9749;</div>";
+  h += "<div class='login-context-txt'>You're the <strong>first one in this morning.</strong> Clients are already checking in at the front desk. The shower area is quiet \u2014 get things set up however you like.</div>";
+  h += "</div>";
+  h += "</form>";
+  h += "<div class='login-footer'>";
+  h += "<button id='login-cta' class='login-cta' type='button' onclick='submitLogin()'" + (canSubmit?"":" disabled") + ">Start shift &rarr;</button>";
+  h += "<div class='login-hint'>Your actions today help us improve the tool.</div>";
+  h += "</div>";
+  h += "</div>";
+  ov.innerHTML = h;
+  setTimeout(function(){
+    var inp = document.getElementById("vol-name-inp");
+    if(inp && !draft) inp.focus();
+  }, 50);
+}
+
+// Initial render
+if(VOLUNTEER_NAME && VOLUNTEER_ROLE){
+  window.__volNameDraft = VOLUNTEER_NAME;
+  selectedRole = VOLUNTEER_ROLE;
+  render();
+} else {
+  renderLogin();
+}
+</script>
+</body>
+</html>

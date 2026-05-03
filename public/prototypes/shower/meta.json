@@ -1,0 +1,10 @@
+{
+  "slug": "shower",
+  "testName": "Shower",
+  "schemaVersion": 1,
+  "createdAt": "2026-05-03T23:28:53.979Z",
+  "mode": "exploration",
+  "prompt": null,
+  "tasks": null,
+  "archived": false
+}
