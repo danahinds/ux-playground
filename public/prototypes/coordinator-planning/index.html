@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMIS · Coordinator (Planning)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-canvas:#F5F0E5;
+  --bg-card:#FFFFFF;
+  --bg-card-alt:#F1EFE8;
+  --brand:#085041;
+  --brand-deep:#063A2F;
+  --brand-tint:#E5EFE9;
+  --text-primary:#1A1A1A;
+  --text-secondary:#5F5E5A;
+  --text-tertiary:#8B8578;
+  --text-light:#FBF7EE;
+  --border:rgba(26,26,26,0.08);
+  --border-strong:rgba(26,26,26,0.18);
+  --radius-sm:4px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg:0 12px 32px rgba(0,0,0,0.18);
+
+  --green:#085041;--green-l:#0F6E56;--green-xl:#E3F4EC;--green-b:#2D8653;
+  --amber:#F59E0B;--amber-l:#FEF3C7;--amber-b:#B45309;
+  --red:#DC2626;--red-l:#FEE2E2;
+  --bg:#F0EFEB;--card:#fff;--ink:#111111;--ink-2:#595959;--ink-3:#595959;
+  --rule:#E8E8E8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"DM Sans",sans-serif;background:var(--bg-canvas);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 40px;-webkit-font-smoothing:antialiased;}
+
+/* Topbar */
+.topbar{width:100%;background:var(--bg-canvas);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;margin-bottom:24px;}
+.topbar-inner{max-width:460px;margin:0 auto;padding:14px 0;display:flex;align-items:center;gap:16px;}
+.brand-mark{display:flex;align-items:center;gap:10px;flex-shrink:0;cursor:pointer;}
+.brand-logo{width:32px;height:32px;background:var(--brand);color:var(--text-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",Georgia,serif;font-size:16px;}
+.brand-text{font-size:14px;font-weight:500;line-height:1.1;color:var(--text-primary);}
+.brand-text small{display:block;font-weight:400;color:var(--text-tertiary);font-size:11px;margin-top:2px;}
+.dev-toggle{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-tertiary);font-family:"DM Mono",monospace;}
+.dev-toggle button{background:#fff;border:1px solid var(--rule);color:var(--text-secondary);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.dev-toggle button.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+.phone{width:100%;max-width:380px;min-height:660px;background:var(--bg);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;position:relative;}
+
+/* Phone surface */
+.dash{flex:1;display:flex;flex-direction:column;background:var(--bg-canvas);overflow-y:auto;padding-bottom:64px;}
+.dash-body{padding:18px 18px 24px;display:flex;flex-direction:column;gap:0;}
+
+/* Compact info-line greeting */
+.info-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.info-name{font-family:"DM Serif Display",serif;font-size:18px;color:var(--text-primary);line-height:1;}
+.info-name em{font-style:italic;color:var(--brand);}
+.info-meta{font-size:11px;color:var(--text-tertiary);font-family:"DM Mono",monospace;text-align:right;line-height:1.3;}
+
+/* Hero — mode-aware. Live = deep green. Planning = cream. */
+.hero{border-radius:var(--radius-xl);padding:22px 22px 20px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
+.hero-mark{position:absolute;top:18px;right:20px;font-size:48px;line-height:1;opacity:.12;font-family:"DM Serif Display",serif;}
+.hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-family:"DM Mono",monospace;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.hero-date{font-family:"DM Mono",monospace;font-size:13px;font-weight:500;margin-bottom:6px;letter-spacing:.02em;}
+.hero-title{font-family:"DM Serif Display",serif;font-size:26px;line-height:1.1;margin-bottom:8px;letter-spacing:-.005em;}
+.hero-sub{font-size:13px;line-height:1.5;margin-bottom:16px;}
+.hero-cta{width:100%;height:48px;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:transform .12s,box-shadow .12s;}
+.hero-cta:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.14);}
+.hero-live{background:linear-gradient(160deg, var(--brand) 0%, var(--brand-deep) 100%);color:#fff;}
+.hero-live .hero-eyebrow{color:#A0DDC8;}
+.hero-live .hero-date{color:#C8EEE3;}
+.hero-live .hero-sub{color:#E5F4ED;}
+.hero-live .hero-cta{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);color:#fff;}
+.hero-live .hero-cta:hover{background:rgba(255,255,255,.24);}
+.hero-live .live-pulse-dot{background:#A0DDC8;animation:livepulse 1.6s ease-in-out infinite;}
+.hero-planning{background:#F5EFE0;color:var(--text-primary);}
+.hero-planning .hero-eyebrow{color:var(--brand);}
+.hero-planning .hero-date{color:var(--text-secondary);}
+.hero-planning .hero-sub{color:var(--text-secondary);}
+.hero-planning .hero-cta{background:var(--brand);color:#fff;}
+.hero-planning .hero-cta:hover{background:var(--brand-deep);}
+
+/* Readiness hero — replaces simple "Next event" hero with prep dashboard */
+.hero-readiness{background:linear-gradient(160deg, #F5EFE0 0%, #E8DFC8 100%);color:var(--text-primary);border:1px solid #D8CFB6;}
+.hero-readiness .hero-mark{color:var(--brand);}
+.hero-readiness.urgent{background:linear-gradient(160deg, #FCEBC9 0%, #F5C76A 100%);border:1.5px solid #B8861A;color:#3D2806;}
+.hero-readiness .hero-eyebrow{color:var(--brand);font-family:"DM Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.hero-readiness.urgent .hero-eyebrow{color:#7A4F0E;}
+.hero-readiness .hero-date{color:var(--text-secondary);font-size:12px;margin-bottom:6px;}
+.hero-readiness.urgent .hero-date{color:#5C3D08;}
+.hero-readiness .hero-title{margin-bottom:14px;}
+.hero-readiness-progress{margin-bottom:14px;}
+.hero-readiness-progress-row{display:flex;justify-content:space-between;font-size:11px;font-family:"DM Mono",monospace;color:var(--text-secondary);margin-bottom:6px;letter-spacing:.02em;}
+.hero-readiness.urgent .hero-readiness-progress-row{color:#5C3D08;}
+.hero-readiness-progress-row strong{color:var(--brand);font-weight:600;}
+.hero-readiness.urgent .hero-readiness-progress-row strong{color:#7A4F0E;}
+.hero-readiness-bar{width:100%;height:7px;background:rgba(0,0,0,.08);border-radius:999px;overflow:hidden;}
+.hero-readiness-bar-fill{height:100%;background:var(--brand);border-radius:999px;transition:width .3s;}
+.hero-readiness.urgent .hero-readiness-bar-fill{background:var(--amber-b);}
+.hero-readiness-actions{display:grid;grid-template-columns:2fr 1fr;gap:6px;}
+.hero-readiness-actions .hero-cta{height:42px;font-size:13px;}
+.hero-readiness-actions .hero-cta.secondary{background:transparent;border:1.5px solid var(--brand-b);color:var(--brand);}
+.hero-readiness.urgent .hero-readiness-actions .hero-cta.primary{background:var(--brand);color:#fff;}
+.hero-readiness.urgent .hero-readiness-actions .hero-cta.secondary{background:transparent;border:1.5px solid #B8861A;color:#5C3D08;}
+.hero-readiness.urgent .hero-readiness-actions .hero-cta.secondary:hover{background:rgba(184,134,26,.1);}
+
+/* Prep tasks list — borrows the "Needs attention" pattern from live */
+.prep-task{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:6px;transition:border-color .12s,box-shadow .12s;}
+.prep-task:hover{border-color:var(--brand);box-shadow:0 2px 6px rgba(8,80,65,.08);}
+.prep-task.warn{background:#FFF5E0;border-color:#D4A55F;}
+.prep-task.warn:hover{border-color:var(--amber-b);}
+.prep-task.done{background:var(--brand-tint);border-color:var(--brand-b);cursor:default;}
+.prep-task.done:hover{box-shadow:none;border-color:var(--brand-b);}
+.prep-task-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;}
+.prep-task-icon.warn{background:var(--amber-b);color:#fff;}
+.prep-task-icon.done{background:var(--brand);color:#fff;}
+.prep-task-icon.todo{background:#fff;border:1.5px solid var(--rule);color:var(--text-tertiary);}
+.prep-task-body{flex:1;min-width:0;}
+.prep-task-name{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.prep-task-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.prep-task-arrow{color:var(--text-tertiary);font-size:14px;flex-shrink:0;}
+
+/* Other upcoming row — quieter than the primary upcoming card */
+.other-upcoming{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:11px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:6px;transition:border-color .12s;}
+.other-upcoming:hover{border-color:var(--brand);}
+.other-upcoming-chip{flex-shrink:0;width:38px;height:38px;background:var(--brand-tint);border-radius:var(--radius-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--brand-b);}
+.other-upcoming-chip-mo{font-size:8px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.06em;line-height:1;}
+.other-upcoming-chip-d{font-family:"DM Serif Display",serif;font-size:18px;color:var(--brand);line-height:1;margin-top:1px;}
+.other-upcoming-body{flex:1;min-width:0;}
+.other-upcoming-name{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.other-upcoming-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.other-upcoming-arrow{color:var(--text-tertiary);font-size:14px;flex-shrink:0;}
+.live-pulse-dot{display:inline-block;}
+@keyframes livepulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(160,221,200,0.5);}
+  50%{box-shadow:0 0 0 5px rgba(160,221,200,0);}
+}
+@keyframes ambpulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(180,83,9,0.5);}
+  50%{box-shadow:0 0 0 5px rgba(180,83,9,0);}
+}
+
+/* Section labels */
+.sec-lbl{font-size:10px;font-weight:600;color:var(--text-tertiary);letter-spacing:.09em;text-transform:uppercase;margin:8px 0 9px;display:flex;align-items:center;gap:8px;}
+.sec-lbl > span:first-child{margin-right:auto;}
+.sec-lbl::after{content:"";flex:1;height:1px;background:var(--border);order:99;}
+.sec-lbl > .see-all-link{order:100;}
+
+/* Live stats panel */
+.live-stats{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;}
+.live-stats-hdr{padding:9px 14px;background:var(--brand-tint);border-bottom:1.5px solid var(--brand-b);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.live-stats-lbl{font-size:11px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.07em;}
+.live-stats-pulse{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.08em;}
+.live-stats-pulse .live-pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--brand);}
+.live-stats-body{display:flex;}
+.live-stats-cell{flex:1;padding:13px 4px 11px;text-align:center;}
+.live-stats-cell+.live-stats-cell{border-left:1px solid var(--rule);}
+.live-stats-cell-n{font-family:"DM Serif Display",serif;font-size:26px;line-height:1;color:var(--brand);letter-spacing:-.01em;}
+.live-stats-cell-lbl{font-size:9px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;}
+
+/* Quick actions row */
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;}
+.qa-btn{height:46px;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .12s;}
+.qa-btn:hover{border-color:var(--brand);background:var(--brand-tint);}
+.qa-btn-meta{font-size:10px;color:var(--text-tertiary);font-weight:400;}
+.qa-btn.warn{border-color:var(--amber-b);background:var(--amber-l);color:var(--amber-b);}
+.qa-btn.warn .qa-btn-meta{color:var(--amber-b);opacity:.75;}
+.qa-btn.warn:hover{background:#FCD9A0;}
+
+/* Check-in alert */
+.checkin-alert{background:#FCEBC9;border:1.5px solid #E5C088;border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:14px;cursor:pointer;}
+.checkin-alert-tag{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--amber-b);color:var(--amber-b);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:999px;margin-bottom:10px;}
+.checkin-alert-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--amber-b);animation:ambpulse 1.6s ease-in-out infinite;}
+.checkin-row{display:flex;align-items:center;gap:10px;}
+.avatar{display:flex;align-items:center;justify-content:center;font-family:"DM Sans",sans-serif;font-weight:600;flex-shrink:0;}
+.avatar-md{width:36px;height:36px;border-radius:50%;font-size:12px;}
+.avatar-sm{width:30px;height:30px;border-radius:50%;font-size:11px;}
+.avatar-lg{width:44px;height:44px;border-radius:50%;font-size:14px;}
+.avatar-amber{background:#F5C76A;color:#5C3D08;}
+.avatar-green{background:var(--brand-tint);color:var(--brand);}
+.checkin-name{font-size:14px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.checkin-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+
+/* Calendar-chip event row */
+.evt-row{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:10px 12px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .12s;}
+.evt-row:hover{border-color:var(--brand);}
+.evt-chip{flex-shrink:0;width:46px;height:46px;border-radius:8px;background:var(--bg-card-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;}
+.evt-chip-mo{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);}
+.evt-chip-d{font-family:"DM Serif Display",serif;font-size:20px;color:var(--text-primary);margin-top:2px;}
+.evt-rest{flex:1;min-width:0;}
+.evt-rest-name{font-size:13px;font-weight:500;color:var(--text-primary);line-height:1.25;}
+.evt-rest-meta{font-size:10px;color:var(--text-tertiary);margin-top:2px;font-family:"DM Mono",monospace;letter-spacing:.02em;}
+.evt-rest-arrow{color:var(--text-tertiary);font-size:14px;flex-shrink:0;}
+
+.evt-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+
+/* Status pill (for past/upcoming chip in headers) */
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.pill-upcoming{background:var(--brand-tint);color:var(--brand);}
+.pill-completed{background:#F5F5F5;color:var(--text-secondary);}
+.pill-live{background:var(--brand);color:#fff;}
+.pill-confirmed{background:var(--brand-tint);color:var(--brand);border:1px solid var(--brand-b);}
+.pill-pending{background:var(--amber-l);color:var(--amber-b);border:1px solid var(--amber-b);}
+.pill-on-pace{background:var(--brand-tint);color:var(--brand);border:1px solid var(--brand-b);}
+.pill-warn{background:var(--amber-l);color:var(--amber-b);border:1px solid var(--amber-b);}
+
+.pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
+
+/* Volunteer row */
+.vol-row{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:9px 12px;display:flex;align-items:center;gap:10px;}
+.vol-row.tappable{cursor:pointer;transition:border-color .12s;}
+.vol-row.tappable:hover{border-color:var(--brand);}
+.vol-row-body{flex:1;min-width:0;}
+.vol-name{font-size:13px;font-weight:500;color:var(--text-primary);line-height:1.2;}
+.vol-meta{font-size:10px;color:var(--text-tertiary);margin-top:2px;font-family:"DM Mono",monospace;letter-spacing:.02em;}
+.vol-row-arrow{color:var(--text-tertiary);font-size:14px;flex-shrink:0;}
+
+/* Bottom tab nav */
+.bot-tabs{position:absolute;bottom:0;left:0;right:0;height:64px;background:#fff;border-top:1px solid var(--rule);display:flex;z-index:30;}
+.bot-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text-tertiary);transition:color .15s;padding:8px 4px 10px;}
+.bot-tab.active{color:var(--brand);}
+.bot-tab svg{width:18px;height:18px;flex-shrink:0;}
+.bot-tab-lbl{font-size:10px;font-weight:500;font-family:"DM Sans",sans-serif;}
+.bot-tab.active .bot-tab-lbl{font-weight:600;}
+.bot-tab-badge{position:absolute;top:7px;right:50%;margin-right:-22px;background:var(--amber-b);color:#fff;font-size:9px;font-weight:600;padding:2px 5px;border-radius:999px;line-height:1;min-width:14px;text-align:center;}
+
+/* Tab sub-nav inside Volunteers */
+.subtabs{display:flex;background:#fff;border:1.5px solid var(--rule);border-radius:999px;padding:3px;margin-bottom:14px;}
+.subtab{flex:1;height:32px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:500;color:var(--text-secondary);border-radius:999px;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .12s;}
+.subtab.active{background:var(--brand);color:#fff;}
+.subtab-count{font-size:10px;opacity:.8;}
+.subtab.active .subtab-count{opacity:1;}
+
+/* Search field */
+.search-field{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:12px;}
+.search-input{flex:1;border:none;outline:none;background:transparent;font-family:"DM Sans",sans-serif;font-size:13px;color:var(--text-primary);}
+.search-input::placeholder{color:var(--text-tertiary);}
+.search-clear{background:transparent;border:none;color:var(--text-tertiary);font-size:14px;cursor:pointer;padding:0 4px;line-height:1;font-family:"DM Sans",sans-serif;}
+.search-clear:hover{color:var(--text-secondary);}
+
+.station-group{margin-bottom:14px;}
+.station-group-hdr{display:flex;align-items:baseline;justify-content:space-between;padding:6px 4px;margin-bottom:6px;border-bottom:1px solid var(--rule);}
+.station-group-name{font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:var(--text-primary);text-transform:uppercase;letter-spacing:.06em;}
+.station-group-name.warn{color:var(--amber-b);}
+.station-group-name.floating{color:var(--brand);}
+.station-group-meta{font-size:10px;color:var(--text-tertiary);font-family:"DM Mono",monospace;letter-spacing:.02em;}
+.station-group-rows{display:flex;flex-direction:column;gap:5px;}
+.search-empty{padding:24px 16px;text-align:center;font-size:12px;color:var(--text-tertiary);font-style:italic;}
+
+/* Collapsible section header — tappable with chevron */
+.collapse-hdr{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:"DM Sans",sans-serif;width:100%;text-align:left;margin-bottom:10px;transition:border-color .12s;}
+.collapse-hdr:hover{border-color:var(--brand);}
+.collapse-hdr-title{flex:1;font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.collapse-hdr-meta{font-size:11px;color:var(--text-tertiary);font-family:"DM Mono",monospace;margin-right:6px;}
+.collapse-chevron{font-size:14px;color:var(--text-tertiary);transition:transform .15s;line-height:1;flex-shrink:0;}
+.collapse-chevron.open{transform:rotate(90deg);}
+.collapse-content{margin-bottom:14px;animation:expand .2s ease;}
+@keyframes expand{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* Event detail */
+.detail-back{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary);cursor:pointer;background:none;border:none;font-family:"DM Sans",sans-serif;padding:0;margin-bottom:6px;}
+.detail-back:hover{color:var(--text-secondary);}
+.detail-title{font-family:"DM Serif Display",serif;font-size:24px;line-height:1.1;margin-bottom:4px;}
+.detail-sub{font-size:12px;color:var(--text-secondary);margin-bottom:18px;}
+
+.detail-stats{display:flex;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;}
+.detail-stats-cell{flex:1;padding:12px 4px 10px;text-align:center;}
+.detail-stats-cell+.detail-stats-cell{border-left:1px solid var(--rule);}
+.detail-stats-n{font-family:"DM Serif Display",serif;font-size:22px;line-height:1;color:var(--brand);}
+.detail-stats-lbl{font-size:9px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;}
+
+.station-row{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.station-row.warn{border-color:var(--amber-b);background:var(--amber-l);}
+.station-row-body{flex:1;min-width:0;}
+.station-row-name{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.2;}
+.station-row-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.cap-dots{display:flex;gap:3px;flex-shrink:0;}
+.cap-dot{width:8px;height:8px;border-radius:50%;}
+.cap-dot.cap-filled{background:var(--brand);}
+.cap-dot.cap-empty{background:#fff;border:1.5px solid var(--rule);}
+.cap-dot.cap-empty-warn{background:#fff;border:1.5px solid var(--amber-b);}
+.result-num{font-family:"DM Serif Display",serif;font-size:18px;color:var(--brand);flex-shrink:0;line-height:1;min-width:24px;text-align:right;}
+
+/* Past event hero */
+.hero-impact{background:linear-gradient(160deg, var(--brand) 0%, var(--brand-deep) 100%);color:#fff;border-radius:var(--radius-lg);padding:22px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow-md);}
+.hero-impact-num{font-family:"DM Serif Display",serif;font-size:54px;line-height:1;letter-spacing:-.02em;}
+.hero-impact-lbl{font-size:13px;font-weight:500;color:#C8EEE3;margin-top:4px;letter-spacing:.04em;}
+.hero-impact-sub{font-size:11px;color:#A0DDC8;margin-top:6px;}
+
+/* Buttons */
+.btn-primary{width:100%;height:46px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .15s;}
+.btn-primary:hover{background:var(--brand-deep);}
+.btn-secondary{width:100%;height:46px;background:#fff;border:1.5px solid var(--rule);color:var(--text-primary);border-radius:var(--radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.btn-secondary:hover{border-color:var(--text-secondary);}
+.btn-amber{width:100%;height:46px;background:var(--amber-b);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.btn-amber:hover{background:#8C3F08;}
+.btn-amber:disabled{background:#D8C8A8;cursor:not-allowed;}
+
+.button-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto;padding-top:18px;}
+
+/* Form fields */
+.field{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:9px 12px;margin-bottom:10px;}
+.field-lbl{font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;}
+.field-val{font-size:13px;color:var(--text-primary);font-weight:500;}
+.field-input{width:100%;border:none;outline:none;background:transparent;font-family:"DM Sans",sans-serif;font-size:13px;color:var(--text-primary);font-weight:500;padding:0;}
+
+.chip{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;border:1.5px solid;}
+.chip-on{background:var(--brand);color:#fff;border-color:var(--brand);}
+.chip-off{background:#fff;color:var(--text-secondary);border-color:var(--rule);}
+.chip-off:hover{border-color:var(--brand);color:var(--brand);}
+
+/* Sheet (overlay for assign / reassign / send-reminder / create-event) */
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;}
+.sheet-backdrop.open{opacity:1;pointer-events:auto;}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg-canvas);border-radius:var(--radius-xl) var(--radius-xl) 0 0;z-index:41;transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.7,.3,1);max-height:88%;overflow-y:auto;display:flex;flex-direction:column;}
+.sheet.open{transform:translateY(0);}
+.sheet-handle{width:36px;height:4px;background:rgba(0,0,0,.18);border-radius:999px;margin:8px auto 4px;flex-shrink:0;}
+.sheet-body{padding:14px 18px 22px;flex:1;display:flex;flex-direction:column;}
+.sheet-title{font-family:"DM Serif Display",serif;font-size:22px;line-height:1.1;margin-bottom:4px;}
+.sheet-sub{font-size:12px;color:var(--text-secondary);margin-bottom:16px;line-height:1.4;}
+.sheet-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.06);border:none;color:var(--text-secondary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-family:"DM Sans",sans-serif;z-index:42;}
+.sheet-close:hover{background:rgba(0,0,0,.12);}
+
+/* Station picker grid (for assign + reassign sheets) */
+.station-picker-lbl{font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;margin-top:4px;}
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.station-opt{padding:11px 10px;background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;text-align:left;transition:all .12s;}
+.station-opt:hover{border-color:var(--brand);}
+.station-opt.selected{background:var(--brand);color:#fff;border-color:var(--brand);}
+.station-opt-meta{font-size:10px;font-weight:400;color:var(--text-tertiary);margin-top:2px;}
+.station-opt.selected .station-opt-meta{color:#C8EEE3;}
+.station-opt:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Vol focus card (in reassign sheet) */
+.focus-card{background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+
+/* Login overlay */
+.login{position:absolute;inset:0;background:var(--bg-canvas);padding:36px 22px 28px;display:flex;flex-direction:column;z-index:60;}
+/* Hard guarantee: login overlay is only ever visible when state is login. */
+#login-overlay{display:none;}
+#login-overlay:not(:empty){display:flex;position:absolute;inset:0;z-index:60;}
+.login-eyebrow{font-size:11px;font-weight:500;color:var(--text-tertiary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-family:"DM Mono",monospace;}
+.login-h{font-family:"DM Serif Display",serif;font-size:26px;line-height:1.15;margin-bottom:6px;}
+.login-h em{font-style:italic;color:var(--brand);}
+.login-sub{font-size:13px;color:var(--text-secondary);line-height:1.4;margin-bottom:24px;}
+.login-form{display:flex;flex-direction:column;flex:1;}
+.login-label{font-size:12px;font-weight:600;color:var(--text-secondary);letter-spacing:.04em;text-transform:uppercase;margin-bottom:7px;display:block;}
+.login-input{width:100%;height:46px;padding:0 14px;border:1.5px solid var(--rule);border-radius:var(--radius-md);background:#fff;font-size:15px;font-family:"DM Sans",sans-serif;color:var(--text-primary);outline:none;transition:border-color .15s;}
+.login-input:focus{border-color:var(--brand);}
+.login-hint{font-size:11px;color:var(--text-tertiary);margin-top:6px;line-height:1.4;}
+.login-spacer{flex:1;min-height:24px;}
+.login-cta{width:100%;height:50px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:15px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .15s;}
+.login-cta:hover{background:var(--brand-deep);}
+.login-cta:disabled{background:#D8D8D8;cursor:not-allowed;}
+
+/* Toast */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:100;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* Empty state */
+.empty{padding:32px 20px;text-align:center;}
+.empty-mark{font-size:32px;opacity:.3;margin-bottom:10px;}
+.empty-title{font-family:"DM Serif Display",serif;font-size:18px;color:var(--text-primary);margin-bottom:6px;}
+.empty-sub{font-size:12px;color:var(--text-secondary);line-height:1.5;}
+
+.anim{animation:si .25s ease;}
+@keyframes si{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none;}}
+</style>
+  <!-- Playground: auto-injected Microsoft Clarity for inside-iframe recording -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window,document,"clarity","script","weqc268a3f");
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      var sid = p.get('sid');
+      if (sid) window.clarity('set', 'session_id', sid);
+      var m = window.location.pathname.match(/\/prototypes\/([^/]+)\//);
+      if (m) window.clarity('set', 'prototype', m[1]);
+      window.clarity('set', 'context', 'prototype');
+    })();
+  </script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-mark" onclick="navTo('home')">
+      <div class="brand-logo">S</div>
+      <div class="brand-text">Coordinator<small>HMIS &middot; Pinellas Hope</small></div>
+    </div>
+  </div>
+</header>
+
+<div class="phone" id="phone-wrap">
+  <div id="screen"></div>
+  <div class="bot-tabs" id="bot-tabs"></div>
+  <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet"></div>
+  <div id="login-overlay"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Coordinator app — user test prototype
+   Architecture:
+     - 4 bottom tabs: Home / Events / Volunteers / Reports
+     - Home is data-aware: shows live event when one's running, else planning view
+     - Sheets handle focused tasks: assign volunteer, reassign, send reminder, create event
+     - Sub-tabs inside Volunteers: All / Confirmed / Pending
+     - Drill-in pages: event detail (upcoming + past variants)
+   ============================================================ */
+
+// ---- Mock data ----
+var DATA_MODE = "planning"; // locked — this is the planning test file
+
+var EVENT_TODAY = {
+  id:"e0", name:"Friday Outreach", loc:"Main Pavilion",
+  startTime:"9:00 AM", endTime:"12:00 PM",
+  startedAgo:"started 14 min ago",
+  status:"live"
+};
+
+var STATS_LIVE = { checkedIn:8, rostered:12, inQueue:15, served:23 };
+
+var STATIONS_LIVE = [
+  {id:"showers",  name:"Showers",     vols:2, queue:4, status:"on_pace"},
+  {id:"clothes",  name:"Clothes",     vols:2, queue:3, status:"on_pace"},
+  {id:"haircuts", name:"Haircuts",    vols:2, queue:2, status:"on_pace"},
+  {id:"meal",     name:"Meal",        vols:1, queue:6, status:"backed_up"}
+];
+
+var ASSIGNED_VOLS = [
+  {id:"v1", initials:"JT", name:"Jordan Tate",   stationId:"showers",  since:"9:08 AM"},
+  {id:"v2", initials:"SP", name:"Sam Park",      stationId:"showers",  since:"9:11 AM"},
+  {id:"v3", initials:"LC", name:"Lin Carlos",    stationId:"haircuts", since:"9:05 AM"},
+  {id:"v4", initials:"CR", name:"Carlos Reyes",  stationId:"clothes",  since:"9:02 AM"},
+  {id:"v5", initials:"DW", name:"Devon Walsh",   stationId:"clothes",  since:"9:03 AM"},
+  {id:"v6", initials:"TR", name:"Tasha Rose",    stationId:"meal",     since:"9:07 AM"},
+  {id:"v7", initials:"AG", name:"Alex Greene",   stationId:"haircuts", since:"9:06 AM"}
+];
+
+var INCOMING_VOL = {
+  initials:"MR", name:"Maya Rodriguez", arrivedAt:"9:14 AM"
+};
+
+// Full volunteer roster (for Volunteers tab)
+var VOLUNTEERS_ROSTER = [
+  // Live (currently on-site) — derived from ASSIGNED_VOLS
+  // Confirmed
+  {id:"r1", initials:"AK", name:"Ann Kim",        status:"confirmed", meta:"Confirmed for Apr 28 · Tuesday Service"},
+  {id:"r2", initials:"BW", name:"Beth Wallace",   status:"confirmed", meta:"Confirmed for Apr 28 · Tuesday Service"},
+  {id:"r3", initials:"MG", name:"Mike Garcia",    status:"confirmed", meta:"Confirmed for May 2 · Friday Outreach"},
+  // Pending
+  {id:"r4", initials:"DR", name:"David Reese",    status:"pending",   meta:"Invited Apr 22 · no reply"},
+  {id:"r5", initials:"JL", name:"Jessica Lin",    status:"pending",   meta:"Invited Apr 22 · no reply"},
+  {id:"r6", initials:"PM", name:"Paul Martin",    status:"pending",   meta:"Invited Apr 23 · no reply"},
+  {id:"r7", initials:"NF", name:"Nina Fox",       status:"pending",   meta:"Invited Apr 25 · no reply"}
+];
+
+var EVENTS_LIST = [
+  // Upcoming events with readiness data
+  {
+    id:"e1", name:"Tuesday Service", mo:"APR", d:"28", dow:"TUE", time:"8:00 AM",
+    loc:"Riverside", status:"upcoming",
+    confirmed:9, capacity:10, pending:3,
+    daysUntil:4,
+    stationGaps:0,
+    lastReminderSent:"6 days ago",
+    services:{showers:true, clothes:true, haircuts:true},
+    clothingModel:"partner",
+    clothingPartner:"Goodwill"
+  },
+  {
+    id:"e2", name:"Friday Outreach", mo:"MAY", d:"2", dow:"FRI", time:"9:00 AM",
+    loc:"Main Pavilion", status:"upcoming",
+    confirmed:7, capacity:12, pending:5,
+    daysUntil:8,
+    stationGaps:1,
+    lastReminderSent:null,
+    services:{showers:true, clothes:true, haircuts:true},
+    clothingModel:"in_house",
+    clothingPartner:null
+  },
+  // Past
+  {id:"e_past1", name:"Friday Outreach", mo:"APR", d:"17", dow:"FRI", time:"9:00 AM", loc:"Main Pavilion", status:"past", served:94, vols:11, dur:"3h"},
+  {id:"e_past2", name:"Tuesday Service",  mo:"APR", d:"14", dow:"TUE", time:"8:00 AM", loc:"Riverside",     status:"past", served:42, vols:6,  dur:"2h"}
+];
+
+// Reports stats (cross-event)
+var REPORTS = {
+  totalServed:312, totalEvents:8, totalVolHours:184,
+  byStation: [
+    {name:"Showers", served:128},
+    {name:"Clothes", served:84},
+    {name:"Haircuts", served:62},
+    {name:"Meal", served:38}
+  ]
+};
+
+// ---- App state ----
+var state = "login";
+var coordName = "";
+var credentialDraft = "";
+var activeTab = "home";
+var volSubtab = "all";
+var confirmedVolsExpanded = false;
+var newEventClothingModel = "in_house"; // default
+var newEventPartnerName = "";
+
+// Edit event state
+var editEventId = null;
+var editClothingModel = null;
+var editPartnerName = "";
+var editServiceShowers = true;
+var editServiceClothes = true;
+var editServiceHaircuts = true;
+var volSearchQuery = "";
+var detailEventId = null;
+var detailFrom = null; // "events" | "reports" — controls which buttons show on past event detail
+var sheetType = null;        // "assign" | "reassign" | "send_reminder" | "create_event" | "send_report"
+var pendingStation = null;
+var reassignVolId = null;
+var reassignTargetId = null;
+var sheetOpen = false;
+
+// ---- Helpers ----
+function isValidCredential(v){
+  v = (v||"").trim();
+  if(v.length < 4) return false;
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return true;
+  var digits = v.replace(/\D/g,"");
+  return digits.length >= 7;
+}
+function deriveName(v){
+  v = (v||"").trim();
+  if(v.indexOf("@")>0){
+    var local = v.split("@")[0].split(/[._-]/)[0];
+    return local.charAt(0).toUpperCase() + local.slice(1);
+  }
+  return "Sarah";
+}
+function firstName(n){return (n||"").split(" ")[0];}
+
+function stationName(id){
+  var s = STATIONS_LIVE.filter(function(x){return x.id===id;})[0];
+  return s ? s.name : "—";
+}
+function stationById(id){
+  return STATIONS_LIVE.filter(function(x){return x.id===id;})[0];
+}
+
+function eventIsLiveToday(){
+  return DATA_MODE === "live";
+}
+
+function backedUpCount(){
+  return STATIONS_LIVE.filter(function(s){return s.status==="backed_up";}).length;
+}
+
+function showToast(msg){
+  var t = document.getElementById("toast");
+  t.innerHTML = msg;
+  t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");}, 2400);
+}
+
+// ---- Navigation ----
+function navTo(tab){
+  activeTab = tab;
+  state = tab;
+  closeSheet();
+  detailEventId = null;
+  render();
+}
+function openEventDetail(id, from){
+  detailEventId = id;
+  detailFrom = from || activeTab;
+  state = "event_detail";
+  closeSheet();
+  render();
+}
+
+// ---- Login ----
+function handleCredentialInput(v){
+  credentialDraft = v;
+  var btn = document.getElementById("login-cta");
+  if(btn) btn.disabled = !isValidCredential(credentialDraft);
+}
+function submitLogin(e){
+  if(e) e.preventDefault();
+  if(!isValidCredential(credentialDraft)) return;
+  coordName = deriveName(credentialDraft);
+  state = "home";
+  activeTab = "home";
+  render();
+}
+function signOut(){
+  state = "login";
+  coordName = "";
+  credentialDraft = "";
+  closeSheet();
+  render();
+}
+
+// ---- Sheets ----
+function openSheet(type, opts){
+  sheetType = type;
+  opts = opts || {};
+  if(type === "reassign"){
+    reassignVolId = opts.volId;
+    reassignTargetId = null;
+  }
+  if(type === "assign"){
+    pendingStation = null;
+  }
+  sheetOpen = true;
+  renderSheet();
+}
+function closeSheet(){
+  sheetOpen = false;
+  sheetType = null;
+  pendingStation = null;
+  reassignVolId = null;
+  reassignTargetId = null;
+  var bk = document.getElementById("sheet-backdrop");
+  var sh = document.getElementById("sheet");
+  if(bk) bk.classList.remove("open");
+  if(sh) sh.classList.remove("open");
+}
+function pickStation(s){
+  pendingStation = s;
+  renderSheet();
+}
+function confirmAssign(){
+  if(!pendingStation || !pendingAssignVolId) return;
+  var inVol = INCOMING_VOLS.filter(function(v){return v.id === pendingAssignVolId;})[0];
+  if(!inVol) return;
+  var isFloating = pendingStation === "_floating";
+  var st = isFloating ? null : stationById(pendingStation);
+  ASSIGNED_VOLS.unshift({
+    id:"v" + (ASSIGNED_VOLS.length + 1),
+    initials:inVol.initials,
+    name:inVol.name,
+    stationId:isFloating ? null : st.id,
+    since:inVol.arrivedAt
+  });
+  // Remove from incoming
+  INCOMING_VOLS = INCOMING_VOLS.filter(function(v){return v.id !== pendingAssignVolId;});
+  if(st){
+    st.vols++;
+    // Recompute backed_up
+    STATIONS_LIVE.forEach(function(s){
+      if(s.queue / Math.max(s.vols,1) <= 3) s.status = "on_pace";
+    });
+  }
+  STATS_LIVE.checkedIn++;
+  showToast(inVol.name + " assigned to " + (isFloating ? "floating support" : st.name));
+  closeSheet();
+  render();
+}
+function pickReassignTarget(s){ reassignTargetId = s; renderSheet(); }
+function confirmReassign(){
+  if(!reassignTargetId || !reassignVolId) return;
+  var v = ASSIGNED_VOLS.filter(function(x){return x.id === reassignVolId;})[0];
+  if(!v) return;
+  var movingToFloating = reassignTargetId === "_floating";
+  if((!movingToFloating && v.stationId === reassignTargetId) ||
+     (movingToFloating && v.stationId === null)) return;
+  var fromSt = stationById(v.stationId);
+  var toSt = movingToFloating ? null : stationById(reassignTargetId);
+  if(fromSt) fromSt.vols = Math.max(0, fromSt.vols - 1);
+  if(toSt) toSt.vols++;
+  // Recompute backed_up
+  STATIONS_LIVE.forEach(function(s){
+    if(s.queue / Math.max(s.vols,1) <= 3) s.status = "on_pace";
+  });
+  v.stationId = movingToFloating ? null : reassignTargetId;
+  showToast(v.name + " moved to " + (movingToFloating ? "floating support" : toSt.name));
+  closeSheet();
+  render();
+}
+
+// ---- Render ----
+function render(){
+  var loginOv = document.getElementById("login-overlay");
+  var screen = document.getElementById("screen");
+  var bot = document.getElementById("bot-tabs");
+
+  if(state === "login"){
+    loginOv.style.display = "flex";
+    bot.style.display = "none";
+    renderLogin();
+    screen.innerHTML = "";
+    return;
+  }
+  loginOv.style.display = "none";
+  loginOv.innerHTML = "";
+  bot.style.display = "flex";
+
+  renderBottomTabs();
+
+  var h = "<div class='dash anim'>";
+  h += "<div class='dash-body'>";
+
+  if(state === "home"){
+    h += renderHome();
+  } else if(state === "events"){
+    h += renderEvents();
+  } else if(state === "event_detail"){
+    h += renderEventDetail();
+  } else if(state === "volunteers"){
+    h += renderVolunteers();
+  } else if(state === "reports"){
+    h += renderReports();
+  }
+
+  h += "</div></div>";
+  screen.innerHTML = h;
+}
+
+function renderBottomTabs(){
+  var tabs = document.getElementById("bot-tabs");
+  var bu = backedUpCount();
+  var inEvents = (state === "events" || state === "event_detail");
+  var h = "";
+  h += "<div class='bot-tab " + (state==='home'?'active':'') + "' onclick='navTo(\"home\")' style='position:relative;'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linejoin='round'><path d='M3 8L9 3L15 8V14C15 14.5 14.5 15 14 15H4C3.5 15 3 14.5 3 14V8Z'/></svg>";
+  h += "<span class='bot-tab-lbl'>Home</span>";
+  h += "</div>";
+  h += "<div class='bot-tab " + (inEvents?'active':'') + "' onclick='navTo(\"events\")'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'><rect x='3' y='4' width='12' height='11' rx='1.5'/><path d='M3 7H15M6 2V5M12 2V5'/></svg>";
+  h += "<span class='bot-tab-lbl'>Events</span>";
+  h += "</div>";
+  h += "<div class='bot-tab " + (state==='volunteers'?'active':'') + "' onclick='navTo(\"volunteers\")'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'><circle cx='7' cy='6' r='2.5'/><path d='M2 15C2 12 4 10.5 7 10.5C10 10.5 12 12 12 15'/><circle cx='13' cy='7' r='2'/></svg>";
+  h += "<span class='bot-tab-lbl'>Volunteers</span>";
+  h += "</div>";
+  h += "<div class='bot-tab " + (state==='reports'?'active':'') + "' onclick='navTo(\"reports\")'>";
+  h += "<svg viewBox='0 0 18 18' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'><path d='M3 14V8M7 14V5M11 14V10M15 14V3'/></svg>";
+  h += "<span class='bot-tab-lbl'>Reports</span>";
+  h += "</div>";
+  tabs.innerHTML = h;
+}
+
+// ----- HOME -----
+function renderHome(){
+  var d = new Date();
+  var dateStr = d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+  var timeStr = d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Hi, <em>" + firstName(coordName) + "</em></div>";
+  h += "<div class='info-meta'>" + dateStr + "<br>" + timeStr + " &middot; coordinator</div>";
+  h += "</div>";
+
+  if(eventIsLiveToday()){
+    // ===== LIVE-DAY HOME =====
+    var bu = backedUpCount();
+
+    // Hero — live event
+    h += "<div class='hero hero-live'>";
+    h += "<div class='hero-mark'>&#9728;</div>";
+    h += "<div class='hero-eyebrow'><span class='live-pulse-dot'></span> Live now &middot; " + EVENT_TODAY.startedAgo + "</div>";
+    h += "<div class='hero-date'>" + EVENT_TODAY.startTime + " &middot; " + EVENT_TODAY.loc + "</div>";
+    h += "<div class='hero-title'>" + EVENT_TODAY.name + "</div>";
+    h += "<div class='hero-sub'>" + STATS_LIVE.inQueue + " in queue &middot; " + STATS_LIVE.served + " served so far</div>";
+    h += "<button class='hero-cta' onclick='openEventDetail(\"e0\")'>View stations &rarr;</button>";
+    h += "</div>";
+
+    // Live stats panel
+    h += "<div class='live-stats'>";
+    h += "<div class='live-stats-hdr'>";
+    h += "<div class='live-stats-lbl'>Today so far</div>";
+    h += "<div class='live-stats-pulse'><span class='live-pulse-dot'></span>Live</div>";
+    h += "</div>";
+    h += "<div class='live-stats-body'>";
+    h += "<div class='live-stats-cell'><div class='live-stats-cell-n'>" + STATS_LIVE.checkedIn + "</div><div class='live-stats-cell-lbl'>Checked in</div></div>";
+    h += "<div class='live-stats-cell'><div class='live-stats-cell-n'>" + STATS_LIVE.inQueue + "</div><div class='live-stats-cell-lbl'>In queue</div></div>";
+    h += "<div class='live-stats-cell'><div class='live-stats-cell-n'>" + STATS_LIVE.served + "</div><div class='live-stats-cell-lbl'>Served</div></div>";
+    h += "</div>";
+    h += "</div>";
+
+    // Quick actions
+    h += "<div class='quick-actions'>";
+    h += "<button class='qa-btn' onclick='navTo(\"volunteers\")'>" + ASSIGNED_VOLS.length + " volunteers<span class='qa-btn-meta'>on-site &rsaquo;</span></button>";
+    if(bu > 0){
+      h += "<button class='qa-btn warn' onclick='openEventDetail(\"e0\")'>&#9888;&#65039; " + bu + " backed up<span class='qa-btn-meta'>fix &rsaquo;</span></button>";
+    } else {
+      h += "<button class='qa-btn' onclick='openEventDetail(\"e0\")'>" + STATIONS_LIVE.length + " stations<span class='qa-btn-meta'>on pace</span></button>";
+    }
+    h += "</div>";
+
+    // Needs attention
+    if(INCOMING_VOL){
+      h += "<div class='sec-lbl'><span>Needs attention</span></div>";
+      h += "<div class='checkin-alert' onclick='openSheet(\"assign\")'>";
+      h += "<span class='checkin-alert-tag'><span class='checkin-alert-tag-dot'></span> New check-in</span>";
+      h += "<div class='checkin-row'>";
+      h += "<div class='avatar avatar-md avatar-amber'>" + INCOMING_VOL.initials + "</div>";
+      h += "<div style='flex:1;'>";
+      h += "<div class='checkin-name'>" + INCOMING_VOL.name + "</div>";
+      h += "<div class='checkin-meta'>Just arrived &middot; " + INCOMING_VOL.arrivedAt + " &middot; <strong>tap to assign &rarr;</strong></div>";
+      h += "</div>";
+      h += "</div>";
+      h += "</div>";
+    }
+  }
+  else {
+    // ===== PLANNING-DAY HOME — readiness for the next event =====
+    var nextEvent = EVENTS_LIST.filter(function(e){return e.status==="upcoming";})[0];
+    var otherUpcoming = EVENTS_LIST.filter(function(e){return e.status==="upcoming";}).slice(1);
+
+    // Readiness signals — derived from event data
+    var fillPct = Math.round((nextEvent.confirmed / nextEvent.capacity) * 100);
+    var slotsOpen = nextEvent.capacity - nextEvent.confirmed;
+    var isUrgent = nextEvent.daysUntil <= 2 && (slotsOpen > 0 || nextEvent.stationGaps > 0);
+
+    // Hero — readiness dashboard
+    h += "<div class='hero hero-readiness" + (isUrgent ? " urgent" : "") + "'>";
+    h += "<div class='hero-mark'>&#9728;</div>";
+    var daysLabel;
+    if(nextEvent.daysUntil === 0) daysLabel = "TODAY";
+    else if(nextEvent.daysUntil === 1) daysLabel = "TOMORROW";
+    else daysLabel = "IN " + nextEvent.daysUntil + " DAYS";
+    h += "<div class='hero-eyebrow'>" + daysLabel + " &middot; " + nextEvent.dow + " " + nextEvent.mo + " " + nextEvent.d + "</div>";
+    h += "<div class='hero-date'>" + nextEvent.time + " &middot; " + nextEvent.loc + "</div>";
+    h += "<div class='hero-title'>" + nextEvent.name + "</div>";
+
+    // Readiness progress bar — volunteers confirmed
+    h += "<div class='hero-readiness-progress'>";
+    h += "<div class='hero-readiness-progress-row'>";
+    h += "<span><strong>" + nextEvent.confirmed + " of " + nextEvent.capacity + "</strong> volunteers confirmed</span>";
+    h += "<span>" + fillPct + "%</span>";
+    h += "</div>";
+    h += "<div class='hero-readiness-bar'><div class='hero-readiness-bar-fill' style='width:" + fillPct + "%;'></div></div>";
+    h += "</div>";
+
+    // Hero actions
+    h += "<div class='hero-readiness-actions'>";
+    h += "<button class='hero-cta primary' onclick='openEventDetail(\"" + nextEvent.id + "\")'>View plan</button>";
+    if(slotsOpen > 0){
+      h += "<button class='hero-cta secondary' onclick='openSheet(\"send_invite\")'>Invite new</button>";
+    } else if(nextEvent.pending > 0){
+      h += "<button class='hero-cta secondary' onclick='openSheet(\"send_reminder\")'>Remind confirmed</button>";
+    } else {
+      h += "<button class='hero-cta secondary' onclick='openSheet(\"send_reminder\")'>Remind confirmed</button>";
+    }
+    h += "</div>";
+    h += "</div>";
+
+    // Prep tasks — what needs the coordinator's attention; each task includes the why
+    var prepTasks = [];
+    if(slotsOpen > 0){
+      var meta;
+      if(nextEvent.pending > 0){
+        meta = nextEvent.pending + " invite" + (nextEvent.pending===1?"":"s") + " haven&rsquo;t been answered yet &mdash; could fill from those, or send more";
+      } else {
+        meta = "No pending invites &mdash; reach out to volunteers not yet on this event";
+      }
+      prepTasks.push({
+        type: "warn",
+        icon: "!",
+        name: "Need " + slotsOpen + " more volunteer" + (slotsOpen===1?"":"s"),
+        meta: meta,
+        action: "openSheet(\"send_invite\")"
+      });
+    }
+    if(nextEvent.stationGaps > 0){
+      prepTasks.push({
+        type: "warn",
+        icon: "!",
+        name: nextEvent.stationGaps + " station" + (nextEvent.stationGaps===1?"":"s") + " under-staffed",
+        meta: "Some services don&rsquo;t have enough volunteers to run smoothly &mdash; rebalance or invite",
+        action: "openEventDetail(\"" + nextEvent.id + "\")"
+      });
+    }
+    if(nextEvent.daysUntil <= 2 && nextEvent.lastReminderSent !== null){
+      prepTasks.push({
+        type: "todo",
+        icon: "@",
+        name: "Send day-before reminders",
+        meta: "Confirmed volunteers may forget &mdash; a reminder boosts show-up rates. Last sent " + nextEvent.lastReminderSent,
+        action: "openSheet(\"send_reminder\")"
+      });
+    }
+    if(slotsOpen === 0 && nextEvent.stationGaps === 0){
+      prepTasks.push({
+        type: "done",
+        icon: "&check;",
+        name: "Everything&rsquo;s ready",
+        meta: "All volunteers confirmed, all stations covered &mdash; just send a reminder closer to the day",
+        action: null
+      });
+    }
+
+    if(prepTasks.length > 0){
+      h += "<div class='sec-lbl'><span>Prep</span></div>";
+      h += "<div style='margin-bottom:18px;'>";
+      prepTasks.forEach(function(t){
+        var clickAttr = t.action ? "onclick='" + t.action + "'" : "";
+        h += "<div class='prep-task " + t.type + "' " + clickAttr + ">";
+        h += "<div class='prep-task-icon " + t.type + "'>" + t.icon + "</div>";
+        h += "<div class='prep-task-body'>";
+        h += "<div class='prep-task-name'>" + t.name + "</div>";
+        h += "<div class='prep-task-meta'>" + t.meta + "</div>";
+        h += "</div>";
+        if(t.action){
+          h += "<span class='prep-task-arrow'>&rsaquo;</span>";
+        }
+        h += "</div>";
+      });
+      h += "</div>";
+    }
+
+    // Other upcoming events — quieter
+    if(otherUpcoming.length > 0){
+      h += "<div class='sec-lbl'><span>Also coming up</span></div>";
+      h += "<div style='margin-bottom:14px;'>";
+      otherUpcoming.forEach(function(e){
+        h += "<div class='other-upcoming' onclick='openEventDetail(\"" + e.id + "\")'>";
+        h += "<div class='other-upcoming-chip'><div class='other-upcoming-chip-mo'>" + e.mo + "</div><div class='other-upcoming-chip-d'>" + e.d + "</div></div>";
+        h += "<div class='other-upcoming-body'>";
+        h += "<div class='other-upcoming-name'>" + e.name + "</div>";
+        h += "<div class='other-upcoming-meta'>" + e.dow + " &middot; " + e.time + " &middot; " + e.confirmed + "/" + e.capacity + " confirmed</div>";
+        h += "</div>";
+        h += "<span class='other-upcoming-arrow'>&rsaquo;</span>";
+        h += "</div>";
+      });
+      h += "</div>";
+    }
+
+    // Quick actions — quiet, at the bottom
+    h += "<div class='quick-actions'>";
+    h += "<button class='qa-btn' onclick='openSheet(\"create_event\")'>+ New event</button>";
+    h += "<button class='qa-btn' onclick='navTo(\"volunteers\")'>Volunteer roster<span class='qa-btn-meta'>" + (VOLUNTEERS_ROSTER.length + ASSIGNED_VOLS.length) + " people</span></button>";
+    h += "</div>";
+  }
+  return h;
+}
+
+// ----- EVENTS LIST -----
+function renderEvents(){
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Events</div>";
+  h += "<div class='info-meta'>upcoming &middot; past</div>";
+  h += "</div>";
+
+  // New event button at top
+  h += "<button class='btn-primary' onclick='openSheet(\"create_event\")' style='margin-bottom:18px;'>+ New event</button>";
+
+  // Today's live event (if live)
+  if(eventIsLiveToday()){
+    h += "<div class='sec-lbl'><span>Today</span></div>";
+    h += "<div class='evt-list'>";
+    h += "<div class='evt-row' onclick='openEventDetail(\"e0\")' style='border-color:var(--brand);background:var(--brand-tint);'>";
+    h += "<div class='evt-chip' style='background:var(--brand);'><div class='evt-chip-mo' style='color:#C8EEE3;'>NOW</div><div class='evt-chip-d' style='color:#fff;'>&#9679;</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + EVENT_TODAY.name + "</div>";
+    h += "<div class='evt-rest-meta' style='color:var(--brand);'>Live &middot; " + EVENT_TODAY.startTime + " &middot; " + STATS_LIVE.served + " served so far</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+    h += "</div>";
+  }
+
+  h += "<div class='sec-lbl'><span>Upcoming</span></div>";
+  h += "<div class='evt-list'>";
+  EVENTS_LIST.filter(function(e){return e.status==="upcoming";}).forEach(function(e){
+    h += "<div class='evt-row' onclick='openEventDetail(\"" + e.id + "\")'>";
+    h += "<div class='evt-chip'><div class='evt-chip-mo'>" + e.mo + "</div><div class='evt-chip-d'>" + e.d + "</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + e.name + "</div>";
+    h += "<div class='evt-rest-meta'>" + e.dow + " &middot; " + e.time + " &middot; " + e.confirmed + "/" + e.capacity + " confirmed</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+  });
+  h += "</div>";
+
+  h += "<div class='sec-lbl'><span>Past</span></div>";
+  h += "<div class='evt-list'>";
+  EVENTS_LIST.filter(function(e){return e.status==="past";}).forEach(function(e){
+    h += "<div class='evt-row' onclick='openEventDetail(\"" + e.id + "\")'>";
+    h += "<div class='evt-chip'><div class='evt-chip-mo'>" + e.mo + "</div><div class='evt-chip-d'>" + e.d + "</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + e.name + "</div>";
+    h += "<div class='evt-rest-meta'>" + e.dow + " &middot; " + e.served + " served &middot; " + e.vols + " vols</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+  });
+  h += "</div>";
+  return h;
+}
+
+// ----- EVENT DETAIL -----
+function renderEventDetail(){
+  var h = "";
+  // Find event — could be e0 (today's live) or from EVENTS_LIST
+  var ev;
+  if(detailEventId === "e0"){
+    ev = {id:"e0", name:EVENT_TODAY.name, loc:EVENT_TODAY.loc, time:EVENT_TODAY.startTime, status:"live"};
+  } else {
+    ev = EVENTS_LIST.filter(function(e){return e.id === detailEventId;})[0];
+    if(!ev){ ev = EVENTS_LIST[0]; }
+  }
+
+  var backTab = detailFrom || "events";
+  var backLabel = backTab === "reports" ? "Reports" : (backTab === "home" ? "Home" : "Events");
+  h += "<button class='detail-back' onclick='navTo(\"" + backTab + "\")'>&lsaquo; " + backLabel + "</button>";
+
+  // Header — pill + title + sub
+  if(ev.status === "live"){
+    h += "<span class='status-pill pill-live'><span class='live-pulse-dot' style='background:#fff;'></span> Live now</span>";
+  } else if(ev.status === "upcoming"){
+    h += "<span class='status-pill pill-upcoming'>Upcoming &middot; " + ev.dow + " " + ev.mo + " " + ev.d + "</span>";
+  } else {
+    h += "<span class='status-pill pill-completed'>Completed &middot; " + ev.mo + " " + ev.d + "</span>";
+  }
+  h += "<div class='detail-title'>" + ev.name + "</div>";
+
+  if(ev.status === "live"){
+    h += "<div class='detail-sub'>" + EVENT_TODAY.startTime + " &ndash; " + EVENT_TODAY.endTime + " &middot; " + EVENT_TODAY.loc + "</div>";
+
+    // Live stats
+    h += "<div class='detail-stats'>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + STATS_LIVE.checkedIn + "/" + STATS_LIVE.rostered + "</div><div class='detail-stats-lbl'>Checked in</div></div>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + STATS_LIVE.inQueue + "</div><div class='detail-stats-lbl'>In queue</div></div>";
+    h += "<div class='detail-stats-cell'><div class='detail-stats-n'>" + STATS_LIVE.served + "</div><div class='detail-stats-lbl'>Served</div></div>";
+    h += "</div>";
+
+    // Stations with status
+    h += "<div class='sec-lbl'><span>Stations</span></div>";
+    h += "<div class='evt-list'>";
+    STATIONS_LIVE.forEach(function(s){
+      var warnCls = s.status === "backed_up" ? " warn" : "";
+      h += "<div class='station-row" + warnCls + "'>";
+      h += "<div class='station-row-body'>";
+      h += "<div class='station-row-name'>" + s.name + "</div>";
+      h += "<div class='station-row-meta'>" + s.vols + " volunteer" + (s.vols===1?"":"s") + " &middot; " + s.queue + " in queue</div>";
+      h += "</div>";
+      h += "<span class='pill " + (s.status==='backed_up'?'pill-warn':'pill-on-pace') + "'>" + (s.status==='backed_up'?'Backed up':'On pace') + "</span>";
+      h += "</div>";
+    });
+    h += "</div>";
+
+    if(backedUpCount() > 0){
+      h += "<div style='margin-top:14px;'><button class='btn-primary' onclick='navTo(\"volunteers\")'>Reassign volunteers &rarr;</button></div>";
+    }
+  }
+  else if(ev.status === "upcoming"){
+    var daysLabel;
+    if(ev.daysUntil === 0) daysLabel = "Today";
+    else if(ev.daysUntil === 1) daysLabel = "Tomorrow";
+    else daysLabel = "In " + ev.daysUntil + " days";
+    h += "<div class='detail-sub'>" + daysLabel + " &middot; " + ev.dow + " " + ev.mo + " " + ev.d + " &middot; " + ev.time + " &middot; " + ev.loc + "</div>";
+
+    // Intake captures basis depends on clothing config — communicates the operational model
+    var intakeCapturesNote;
+    if(ev.clothingModel === "in_house"){
+      intakeCapturesNote = "Captures clothing details so volunteers can prefill bags";
+    } else if(ev.clothingModel === "partner"){
+      intakeCapturesNote = "Captures clothing yes/no to queue clients for " + (ev.clothingPartner || "partner");
+    } else {
+      intakeCapturesNote = "Captures client profile and routes to services";
+    }
+
+    // Intake — front door
+    h += "<div class='sec-lbl'><span>Front door</span></div>";
+    h += "<div class='evt-list'>";
+    h += "<div class='station-row' style='border-left:3px solid var(--brand);'>";
+    h += "<div class='station-row-body'>";
+    h += "<div class='station-row-name'>Intake</div>";
+    h += "<div style='font-size:11px;color:var(--text-tertiary);font-style:italic;margin-top:2px;line-height:1.4;'>" + intakeCapturesNote + "</div>";
+    h += "</div>";
+    h += "</div>";
+    h += "</div>";
+
+    // Service stations — clothing meta line varies by config
+    var clothesMeta;
+    if(ev.clothingModel === "in_house"){
+      clothesMeta = "In-house &middot; volunteers prefill bags from intake details";
+    } else if(ev.clothingModel === "partner"){
+      clothesMeta = "Partner: " + (ev.clothingPartner || "external") + " &middot; we queue, they fulfill";
+    } else {
+      clothesMeta = null;
+    }
+
+    h += "<div class='sec-lbl'><span>Services</span></div>";
+    h += "<div class='evt-list'>";
+
+    var svcs = ev.services || {showers:true, clothes:true, haircuts:true};
+    var stationPlan = [];
+    if(svcs.showers)  stationPlan.push({name:"Showers",  config:"In-house"});
+    if(svcs.clothes)  stationPlan.push({name:"Clothes",  config:clothesMeta});
+    if(svcs.haircuts) stationPlan.push({name:"Haircuts", config:"In-house"});
+
+    if(stationPlan.length === 0){
+      h += "<div class='station-row' style='justify-content:center;color:var(--text-tertiary);font-style:italic;padding:14px;'>No services configured for this event</div>";
+    } else {
+      stationPlan.forEach(function(s){
+        h += "<div class='station-row'>";
+        h += "<div class='station-row-body'>";
+        h += "<div class='station-row-name'>" + s.name + "</div>";
+        if(s.config){
+          h += "<div style='font-size:11px;color:var(--text-tertiary);font-style:italic;margin-top:2px;line-height:1.4;'>" + s.config + "</div>";
+        }
+        h += "</div>";
+        h += "</div>";
+      });
+    }
+    h += "</div>";
+
+    // Action buttons — labels self-describe purpose
+    h += "<div class='button-row' style='margin-top:14px;'>";
+    if((ev.capacity - ev.confirmed) > 0){
+      h += "<button class='btn-secondary' onclick='openSheet(\"send_reminder\")'>Remind confirmed</button>";
+      h += "<button class='btn-primary' onclick='openSheet(\"send_invite\")'>+ Invite new</button>";
+    } else {
+      h += "<button class='btn-secondary' onclick='openSheet(\"send_reminder\")'>Remind confirmed</button>";
+      h += "<button class='btn-primary' onclick='openSheet(\"send_reminder\")'>Send reminder</button>";
+    }
+    h += "</div>";
+    // Edit event — always available, quietly placed below primary actions
+    h += "<div style='margin-top:8px;'>";
+    h += "<button class='btn-secondary' style='width:100%;' onclick='openEditEvent(\"" + ev.id + "\")'>Edit event</button>";
+    h += "</div>";
+  }
+  else {
+    // Past event
+    h += "<div class='detail-sub'>" + ev.dow + " " + ev.mo + " " + ev.d + " &middot; " + ev.time + " &middot; " + ev.loc + "</div>";
+
+    h += "<div class='hero-impact'>";
+    h += "<div class='hero-impact-num'>" + ev.served + "</div>";
+    h += "<div class='hero-impact-lbl'>People served</div>";
+    h += "<div class='hero-impact-sub'>across 4 stations &middot; " + ev.vols + " volunteers &middot; " + ev.dur + "</div>";
+    h += "</div>";
+
+    h += "<div class='sec-lbl'><span>By station</span></div>";
+    h += "<div class='evt-list'>";
+    var pastBreakdown = [
+      {name:"Showers",  vols:3, dur:"2 hr 58 min", served:38},
+      {name:"Clothes",  vols:2, dur:"3 hr 04 min", served:28},
+      {name:"Haircuts", vols:2, dur:"2 hr 41 min", served:22},
+      {name:"Meal",     vols:4, dur:"1 hr 50 min", served:6}
+    ];
+    pastBreakdown.forEach(function(s){
+      h += "<div class='station-row'>";
+      h += "<div class='station-row-body'>";
+      h += "<div class='station-row-name'>" + s.name + "</div>";
+      h += "<div class='station-row-meta'>" + s.vols + " volunteers &middot; " + s.dur + "</div>";
+      h += "</div>";
+      h += "<div class='result-num'>" + s.served + "</div>";
+      h += "</div>";
+    });
+    h += "</div>";
+
+    h += "<div class='button-row'>";
+    h += "<button class='btn-secondary' onclick='showToast(\"Export coming soon\")'>Export report</button>";
+    if(detailFrom === "reports"){
+      h += "<button class='btn-primary' onclick='openSheet(\"send_report\")'>Send report</button>";
+    } else {
+      h += "<button class='btn-primary' onclick='showToast(\"Duplicated &mdash; redirecting to new event\")'>Duplicate event</button>";
+    }
+    h += "</div>";
+  }
+  return h;
+}
+
+// ----- VOLUNTEERS -----
+function renderVolunteers(){
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Volunteers</div>";
+  var totalCount = ASSIGNED_VOLS.length + VOLUNTEERS_ROSTER.length;
+  h += "<div class='info-meta'>" + totalCount + " total<br>" + ASSIGNED_VOLS.length + " on-site now</div>";
+  h += "</div>";
+
+  // Search field — at the top so it's the first thing the eye lands on
+  var qEsc = (volSearchQuery || "").replace(/"/g,"&quot;");
+  h += "<div class='search-field'>";
+  h += "<svg width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='currentColor' stroke-width='1.5'><circle cx='6' cy='6' r='4'/><path d='M9.5 9.5L13 13' stroke-linecap='round'/></svg>";
+  h += "<input class='search-input' type='text' placeholder='Search by name' value=\"" + qEsc + "\" oninput='handleVolSearch(this.value)'>";
+  if(volSearchQuery){
+    h += "<button class='search-clear' onclick='clearVolSearch()' aria-label='Clear search'>&times;</button>";
+  }
+  h += "</div>";
+
+  // Sub-tabs
+  var liveCount = ASSIGNED_VOLS.length;
+  var confirmedCount = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='confirmed';}).length;
+  var pendingCount = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='pending';}).length;
+  var allCount = liveCount + confirmedCount + pendingCount;
+  h += "<div class='subtabs'>";
+  h += "<div class='subtab " + (volSubtab==='all'?'active':'') + "' onclick='setVolSubtab(\"all\")'>All <span class='subtab-count'>&middot; " + allCount + "</span></div>";
+  if(eventIsLiveToday()){
+    h += "<div class='subtab " + (volSubtab==='live'?'active':'') + "' onclick='setVolSubtab(\"live\")'>On-site <span class='subtab-count'>&middot; " + liveCount + "</span></div>";
+  }
+  h += "<div class='subtab " + (volSubtab==='confirmed'?'active':'') + "' onclick='setVolSubtab(\"confirmed\")'>Confirmed <span class='subtab-count'>&middot; " + confirmedCount + "</span></div>";
+  h += "<div class='subtab " + (volSubtab==='pending'?'active':'') + "' onclick='setVolSubtab(\"pending\")'>Pending <span class='subtab-count'>&middot; " + pendingCount + "</span></div>";
+  h += "</div>";
+
+  // Filter helper — match against name (case-insensitive)
+  var q = (volSearchQuery || "").trim().toLowerCase();
+  function nameMatches(v){
+    if(!q) return true;
+    return v.name.toLowerCase().indexOf(q) >= 0;
+  }
+
+  var resultCount = 0;
+  var contentHtml = "";
+
+  // ===== On-site (Live + All sub-tabs) — grouped by station, Floating Support on top =====
+  if(volSubtab === "all" || volSubtab === "live"){
+    if(eventIsLiveToday() && ASSIGNED_VOLS.length){
+      // Floating Support first
+      var floating = ASSIGNED_VOLS.filter(function(v){return v.stationId === null && nameMatches(v);});
+      if(floating.length){
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name floating'>&#9733; Floating support</div>";
+        contentHtml += "<div class='station-group-meta'>" + floating.length + " available</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+        floating.forEach(function(v){
+          contentHtml += "<div class='vol-row tappable' onclick='openSheet(\"reassign\",{volId:\"" + v.id + "\"})'>";
+          contentHtml += "<div class='avatar avatar-sm avatar-amber'>" + v.initials + "</div>";
+          contentHtml += "<div class='vol-row-body'>";
+          contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+          contentHtml += "<div class='vol-meta'>Floating &middot; available since " + v.since + "</div>";
+          contentHtml += "</div>";
+          contentHtml += "<span class='pill pill-live'>On-site</span>";
+          contentHtml += "</div>";
+        });
+        contentHtml += "</div>";
+        contentHtml += "</div>";
+        resultCount += floating.length;
+      }
+      // Then by station
+      STATIONS_LIVE.forEach(function(st){
+        var rows = ASSIGNED_VOLS.filter(function(v){return v.stationId === st.id && nameMatches(v);});
+        if(rows.length === 0) return;
+        var warnCls = st.status === "backed_up" ? " warn" : "";
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name" + warnCls + "'>" +
+                       (st.status === "backed_up" ? "&#9888;&#65039; " : "") + st.name + "</div>";
+        contentHtml += "<div class='station-group-meta'>" + rows.length + " vol" + (rows.length===1?"":"s") + " &middot; " + st.queue + " in queue</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+        rows.forEach(function(v){
+          contentHtml += "<div class='vol-row tappable' onclick='openSheet(\"reassign\",{volId:\"" + v.id + "\"})'>";
+          contentHtml += "<div class='avatar avatar-sm avatar-amber'>" + v.initials + "</div>";
+          contentHtml += "<div class='vol-row-body'>";
+          contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+          contentHtml += "<div class='vol-meta'>At " + st.name + " &middot; since " + v.since + "</div>";
+          contentHtml += "</div>";
+          contentHtml += "<span class='pill pill-live'>On-site</span>";
+          contentHtml += "</div>";
+        });
+        contentHtml += "</div>";
+        contentHtml += "</div>";
+        resultCount += rows.length;
+      });
+    }
+  }
+
+  // ===== Confirmed (All + Confirmed sub-tabs) — flat list, no station grouping (RSVP for future) =====
+  if(volSubtab === "all" || volSubtab === "confirmed"){
+    var confirmed = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='confirmed' && nameMatches(v);});
+    if(confirmed.length){
+      if(volSubtab === "all"){
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name'>Confirmed for upcoming events</div>";
+        contentHtml += "<div class='station-group-meta'>" + confirmed.length + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+      } else {
+        contentHtml += "<div style='display:flex;flex-direction:column;gap:5px;margin-bottom:14px;'>";
+      }
+      confirmed.forEach(function(v){
+        contentHtml += "<div class='vol-row'>";
+        contentHtml += "<div class='avatar avatar-sm avatar-green'>" + v.initials + "</div>";
+        contentHtml += "<div class='vol-row-body'>";
+        contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+        contentHtml += "<div class='vol-meta'>" + v.meta + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<span class='pill pill-confirmed'>Confirmed</span>";
+        contentHtml += "</div>";
+      });
+      contentHtml += volSubtab === "all" ? "</div></div>" : "</div>";
+      resultCount += confirmed.length;
+    }
+  }
+
+  // ===== Pending (All + Pending sub-tabs) — flat list =====
+  if(volSubtab === "all" || volSubtab === "pending"){
+    var pending = VOLUNTEERS_ROSTER.filter(function(v){return v.status==='pending' && nameMatches(v);});
+    if(pending.length){
+      if(volSubtab === "all"){
+        contentHtml += "<div class='station-group'>";
+        contentHtml += "<div class='station-group-hdr'>";
+        contentHtml += "<div class='station-group-name'>Invited &middot; not replied</div>";
+        contentHtml += "<div class='station-group-meta'>" + pending.length + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<div class='station-group-rows'>";
+      } else {
+        contentHtml += "<div style='display:flex;flex-direction:column;gap:5px;margin-bottom:14px;'>";
+      }
+      pending.forEach(function(v){
+        contentHtml += "<div class='vol-row'>";
+        contentHtml += "<div class='avatar avatar-sm avatar-green'>" + v.initials + "</div>";
+        contentHtml += "<div class='vol-row-body'>";
+        contentHtml += "<div class='vol-name'>" + v.name + "</div>";
+        contentHtml += "<div class='vol-meta'>" + v.meta + "</div>";
+        contentHtml += "</div>";
+        contentHtml += "<span class='pill pill-pending'>Pending</span>";
+        contentHtml += "</div>";
+      });
+      contentHtml += volSubtab === "all" ? "</div></div>" : "</div>";
+      resultCount += pending.length;
+    }
+  }
+
+  // Empty state when search returns nothing
+  if(resultCount === 0){
+    if(q){
+      h += "<div class='search-empty'>No volunteers match &ldquo;" + qEsc + "&rdquo;</div>";
+    } else {
+      h += "<div class='search-empty'>No volunteers in this view yet.</div>";
+    }
+  } else {
+    h += contentHtml;
+  }
+
+  h += "<button class='btn-primary' onclick='showToast(\"Invite flow coming soon\")'>+ Invite volunteers</button>";
+  return h;
+}
+function setVolSubtab(t){ volSubtab = t; render(); }
+function handleVolSearch(v){ volSearchQuery = v; render(); }
+function clearVolSearch(){ volSearchQuery = ""; render(); }
+
+// ----- REPORTS -----
+function renderReports(){
+  var h = "";
+  h += "<div class='info-line'>";
+  h += "<div class='info-name'>Reports</div>";
+  h += "<div class='info-meta'>this year<br>across all events</div>";
+  h += "</div>";
+
+  // Hero stats
+  h += "<div class='hero-impact'>";
+  h += "<div class='hero-impact-num'>" + REPORTS.totalServed + "</div>";
+  h += "<div class='hero-impact-lbl'>People served</div>";
+  h += "<div class='hero-impact-sub'>across " + REPORTS.totalEvents + " events &middot; " + REPORTS.totalVolHours + " volunteer hours</div>";
+  h += "</div>";
+
+  h += "<div class='sec-lbl'><span>By station</span></div>";
+  h += "<div class='evt-list'>";
+  REPORTS.byStation.forEach(function(s){
+    h += "<div class='station-row'>";
+    h += "<div class='station-row-body'>";
+    h += "<div class='station-row-name'>" + s.name + "</div>";
+    h += "<div class='station-row-meta'>" + Math.round(s.served / REPORTS.totalEvents) + " avg per event</div>";
+    h += "</div>";
+    h += "<div class='result-num'>" + s.served + "</div>";
+    h += "</div>";
+  });
+  h += "</div>";
+
+  h += "<div class='sec-lbl'><span>Recent events</span></div>";
+  h += "<div class='evt-list'>";
+  EVENTS_LIST.filter(function(e){return e.status==='past';}).forEach(function(e){
+    h += "<div class='evt-row' onclick='openEventDetail(\"" + e.id + "\",\"reports\")'>";
+    h += "<div class='evt-chip'><div class='evt-chip-mo'>" + e.mo + "</div><div class='evt-chip-d'>" + e.d + "</div></div>";
+    h += "<div class='evt-rest'>";
+    h += "<div class='evt-rest-name'>" + e.name + "</div>";
+    h += "<div class='evt-rest-meta'>" + e.served + " served &middot; " + e.vols + " volunteers</div>";
+    h += "</div>";
+    h += "<span class='evt-rest-arrow'>&rsaquo;</span>";
+    h += "</div>";
+  });
+  h += "</div>";
+
+  return h;
+}
+
+// ----- SHEET RENDER -----
+function renderSheet(){
+  var bk = document.getElementById("sheet-backdrop");
+  var sh = document.getElementById("sheet");
+  if(!sheetOpen){ bk.classList.remove("open"); sh.classList.remove("open"); return; }
+  bk.classList.add("open");
+  sh.classList.add("open");
+
+  var h = "";
+  h += "<div class='sheet-handle'></div>";
+  h += "<button class='sheet-close' onclick='closeSheet()'>&times;</button>";
+  h += "<div class='sheet-body'>";
+
+  if(sheetType === "assign"){
+    h += "<div class='sheet-title'>Assign volunteer</div>";
+    h += "<div class='sheet-sub'>Select a station</div>";
+    h += "<div class='checkin-alert' style='cursor:default;'>";
+    h += "<span class='checkin-alert-tag'><span class='checkin-alert-tag-dot'></span> New check-in</span>";
+    h += "<div class='checkin-row'>";
+    h += "<div class='avatar avatar-md avatar-amber'>" + INCOMING_VOL.initials + "</div>";
+    h += "<div style='flex:1;'>";
+    h += "<div class='checkin-name'>" + INCOMING_VOL.name + "</div>";
+    h += "<div class='checkin-meta'>Just arrived &middot; " + INCOMING_VOL.arrivedAt + "</div>";
+    h += "</div>";
+    h += "</div>";
+    h += "</div>";
+    h += "<div class='station-picker-lbl' style='margin-top:14px;'>Send to station</div>";
+    h += "<div class='station-grid'>";
+    STATIONS_LIVE.forEach(function(s){
+      var sel = pendingStation === s.id;
+      h += "<button class='station-opt" + (sel?" selected":"") + "' onclick='pickStation(\"" + s.id + "\")'>";
+      h += s.name;
+      h += "<div class='station-opt-meta'>" + s.vols + " vol &middot; " + s.queue + " in queue</div>";
+      h += "</button>";
+    });
+    // Floating support — spans both columns visually
+    var floatSel = pendingStation === "_floating";
+    var floatCount = ASSIGNED_VOLS.filter(function(v){return v.stationId === null;}).length;
+    h += "<button class='station-opt" + (floatSel?" selected":"") + "' style='grid-column:span 2;' onclick='pickStation(\"_floating\")'>";
+    h += "&#9733; Floating support";
+    h += "<div class='station-opt-meta'>" + floatCount + " available &middot; ready to help anywhere</div>";
+    h += "</button>";
+    h += "</div>";
+    h += "<button class='btn-amber' " + (pendingStation?"":"disabled") + " onclick='confirmAssign()'>";
+    h += pendingStation ? "Assign to " + (pendingStation === "_floating" ? "floating support" : stationName(pendingStation)) : "Select a station";
+    h += "</button>";
+  }
+
+  else if(sheetType === "reassign"){
+    var v = ASSIGNED_VOLS.filter(function(x){return x.id === reassignVolId;})[0];
+    if(!v){ closeSheet(); return; }
+    var fromSt = stationById(v.stationId);
+    h += "<div class='sheet-title'>Reassign volunteer</div>";
+    var fromLabel = fromSt ? fromSt.name : "Floating support";
+    h += "<div class='sheet-sub'>Currently " + (fromSt ? "at " + fromSt.name : "in floating support") + ". Pick a station.</div>";
+    h += "<div class='focus-card'>";
+    h += "<div class='avatar avatar-lg avatar-green'>" + v.initials + "</div>";
+    h += "<div style='flex:1;'>";
+    h += "<div class='vol-name' style='font-size:15px;'>" + v.name + "</div>";
+    h += "<div class='vol-meta'>" + (fromSt ? "At " + fromSt.name : "Floating support") + " &middot; since " + v.since + "</div>";
+    h += "</div>";
+    h += "</div>";
+    h += "<div class='station-picker-lbl'>Move to</div>";
+    h += "<div class='station-grid'>";
+    STATIONS_LIVE.forEach(function(s){
+      var sel = reassignTargetId === s.id;
+      var current = s.id === v.stationId;
+      var clickHandler = current ? "" : "pickReassignTarget('" + s.id + "')";
+      h += "<button class='station-opt" + (sel?" selected":"") + "' " + (current?"disabled":"") + " onclick=\"" + clickHandler + "\">";
+      h += s.name + (current?" (current)":"");
+      h += "<div class='station-opt-meta'>" + s.vols + " vol &middot; " + s.queue + " in queue</div>";
+      h += "</button>";
+    });
+    // Floating support option
+    var floatSel = reassignTargetId === "_floating";
+    var floatCurrent = v.stationId === null;
+    var floatClick = floatCurrent ? "" : "pickReassignTarget('_floating')";
+    var floatCount = ASSIGNED_VOLS.filter(function(x){return x.stationId === null;}).length;
+    h += "<button class='station-opt" + (floatSel?" selected":"") + "' style='grid-column:span 2;' " + (floatCurrent?"disabled":"") + " onclick=\"" + floatClick + "\">";
+    h += "&#9733; Floating support" + (floatCurrent?" (current)":"");
+    h += "<div class='station-opt-meta'>" + floatCount + " available &middot; ready to help anywhere</div>";
+    h += "</button>";
+    h += "</div>";
+    h += "<button class='btn-primary' " + (reassignTargetId?"":"disabled") + " onclick='confirmReassign()'>";
+    h += reassignTargetId
+      ? "Move " + firstName(v.name) + " to " + (reassignTargetId === "_floating" ? "floating support" : stationName(reassignTargetId))
+      : "Select a station";
+    h += "</button>";
+  }
+
+  else if(sheetType === "send_reminder"){
+    h += "<div class='sheet-title'>Send reminder</div>";
+    h += "<div class='sheet-sub'>Notify volunteers about an upcoming event.</div>";
+    h += "<div class='field'><div class='field-lbl'>Recipients</div><div class='field-val'>All confirmed &middot; 12 volunteers</div></div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;'>Message preview</div>";
+    h += "<div style='background:#fff;border:1.5px solid var(--rule);border-radius:var(--radius-md);padding:12px;font-size:13px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px;'>Reminder: you&rsquo;re scheduled for Friday Outreach this Friday at 9 AM at Main Pavilion. Tap &ldquo;I&rsquo;m here&rdquo; when you arrive.</div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;'>When to send</div>";
+    h += "<div style='display:flex;flex-direction:column;gap:6px;margin-bottom:14px;'>";
+    h += "<button class='station-opt selected' style='text-align:left;'>24 hours before event<div class='station-opt-meta'>Recommended</div></button>";
+    h += "<button class='station-opt' style='text-align:left;' onclick='showToast(\"Will send now\")'>Send now</button>";
+    h += "</div>";
+    h += "<button class='btn-primary' onclick='confirmSendReminder()'>Schedule reminder</button>";
+  }
+
+  else if(sheetType === "send_invite"){
+    var nextEv = EVENTS_LIST.filter(function(e){return e.status==="upcoming";})[0];
+    var slotsOpen = nextEv ? (nextEv.capacity - nextEv.confirmed) : 0;
+    h += "<div class='sheet-title'>Invite volunteers</div>";
+    h += "<div class='sheet-sub'>Reach out to people on your roster who haven&rsquo;t signed up for this event yet.</div>";
+    if(nextEv){
+      h += "<div class='field'><div class='field-lbl'>Event</div><div class='field-val'>" + nextEv.name + "</div><div style='font-size:11px;color:var(--text-tertiary);margin-top:2px;'>" + nextEv.dow + " " + nextEv.mo + " " + nextEv.d + " &middot; " + nextEv.time + " &middot; " + slotsOpen + " open slot" + (slotsOpen===1?"":"s") + "</div></div>";
+    }
+    h += "<div class='field-lbl' style='margin-bottom:6px;margin-top:4px;'>Invite from</div>";
+    h += "<div style='display:flex;flex-direction:column;gap:6px;margin-bottom:12px;'>";
+    h += "<button class='station-opt selected' style='text-align:left;'>Regular volunteers<div class='station-opt-meta'>" + VOLUNTEERS_ROSTER.length + " people &middot; recommended</div></button>";
+    h += "<button class='station-opt' style='text-align:left;'>New contacts<div class='station-opt-meta'>Add by phone or email</div></button>";
+    h += "<button class='station-opt' style='text-align:left;'>Share signup link<div class='station-opt-meta'>For social or group chat</div></button>";
+    h += "</div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;'>Personal note (optional)</div>";
+    h += "<div class='field' style='padding:10px 12px;'><textarea class='field-input' rows='2' placeholder='We&rsquo;d love to have you. Even a couple of hours helps.' style='width:100%;border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:var(--text-primary);resize:none;'></textarea></div>";
+    h += "<div class='login-spacer' style='flex:1;min-height:8px;'></div>";
+    h += "<button class='btn-primary' onclick='confirmSendInvite()'>Send invites</button>";
+  }
+
+  else if(sheetType === "send_report"){
+    var ev = EVENTS_LIST.filter(function(e){return e.id === detailEventId;})[0];
+    var evName = ev ? ev.name : "this event";
+    var evMeta = ev ? (ev.dow + " " + ev.mo + " " + ev.d + " &middot; " + ev.served + " people served") : "";
+    h += "<div class='sheet-title'>Send report</div>";
+    h += "<div class='sheet-sub'>Email this report to recipients. Includes the impact summary and station breakdown.</div>";
+    h += "<div class='field'><div class='field-lbl'>Report</div><div class='field-val'>" + evName + "</div><div style='font-size:11px;color:var(--text-tertiary);margin-top:2px;'>" + evMeta + "</div></div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;margin-top:4px;'>Send to</div>";
+    h += "<div style='display:flex;flex-direction:column;gap:6px;margin-bottom:12px;'>";
+    h += "<button class='station-opt selected' style='text-align:left;'>Board members<div class='station-opt-meta'>5 people &middot; recommended</div></button>";
+    h += "<button class='station-opt' style='text-align:left;'>Lead pastor<div class='station-opt-meta'>Reverend Hill</div></button>";
+    h += "<button class='station-opt' style='text-align:left;'>Custom recipients<div class='station-opt-meta'>Pick from your contacts</div></button>";
+    h += "</div>";
+    h += "<div class='field-lbl' style='margin-bottom:6px;'>Add a note (optional)</div>";
+    h += "<div class='field' style='padding:10px 12px;'><textarea class='field-input' rows='2' placeholder='e.g. Great event this week &mdash; thanks to everyone who served.' style='width:100%;border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:var(--text-primary);resize:none;'></textarea></div>";
+    h += "<div class='login-spacer' style='flex:1;min-height:8px;'></div>";
+    h += "<button class='btn-primary' onclick='confirmSendReport()'>Send report</button>";
+  }
+
+  else if(sheetType === "edit_event"){
+    var ev = EVENTS_LIST.filter(function(e){return e.id === editEventId;})[0];
+    var evName = ev ? ev.name : "Event";
+    h += "<div class='sheet-title'>Edit event</div>";
+    h += "<div class='sheet-sub'>Adjust services or clothing setup for " + evName + ". Other fields like date and time aren&rsquo;t editable in this prototype.</div>";
+
+    // Services (toggleable for editing)
+    h += "<div class='station-picker-lbl' style='margin-top:6px;'>Services</div>";
+    h += "<div style='display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;'>";
+    h += "<span class='chip " + (editServiceShowers ? "chip-on" : "chip-off") + "' onclick='toggleEditService(\"showers\")' style='cursor:pointer;'>Showers</span>";
+    h += "<span class='chip " + (editServiceClothes ? "chip-on" : "chip-off") + "' onclick='toggleEditService(\"clothes\")' style='cursor:pointer;'>Clothes</span>";
+    h += "<span class='chip " + (editServiceHaircuts ? "chip-on" : "chip-off") + "' onclick='toggleEditService(\"haircuts\")' style='cursor:pointer;'>Haircuts</span>";
+    h += "</div>";
+    h += "<div style='font-size:11px;color:var(--text-tertiary);font-style:italic;margin-bottom:14px;line-height:1.4;'>Tap a service to turn it on or off for this event. Intake always runs.</div>";
+
+    // Clothes setup — only if clothes is enabled
+    if(editServiceClothes){
+      h += "<div class='station-picker-lbl' style='margin-top:6px;'>Clothes setup</div>";
+      h += "<div style='display:flex;flex-direction:column;gap:6px;margin-bottom:8px;'>";
+      h += "<button class='station-opt " + (editClothingModel === "in_house" ? "selected" : "") + "' style='text-align:left;' onclick='setEditClothing(\"in_house\")'>";
+      h += "In-house";
+      h += "<div class='station-opt-meta'>We run Clothes &middot; Intake captures sizing &amp; preferences for prefill</div>";
+      h += "</button>";
+      h += "<button class='station-opt " + (editClothingModel === "partner" ? "selected" : "") + "' style='text-align:left;' onclick='setEditClothing(\"partner\")'>";
+      h += "Partner runs Clothes";
+      h += "<div class='station-opt-meta'>We queue clients &middot; partner fulfills &middot; Intake captures yes/no only</div>";
+      h += "</button>";
+      h += "</div>";
+      if(editClothingModel === "partner"){
+        h += "<div class='field'><div class='field-lbl'>Partner organization</div><input class='field-input' type='text' placeholder='e.g. Goodwill' value='" + (editPartnerName||"") + "' oninput='setEditPartnerName(this.value)'></div>";
+      }
+      h += "<div style='font-size:11px;color:var(--text-tertiary);font-style:italic;margin-bottom:14px;line-height:1.4;'>Intake will adapt to ask the right questions for this setup.</div>";
+    }
+
+    h += "<button class='btn-primary' onclick='confirmEditEvent()'>Save changes</button>";
+  }
+
+  else if(sheetType === "create_event"){
+    h += "<div class='sheet-title'>New event</div>";
+    h += "<div class='sheet-sub'>Set up a new outreach event.</div>";
+    h += "<div class='field'><div class='field-lbl'>Event name</div><input class='field-input' type='text' placeholder='e.g. Friday Outreach' value=''></div>";
+    h += "<div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;'>";
+    h += "<div class='field'><div class='field-lbl'>Date</div><input class='field-input' type='text' placeholder='May 15' value=''></div>";
+    h += "<div class='field'><div class='field-lbl'>Start</div><input class='field-input' type='text' placeholder='9:00 AM' value=''></div>";
+    h += "</div>";
+    h += "<div class='field'><div class='field-lbl'>Location</div><input class='field-input' type='text' placeholder='Main Pavilion' value=''></div>";
+
+    h += "<div class='station-picker-lbl' style='margin-top:6px;'>Services</div>";
+    h += "<div style='display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;'>";
+    h += "<span class='chip chip-on'>Showers</span>";
+    h += "<span class='chip chip-on'>Clothes</span>";
+    h += "<span class='chip chip-on'>Haircuts</span>";
+    h += "</div>";
+    h += "<div style='font-size:11px;color:var(--text-tertiary);font-style:italic;margin-bottom:14px;line-height:1.4;'>Intake (the front door) runs at every event &mdash; it routes clients to the services above.</div>";
+
+    // Clothing setup — drives what Intake captures
+    h += "<div class='station-picker-lbl' style='margin-top:6px;'>Clothes setup</div>";
+    h += "<div style='display:flex;flex-direction:column;gap:6px;margin-bottom:8px;'>";
+    h += "<button class='station-opt " + (newEventClothingModel === "in_house" ? "selected" : "") + "' style='text-align:left;' onclick='setNewEventClothing(\"in_house\")'>";
+    h += "In-house";
+    h += "<div class='station-opt-meta'>We run Clothes &middot; Intake captures sizing &amp; preferences for prefill</div>";
+    h += "</button>";
+    h += "<button class='station-opt " + (newEventClothingModel === "partner" ? "selected" : "") + "' style='text-align:left;' onclick='setNewEventClothing(\"partner\")'>";
+    h += "Partner runs Clothes";
+    h += "<div class='station-opt-meta'>We queue clients &middot; partner fulfills &middot; Intake captures yes/no only</div>";
+    h += "</button>";
+    h += "</div>";
+    if(newEventClothingModel === "partner"){
+      h += "<div class='field'><div class='field-lbl'>Partner organization</div><input class='field-input' type='text' placeholder='e.g. Goodwill' value='" + (newEventPartnerName||"") + "' oninput='setNewEventPartnerName(this.value)'></div>";
+    }
+    h += "<div style='font-size:11px;color:var(--text-tertiary);font-style:italic;margin-bottom:14px;line-height:1.4;'>Intake will adapt to ask the right questions for this setup.</div>";
+
+    h += "<button class='btn-primary' onclick='confirmCreateEvent()'>Create event</button>";
+  }
+
+  h += "</div>";
+  sh.innerHTML = h;
+}
+
+function confirmSendReport(){
+  showToast("Report sent &middot; recipients notified");
+  closeSheet();
+}
+function confirmSendReminder(){
+  showToast("Reminder scheduled &middot; sends 24 hr before event");
+  closeSheet();
+}
+function confirmSendInvite(){
+  showToast("Invites sent &middot; replies will appear in pending RSVPs");
+  closeSheet();
+}
+function confirmCreateEvent(){
+  var msg;
+  if(newEventClothingModel === "partner"){
+    var pname = newEventPartnerName || "partner";
+    msg = "Event created &middot; Clothes via " + pname;
+  } else {
+    msg = "Event created &middot; in-house Clothes prefill";
+  }
+  showToast(msg);
+  // Reset state
+  newEventClothingModel = "in_house";
+  newEventPartnerName = "";
+  closeSheet();
+}
+function setNewEventClothing(model){
+  newEventClothingModel = model;
+  renderSheet();
+}
+function setNewEventPartnerName(v){
+  newEventPartnerName = v;
+  // No re-render — typing should not cause re-render that loses focus
+}
+
+// Edit event — opens edit sheet with values pre-populated from the event
+function openEditEvent(evId){
+  var ev = EVENTS_LIST.filter(function(e){return e.id === evId;})[0];
+  if(!ev) return;
+  editEventId = evId;
+  editClothingModel = ev.clothingModel || "in_house";
+  editPartnerName = ev.clothingPartner || "";
+  var svcs = ev.services || {showers:true, clothes:true, haircuts:true};
+  editServiceShowers  = !!svcs.showers;
+  editServiceClothes  = !!svcs.clothes;
+  editServiceHaircuts = !!svcs.haircuts;
+  openSheet("edit_event");
+}
+function setEditClothing(model){
+  editClothingModel = model;
+  renderSheet();
+}
+function setEditPartnerName(v){
+  editPartnerName = v;
+}
+function toggleEditService(svc){
+  if(svc === "showers") editServiceShowers = !editServiceShowers;
+  else if(svc === "clothes") editServiceClothes = !editServiceClothes;
+  else if(svc === "haircuts") editServiceHaircuts = !editServiceHaircuts;
+  renderSheet();
+}
+function confirmEditEvent(){
+  var ev = EVENTS_LIST.filter(function(e){return e.id === editEventId;})[0];
+  if(!ev){ closeSheet(); return; }
+  ev.clothingModel = editClothingModel;
+  ev.clothingPartner = editClothingModel === "partner" ? editPartnerName : null;
+  ev.services = {
+    showers:  editServiceShowers,
+    clothes:  editServiceClothes,
+    haircuts: editServiceHaircuts
+  };
+  // Reset edit state
+  editEventId = null;
+  editClothingModel = null;
+  editPartnerName = "";
+  showToast("Event updated");
+  closeSheet();
+  render();
+}
+function toggleConfirmedVols(){ confirmedVolsExpanded = !confirmedVolsExpanded; render(); }
+
+// ----- LOGIN -----
+function renderLogin(){
+  var loginOv = document.getElementById("login-overlay");
+  var canSubmit = isValidCredential(credentialDraft);
+  var h = "";
+  h += "<div class='login'>";
+  h += "<div class='login-eyebrow'>HMIS &middot; Pinellas Hope</div>";
+  h += "<div class='login-h'>Coordinator <em>sign in</em></div>";
+  h += "<div class='login-sub'>Use the email or phone number associated with your account.</div>";
+  h += "<form class='login-form' onsubmit='submitLogin(event)'>";
+  h += "<label class='login-label' for='cred-inp'>Email or phone</label>";
+  h += "<input id='cred-inp' class='login-input' type='text' inputmode='email' autocomplete='username' autocapitalize='off' spellcheck='false' placeholder='you@example.com or (555) 555-1234' value='" + (credentialDraft||"") + "' oninput='handleCredentialInput(this.value)'>";
+  h += "<div class='login-hint'>We&rsquo;ll send a code to verify it&rsquo;s you.</div>";
+  h += "<div class='login-spacer'></div>";
+  h += "<button id='login-cta' class='login-cta' type='button' onclick='submitLogin()' " + (canSubmit?"":"disabled") + ">Continue</button>";
+  h += "</form>";
+  h += "</div>";
+  loginOv.innerHTML = h;
+  setTimeout(function(){
+    var inp = document.getElementById("cred-inp");
+    if(inp && !credentialDraft) inp.focus();
+  }, 50);
+}
+
+render();
+</script>
+</body>
+</html>

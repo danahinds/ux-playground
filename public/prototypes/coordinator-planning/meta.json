@@ -1,0 +1,10 @@
+{
+  "slug": "coordinator-planning",
+  "testName": "Coordinator Planning",
+  "schemaVersion": 1,
+  "createdAt": "2026-05-03T22:28:42.694Z",
+  "mode": "exploration",
+  "prompt": null,
+  "tasks": null,
+  "archived": false
+}
