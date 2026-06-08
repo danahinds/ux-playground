@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A3D54">
+<title>SALT Tampa · My hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-canvas:#EAF3F6; --bg-card:#FFFFFF; --bg-card-alt:#EAF2F5;
+  --brand:#0E7C9B; --brand-deep:#0A5E76; --brand-tint:#DCEFF4;
+  --ocean-1:#0A3D54; --ocean-2:#0E6E8C; --ocean-3:#16A8AE;
+  --coral:#FF8A5B; --coral-deep:#E8633A;
+  --text-primary:#13262C; --text-secondary:#4A5C63; --text-tertiary:#7C9099; --text-light:#F2FAFB;
+  --border:rgba(19,38,44,0.08); --border-strong:rgba(19,38,44,0.16);
+  --radius-md:10px; --radius-lg:14px; --radius-xl:20px;
+  --shadow-sm:0 1px 2px rgba(10,61,84,0.06); --shadow-md:0 6px 18px rgba(10,61,84,0.09);
+  --t:150ms cubic-bezier(0.4,0,0.2,1);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg-canvas); color:var(--text-primary);
+  font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  min-height:100vh; min-height:100dvh; padding-bottom:40px;
+}
+.serif{font-family:"DM Serif Display",Georgia,serif;font-weight:400;letter-spacing:-0.01em;}
+
+/* ---------- Top bar ---------- */
+.topbar{ background:transparent; position:relative; z-index:30; }
+.topbar-inner{
+  max-width:760px; margin:0 auto; padding:14px 18px;
+  display:flex; align-items:center; gap:12px;
+}
+.brand-mark{display:flex;align-items:center;gap:9px;}
+.brand-logo{
+  width:34px;height:34px;border-radius:9px;
+  background:var(--text-light); color:var(--ocean-1);
+  display:flex;align-items:center;justify-content:center;
+  font-family:"DM Serif Display",Georgia,serif; font-size:18px;
+}
+.brand-name{font-size:14px;font-weight:600;color:var(--text-light);line-height:1;}
+.topbar .icon-btn{
+  margin-left:auto; width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,0.16); border:none; color:var(--text-light);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background var(--t);
+}
+.topbar .icon-btn:hover{background:rgba(255,255,255,0.28);}
+
+/* ---------- Hero / greeting ---------- */
+.hero{
+  background:linear-gradient(165deg, var(--ocean-1) 0%, var(--ocean-2) 72%, var(--ocean-3) 135%);
+  color:var(--text-light); position:relative; overflow:hidden;
+  border-radius:0 0 28px 28px; padding-bottom:64px;
+}
+.hero::before{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.7;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,0.08) 0 3%, transparent 3% 14%),
+    linear-gradient(132deg, rgba(255,255,255,0.06) 0 4%, transparent 4% 17%);
+}
+.hero-inner{max-width:760px;margin:0 auto;padding:8px 18px 0;position:relative;z-index:3;}
+.greet-eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8FE3E8;margin:0 0 6px;}
+.greet-title{font-size:30px;line-height:1.08;margin:0 0 8px;}
+.greet-sub{font-size:14.5px;color:#CFEEF1;margin:0;max-width:430px;}
+.hero-mascot{
+  position:absolute;right:-18px;bottom:30px;width:172px;z-index:2;
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,0.26)); animation:floaty 6s ease-in-out infinite;
+}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-9px) rotate(1deg);}}
+.hbub{position:absolute;border-radius:50%;z-index:2;
+  background:radial-gradient(circle at 32% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.12) 55%);
+  border:1px solid rgba(255,255,255,0.3);}
+
+/* impact stats — personal */
+.impact{
+  max-width:760px;margin:0 auto;padding:0 18px;position:relative;z-index:6;
+  margin-top:-44px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.impact-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 12px;text-align:center;box-shadow:var(--shadow-md);
+}
+.impact-value{font-family:"DM Serif Display",Georgia,serif;font-size:26px;line-height:1;margin:0;color:var(--ocean-1);}
+.impact-label{font-size:11.5px;color:var(--text-secondary);margin:6px 0 0;line-height:1.3;}
+
+/* ---------- Content ---------- */
+.wrap{max-width:760px;margin:0 auto;padding:24px 18px 0;}
+.block{margin-bottom:26px;}
+.block-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 12px;}
+.block-title{font-size:18px;font-weight:600;margin:0;}
+.block-link{font-size:13px;font-weight:600;color:var(--brand);text-decoration:none;cursor:pointer;}
+.block-link:hover{text-decoration:underline;}
+
+/* next shift — hero action card */
+.nextshift{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;gap:16px;
+}
+.nextshift-date{
+  flex:0 0 62px;text-align:center;background:var(--brand-tint);border-radius:var(--radius-md);
+  padding:10px 6px;color:var(--brand-deep);
+}
+.nextshift-date .d{font-family:"DM Serif Display",Georgia,serif;font-size:24px;line-height:1;display:block;}
+.nextshift-date .m{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;display:block;}
+.nextshift-body{flex:1;min-width:0;}
+.nextshift-body .role{font-size:16px;font-weight:600;margin:0;}
+.nextshift-body .meta{font-size:13px;color:var(--text-secondary);margin:3px 0 0;}
+.startbtn{
+  flex:0 0 auto;background:var(--brand);color:var(--text-light);border:none;border-radius:var(--radius-md);
+  padding:12px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background var(--t);
+  white-space:nowrap;
+}
+.startbtn:hover{background:var(--brand-deep);}
+
+/* tasks */
+.task{
+  display:flex;align-items:center;gap:12px;background:var(--bg-card);
+  border:1px solid var(--border);border-radius:var(--radius-md);padding:13px 15px;margin-bottom:8px;
+  box-shadow:var(--shadow-sm);
+}
+.task-check{
+  flex:0 0 22px;width:22px;height:22px;border-radius:6px;border:2px solid var(--border-strong);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:all var(--t);
+}
+.task.done .task-check{background:var(--brand);border-color:var(--brand);color:#fff;}
+.task-text{flex:1;font-size:14px;}
+.task.done .task-text{color:var(--text-tertiary);text-decoration:line-through;}
+.task-tag{font-size:11px;color:var(--text-tertiary);}
+
+/* events */
+.event{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:12px;
+}
+.event-strip{height:6px;background:linear-gradient(90deg,var(--ocean-2),var(--ocean-3));}
+.event-body{padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.event-when{
+  flex:0 0 58px;text-align:center;color:var(--brand-deep);
+}
+.event-when .d{font-family:"DM Serif Display",Georgia,serif;font-size:22px;line-height:1;display:block;}
+.event-when .m{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:block;margin-top:2px;}
+.event-info{flex:1;min-width:160px;}
+.event-name{font-size:15.5px;font-weight:600;margin:0;}
+.event-meta{font-size:13px;color:var(--text-secondary);margin:3px 0 0;}
+.event-actions{display:flex;align-items:center;gap:8px;}
+.rsvp{
+  border:1.5px solid var(--brand);background:var(--bg-card);color:var(--brand);
+  border-radius:999px;padding:8px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--t);
+}
+.rsvp:hover{background:var(--brand-tint);}
+.rsvp.going{background:var(--brand);color:#fff;border-color:var(--brand);}
+.rsvp-count{font-size:12px;color:var(--text-tertiary);}
+
+/* announcements */
+.note{
+  display:flex;gap:12px;background:var(--bg-card);border:1px solid var(--border);
+  border-left:4px solid var(--ocean-3);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow-sm);
+}
+.note.warm{border-left-color:var(--coral);}
+.note-ico{flex:0 0 20px;color:var(--brand-deep);margin-top:1px;}
+.note.warm .note-ico{color:var(--coral-deep);}
+.note-body b{font-weight:600;}
+.note-body{font-size:13.5px;line-height:1.5;color:var(--text-secondary);}
+.note-body b{color:var(--text-primary);}
+
+/* donate */
+.donate{
+  background:linear-gradient(135deg, var(--coral) 0%, var(--coral-deep) 120%);
+  color:#fff;border-radius:var(--radius-xl);padding:22px;position:relative;overflow:hidden;
+  box-shadow:var(--shadow-md);
+}
+.donate::after{content:"";position:absolute;right:-50px;bottom:-50px;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,0.18),transparent 70%);}
+.donate h3{font-family:"DM Serif Display",Georgia,serif;font-size:22px;margin:0 0 6px;font-weight:400;position:relative;z-index:2;}
+.donate p{font-size:14px;margin:0 0 16px;color:#FFF1EB;position:relative;z-index:2;max-width:380px;}
+.donate-btn{
+  background:#fff;color:var(--coral-deep);border:none;border-radius:var(--radius-md);
+  padding:12px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;position:relative;z-index:2;transition:transform var(--t);
+}
+.donate-btn:hover{transform:translateY(-1px);}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 620px){
+  .greet-title{font-size:34px;}
+  .hero-mascot{width:210px;bottom:24px;}
+}
+@media (max-width: 420px){
+  .impact-value{font-size:22px;}
+  .nextshift{flex-wrap:wrap;}
+  .startbtn{width:100%;}
+  .hero-mascot{width:140px;}
+}
+</style>
+  <!-- Playground: auto-injected Microsoft Clarity for inside-iframe recording -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window,document,"clarity","script","weqc268a3f");
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      var sid = p.get('sid');
+      if (sid) window.clarity('set', 'session_id', sid);
+      var m = window.location.pathname.match(/\/prototypes\/([^/]+)\//);
+      if (m) window.clarity('set', 'prototype', m[1]);
+      window.clarity('set', 'context', 'prototype');
+    })();
+  </script>
+</head>
+<body>
+
+<section class="hero">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-mark">
+        <div class="brand-logo serif">S</div>
+        <div class="brand-name">SALT Tampa</div>
+      </div>
+      <button class="icon-btn" title="Sign out" onclick="window.location.href='Serve513 Login.html'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="hero-inner">
+    <p class="greet-eyebrow">Tuesday · June 3</p>
+    <h1 class="greet-title serif">Good morning, Pat.</h1>
+    <p class="greet-sub">Thanks for being part of the SALT Tampa crew. Here's your day at a glance.</p>
+  </div>
+
+  <span class="hbub" style="width:11px;height:11px;right:210px;top:46px;"></span>
+  <span class="hbub" style="width:7px;height:7px;right:240px;top:74px;"></span>
+  <span class="hbub" style="width:9px;height:9px;right:170px;top:30px;"></span>
+  <img class="hero-mascot" src="stingray-ocean.png" alt="SALT Tampa stingray mascot">
+</section>
+
+<!-- personal impact -->
+<div class="impact">
+  <div class="impact-card"><p class="impact-value">5</p><p class="impact-label">shifts<br>this month</p></div>
+  <div class="impact-card"><p class="impact-value">18</p><p class="impact-label">hours<br>volunteered</p></div>
+  <div class="impact-card"><p class="impact-value">62</p><p class="impact-label">neighbors<br>you've helped</p></div>
+</div>
+
+<main class="wrap">
+
+  <!-- next shift -->
+  <div class="block">
+    <div class="block-head"><h2 class="block-title">Your next shift</h2><a class="block-link" onclick="return false;">My schedule</a></div>
+    <div class="nextshift">
+      <div class="nextshift-date"><span class="d">3</span><span class="m">Jun</span></div>
+      <div class="nextshift-body">
+        <p class="role">Welcome desk</p>
+        <p class="meta">Today · 9:00–11:30 AM · with Maria R.</p>
+      </div>
+      <button class="startbtn" onclick="window.location.href='Serve513 Welcome Desk.html'">Start shift</button>
+    </div>
+  </div>
+
+  <!-- tasks -->
+  <div class="block">
+    <div class="block-head"><h2 class="block-title">Your tasks today</h2></div>
+    <div class="task done" onclick="this.classList.toggle('done')">
+      <div class="task-check"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 4 6-8"/></svg></div>
+      <span class="task-text">Clock in at the volunteer table</span>
+      <span class="task-tag">8:45 AM</span>
+    </div>
+    <div class="task" onclick="this.classList.toggle('done')">
+      <div class="task-check"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 4 6-8"/></svg></div>
+      <span class="task-text">Restock intake slips &amp; lanyards</span>
+      <span class="task-tag">Before 9</span>
+    </div>
+    <div class="task" onclick="this.classList.toggle('done')">
+      <div class="task-check"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 4 6-8"/></svg></div>
+      <span class="task-text">Hand off the desk to the 11:30 volunteer</span>
+      <span class="task-tag">11:30 AM</span>
+    </div>
+  </div>
+
+  <!-- upcoming events -->
+  <div class="block">
+    <div class="block-head"><h2 class="block-title">Upcoming events</h2><a class="block-link" onclick="return false;">See all</a></div>
+
+    <div class="event">
+      <div class="event-strip"></div>
+      <div class="event-body">
+        <div class="event-when"><span class="d">7</span><span class="m">Jun</span></div>
+        <div class="event-info">
+          <p class="event-name">Community shower &amp; clothing day</p>
+          <p class="event-meta">Sat · 8 AM–1 PM · Pinellas Hope</p>
+        </div>
+        <div class="event-actions">
+          <button class="rsvp" onclick="toggleRsvp(this)">RSVP</button>
+          <span class="rsvp-count">12 going</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="event">
+      <div class="event-strip"></div>
+      <div class="event-body">
+        <div class="event-when"><span class="d">14</span><span class="m">Jun</span></div>
+        <div class="event-info">
+          <p class="event-name">Volunteer orientation &amp; lunch</p>
+          <p class="event-meta">Sat · 11 AM · SALT Tampa HQ</p>
+        </div>
+        <div class="event-actions">
+          <button class="rsvp going" onclick="toggleRsvp(this)">Going ✓</button>
+          <span class="rsvp-count">8 going</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="event">
+      <div class="event-strip"></div>
+      <div class="event-body">
+        <div class="event-when"><span class="d">21</span><span class="m">Jun</span></div>
+        <div class="event-info">
+          <p class="event-name">Beach cleanup with the crew</p>
+          <p class="event-meta">Sat · 9 AM · Clearwater Beach</p>
+        </div>
+        <div class="event-actions">
+          <button class="rsvp" onclick="toggleRsvp(this)">RSVP</button>
+          <span class="rsvp-count">19 going</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- announcements -->
+  <div class="block">
+    <div class="block-head"><h2 class="block-title">Good to know</h2></div>
+    <div class="note warm">
+      <span class="note-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/><path d="M9 21h6"/></svg></span>
+      <div class="note-body"><b>New arrivals.</b> Winter coats and size 11–13 shoes were restocked this morning — let neighbors know.</div>
+    </div>
+    <div class="note">
+      <span class="note-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></span>
+      <div class="note-body"><b>Reminder.</b> Log every visit before the neighbor leaves the desk — it keeps our records accurate.</div>
+    </div>
+  </div>
+
+  <!-- donate -->
+  <div class="block">
+    <div class="donate">
+      <h3>Fuel the next shower day</h3>
+      <p>Every $25 covers hygiene kits and fresh clothing for one neighbor. Your support keeps the doors open.</p>
+      <button class="donate-btn" onclick="return false;">Donate to SALT Tampa</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+function toggleRsvp(btn){
+  var going = btn.classList.toggle('going');
+  btn.textContent = going ? 'Going ✓' : 'RSVP';
+  var count = btn.parentElement.querySelector('.rsvp-count');
+  if(count){
+    var n = parseInt(count.textContent,10) || 0;
+    n += going ? 1 : -1;
+    count.textContent = n + ' going';
+  }
+}
+</script>
+</body>
+</html>
