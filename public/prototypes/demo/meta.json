@@ -1,0 +1,10 @@
+{
+  "slug": "demo",
+  "testName": "Demo",
+  "schemaVersion": 1,
+  "createdAt": "2026-06-08T13:53:27.208Z",
+  "mode": "exploration",
+  "prompt": null,
+  "tasks": null,
+  "archived": false
+}
