@@ -78,6 +78,44 @@ export default function PrototypeIndex() {
     }
   }
 
+  const deleteOne = async (slug, { silent = false } = {}) => {
+    if (!silent && !window.confirm(`Delete "${slug}" permanently? This removes the prototype and its files from the repo. Response data is kept.`)) {
+      return false
+    }
+    setPendingSlug(slug)
+    try {
+      const res = await fetch('/.netlify/functions/delete-prototype', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        if (!silent) window.alert(data.error || 'Delete failed.')
+        return false
+      }
+      setState(s => ({ ...s, prototypes: s.prototypes.filter(p => p.slug !== slug) }))
+      return true
+    } catch {
+      if (!silent) window.alert('Network error while deleting.')
+      return false
+    } finally {
+      setPendingSlug(null)
+    }
+  }
+
+  const deleteAllArchived = async () => {
+    const targets = state.prototypes.filter(p => p.archived).map(p => p.slug)
+    if (targets.length === 0) return
+    if (!window.confirm(`Permanently delete all ${targets.length} archived prototype${targets.length === 1 ? '' : 's'}? This cannot be undone. Response data is kept.`)) return
+    // Sequential to keep the underlying GitHub fast-forward simple.
+    for (const slug of targets) {
+      // eslint-disable-next-line no-await-in-loop
+      await deleteOne(slug, { silent: true })
+    }
+    fetchList()
+  }
+
   const active = state.prototypes.filter(p => !p.archived)
   const archived = state.prototypes.filter(p => p.archived)
 
@@ -162,6 +200,7 @@ export default function PrototypeIndex() {
                   onCopy={() => copyLink(p.slug)}
                   onPreview={() => openPreview(p.slug)}
                   onToggleArchive={() => toggleArchive(p.slug, true)}
+                  onDelete={() => deleteOne(p.slug)}
                 />
               ))}
             </div>
@@ -170,21 +209,37 @@ export default function PrototypeIndex() {
 
         {archived.length > 0 && (
           <div>
-            <button
-              onClick={() => setShowArchived(v => !v)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'transparent', border: 'none', padding: 0,
-                color: 'var(--fg-2)', cursor: 'pointer', marginBottom: 12,
-              }}
-            >
-              <Icon name={showArchived ? 'chevronDown' : 'chevronRight'} size={14} />
-              <span className="mono" style={{
-                fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em',
-              }}>
-                Archived · {archived.length}
-              </span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <button
+                onClick={() => setShowArchived(v => !v)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: 'transparent', border: 'none', padding: 0,
+                  color: 'var(--fg-2)', cursor: 'pointer',
+                }}
+              >
+                <Icon name={showArchived ? 'chevronDown' : 'chevronRight'} size={14} />
+                <span className="mono" style={{
+                  fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em',
+                }}>
+                  Archived · {archived.length}
+                </span>
+              </button>
+              <span style={{ flex: 1 }} />
+              <button
+                onClick={deleteAllArchived}
+                disabled={!!pendingSlug}
+                className="mono"
+                style={{
+                  fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em',
+                  background: 'transparent', border: 'none', padding: 0,
+                  color: '#b91c1c', cursor: pendingSlug ? 'not-allowed' : 'pointer',
+                  opacity: pendingSlug ? 0.5 : 1,
+                }}
+              >
+                Delete all
+              </button>
+            </div>
             {showArchived && (
               <div style={{ display: 'grid', gap: 10 }}>
                 {archived.map(p => (
@@ -197,6 +252,7 @@ export default function PrototypeIndex() {
                     onCopy={() => copyLink(p.slug)}
                     onPreview={() => openPreview(p.slug)}
                     onToggleArchive={() => toggleArchive(p.slug, false)}
+                    onDelete={() => deleteOne(p.slug)}
                   />
                 ))}
               </div>
@@ -219,7 +275,7 @@ function SectionHeader({ label, count }) {
   )
 }
 
-function PrototypeRow({ proto, navigate, pending, copied, onCopy, onPreview, onToggleArchive }) {
+function PrototypeRow({ proto, navigate, pending, copied, onCopy, onPreview, onToggleArchive, onDelete }) {
   const p = proto
   return (
     <div style={{
@@ -268,12 +324,19 @@ function PrototypeRow({ proto, navigate, pending, copied, onCopy, onPreview, onT
           disabled={pending || p.legacy}
           title={p.legacy ? 'Legacy prototypes (no meta.json) cannot be archived.' : undefined}
         />
+        <IconButton
+          label="Delete"
+          icon="x"
+          onClick={onDelete}
+          disabled={pending}
+          danger
+        />
       </div>
     </div>
   )
 }
 
-function IconButton({ icon, label, onClick, disabled, title }) {
+function IconButton({ icon, label, onClick, disabled, title, danger }) {
   return (
     <button
       type="button"
@@ -284,7 +347,7 @@ function IconButton({ icon, label, onClick, disabled, title }) {
         display: 'flex', alignItems: 'center', gap: 6,
         padding: '6px 10px', fontSize: 12, fontWeight: 500,
         background: 'var(--bg-3)', border: '1px solid var(--border)',
-        borderRadius: 6, color: 'var(--fg-2)',
+        borderRadius: 6, color: danger ? '#b91c1c' : 'var(--fg-2)',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
         fontFamily: 'inherit',
