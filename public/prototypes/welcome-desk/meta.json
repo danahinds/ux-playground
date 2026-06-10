@@ -1,0 +1,10 @@
+{
+  "slug": "welcome-desk",
+  "testName": "Welcome Desk",
+  "schemaVersion": 1,
+  "createdAt": "2026-06-10T19:22:28.145Z",
+  "mode": "exploration",
+  "prompt": "Help our check-in and get serviices",
+  "tasks": null,
+  "archived": false
+}
