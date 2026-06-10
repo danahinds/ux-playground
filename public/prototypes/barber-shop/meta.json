@@ -1,0 +1,10 @@
+{
+  "slug": "barber-shop",
+  "testName": "Barber Shop",
+  "schemaVersion": 1,
+  "createdAt": "2026-06-10T21:55:41.252Z",
+  "mode": "exploration",
+  "prompt": "Have fun",
+  "tasks": null,
+  "archived": false
+}

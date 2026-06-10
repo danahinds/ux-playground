@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMIS · Barber Queue</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Shared design tokens (mirrored from Serve513 Welcome desk) */
+  --bg-canvas:#F5F0E5;
+  --bg-card:#FFFFFF;
+  --bg-card-alt:#F1EFE8;
+  --brand:#085041;
+  --brand-deep:#063A2F;
+  --brand-tint:#E5EFE9;
+  --text-primary:#1A1A1A;
+  --text-secondary:#5F5E5A;
+  --text-tertiary:#8B8578;
+  --text-light:#FBF7EE;
+  --border:rgba(26,26,26,0.08);
+  --border-strong:rgba(26,26,26,0.18);
+  --radius-sm:4px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg:0 12px 32px rgba(0,0,0,0.18);
+
+  /* Legacy app-internal tokens (in-phone UI) */
+  --green:#085041;--green-l:#0F6E56;--green-xl:#E3F4EC;--green-b:#2D8653;
+  --amber:#F59E0B;--amber-l:#FEF3C7;--amber-b:#B45309;
+  --red:#B91C1C;--red-l:#FEE2E2;
+  --blue:#0284C7;--blue-l:#E0F2FE;
+  --ink:#111111;--ink-2:#595959;--ink-3:#595959;
+  --rule:#E8E8E8;--bg:#F0EFEB;--card:#fff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"DM Sans",sans-serif;background:var(--bg-canvas);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 40px;-webkit-font-smoothing:antialiased;}
+
+/* ===== Outer topbar (matches Serve513 Welcome topbar pattern) ===== */
+.topbar{width:100%;background:var(--bg-canvas);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;margin-bottom:24px;}
+.topbar-inner{max-width:460px;margin:0 auto;padding:14px 0;display:flex;align-items:center;gap:16px;}
+.brand-mark{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.brand-logo{width:32px;height:32px;background:var(--brand);color:var(--text-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",Georgia,serif;font-size:16px;}
+.brand-text{font-size:14px;font-weight:500;line-height:1.1;color:var(--text-primary);}
+.brand-text small{display:block;font-weight:400;color:var(--text-tertiary);font-size:11px;margin-top:2px;}
+.topbar-meta{font-size:12px;color:var(--text-tertiary);margin-left:auto;text-align:right;line-height:1.3;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.live-badge{display:inline-flex;align-items:center;gap:5px;background:var(--amber);border-radius:999px;padding:3px 10px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#1a1a1a;animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.live-txt{font-size:9px;font-weight:600;color:#1a1a1a;letter-spacing:.04em;}
+.sync-txt{font-size:11px;color:var(--text-tertiary);}
+
+.phone{width:100%;max-width:380px;background:var(--bg);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;position:relative;}
+
+/* ===== Coordinator mode bar — sits above the volunteer queue tool ===== */
+/* Visible when a coordinator has joined this station and is acting as a volunteer.
+   Provides the two escape routes: Leave (full role exit) or Step out (temporary). */
+.coord-bar{background:linear-gradient(180deg, #064E40 0%, #053D33 100%);color:#fff;padding:10px 14px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.coord-bar-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.coord-bar-eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:"DM Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#FFD27A;}
+.coord-bar-pip{width:6px;height:6px;border-radius:50%;background:#FFD27A;animation:coordpulse 1.6s ease-in-out infinite;}
+@keyframes coordpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,210,122,.5);}50%{box-shadow:0 0 0 5px rgba(255,210,122,0);}}
+.coord-bar-time{font-family:"DM Mono",monospace;font-size:10px;color:rgba(255,255,255,.6);letter-spacing:.04em;}
+.coord-bar-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:6px;}
+.coord-btn{height:34px;border-radius:var(--radius-md);font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:background .12s,border-color .12s;}
+.coord-btn-leave{background:transparent;border-color:#E5C088;color:#FFD27A;}
+.coord-btn-leave:hover{background:rgba(255,210,122,.08);}
+.coord-btn-stepout{background:rgba(255,255,255,.95);border-color:rgba(255,255,255,.95);color:#063A2F;}
+.coord-btn-stepout:hover{background:#fff;}
+
+/* Nav */
+.app-nav{background:var(--green);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.nav-title{font-size:12px;font-weight:500;color:#C8EEE3;letter-spacing:.05em;text-transform:uppercase;}
+.nav-stats{display:flex;align-items:center;gap:5px;}
+.nav-stat{background:rgba(255,255,255,.12);border-radius:999px;padding:2px 8px;font-size:12px;color:#C8EEE3;}
+.nav-stat-n{font-weight:500;}
+
+/* Chairs — compact reference panel */
+.chairs-section{background:var(--green-l);padding:8px 12px 10px;flex-shrink:0;}
+.chairs-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.chairs-lbl{font-size:11px;font-weight:600;color:#C8EEE3;text-transform:uppercase;letter-spacing:.07em;}
+.add-btn{height:24px;padding:0 9px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:rgba(255,255,255,.08);color:#C8EEE3;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.add-btn:hover{background:rgba(255,255,255,.16);}
+.chairs-row{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* Chair pill */
+.chair-pill{border-radius:8px;overflow:hidden;min-width:70px;flex:1;}
+.chair-pill.empty{background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.2);padding:7px 8px;display:flex;align-items:center;gap:5px;position:relative;}
+.sp-empty-ico{font-size:13px;opacity:.5;}
+.sp-empty-lbl{font-size:11px;color:rgba(255,255,255,.5);font-style:italic;}
+.sp-remove{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.4);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;}
+.chair-pill.occ{background:var(--card);border:1.5px solid var(--green-b);transition:background .5s,border-color .5s;}
+.chair-pill.occ.warn{background:var(--amber-l);border-color:var(--amber-b);}
+.chair-pill.occ.over{background:var(--red-l);border-color:var(--red);}
+.sp-occ-body{padding:6px 8px 4px;}
+.sp-name{font-size:12px;font-weight:500;color:var(--ink);line-height:1.2;}
+.sp-flags{display:flex;gap:2px;margin-top:2px;}
+.spf{font-size:12px;}
+.sp-times{display:flex;align-items:center;padding:2px 8px 4px;}
+.sp-in{font-size:11px;color:var(--ink-3);font-family:"DM Mono",monospace;}
+
+.sp-out-btn{width:100%;border-top:1px solid rgba(0,0,0,.07);height:26px;border-left:none;border-right:none;border-bottom:none;font-size:11px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;background:rgba(0,0,0,.04);color:var(--ink-2);display:flex;align-items:center;justify-content:center;gap:3px;}
+.sp-out-btn:hover{background:rgba(0,0,0,.09);}
+.chair-pill.occ.warn .sp-out-btn{color:var(--amber-b);}
+.chair-pill.occ.over .sp-out-btn{color:var(--red);}
+
+/* Queue */
+.queue-section{flex:1;overflow-y:auto;}
+.q-tabs{display:flex;border-bottom:2px solid var(--rule);background:var(--card);}
+.q-tab{flex:1;height:42px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--ink-3);cursor:pointer;position:relative;gap:4px;}
+.q-tab.act{color:var(--green);}
+.q-tab.act::after{content:"";position:absolute;bottom:-2px;left:10px;right:10px;height:2px;background:var(--green);border-radius:1px;}
+.tbdg{height:15px;min-width:15px;padding:0 4px;border-radius:8px;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;}
+.tbdg-w{background:var(--green-xl);color:#1A5C38;border:1px solid var(--green-b);}
+.tbdg-m{background:var(--amber-l);color:var(--amber-b);border:1px solid var(--amber-b);}
+.tbdg-d{background:#F5F5F5;color:var(--ink-3);border:1px solid #DADADA;}
+
+/* Queue cards — action lives here */
+.q-card{margin:6px 10px;background:var(--card);border-radius:12px;border:1.5px solid var(--rule);overflow:hidden;}
+.q-card.next-up{border-color:var(--green);border-width:2px;}
+.qc-top{padding:10px 12px 7px;display:flex;align-items:flex-start;gap:8px;}
+.qc-pos{width:24px;height:24px;border-radius:7px;background:#F5F5F5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--ink-3);flex-shrink:0;}
+.qc-pos.next{background:var(--green);color:#C8EEE3;}
+.qc-name{font-family:"DM Serif Display",serif;font-size:16px;color:var(--ink);line-height:1.1;}
+.qc-meta{font-size:11px;color:var(--ink-3);font-family:"DM Mono",monospace;margin-top:2px;}
+.qc-flags{display:flex;gap:4px;flex-wrap:wrap;padding:0 12px 8px;}
+.qcf{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;}
+.qcf-h{background:#FEE2E2;color:#7F1D1D;border:1px solid #B91C1C;}
+.qcf-m{background:#EDE9FE;color:#5B21B6;border:1px solid #7C3AED;}
+.qcf-v{background:var(--blue-l);color:#0C5D8A;border:1px solid var(--blue);}
+.qcf-c{background:var(--green-xl);color:#1A5C38;border:1px solid var(--green-b);}
+
+/* Card actions */
+.qc-actions{border-top:1px solid var(--rule);display:flex;}
+.qca{flex:1;height:42px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;font-family:"DM Sans",sans-serif;gap:5px;transition:background .12s;}
+.qca+.qca{border-left:1px solid var(--rule);}
+.qca-send{color:var(--green);background:var(--green-xl);}
+.qca-send:hover{background:#C8EEE3;}
+.qca-missed{color:var(--amber-b);}
+.qca-missed:hover{background:var(--amber-l);}
+.qca-back{color:var(--green);}
+.qca-back:hover{background:var(--green-xl);}
+.chk{width:9px;height:6px;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg) translateY(-1px);}
+
+/* Done cards */
+.done-card{margin:6px 10px;background:var(--card);border-radius:11px;border:1.5px solid var(--rule);padding:10px 12px;opacity:.85;}
+.dc-name{font-family:"DM Serif Display",serif;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.dc-times{display:flex;align-items:center;gap:8px;}
+.dc-t{font-size:11px;color:var(--ink-3);font-family:"DM Mono",monospace;}
+.dc-dur{font-size:11px;font-weight:500;color:var(--green);margin-left:auto;font-family:"DM Mono",monospace;}
+.dc-clothing{display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;background:var(--green-xl);color:#1A5C38;border:1px solid var(--green-b);}
+
+/* Sheet */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;border-radius:24px;overflow:hidden;z-index:10;}
+.sheet{background:var(--card);border-radius:14px 14px 0 0;width:100%;padding:14px 14px 22px;}
+.sh-handle{width:34px;height:3px;background:#DADADA;border-radius:2px;margin:0 auto 12px;}
+.sh-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.sh-sub{font-size:13px;color:var(--ink-3);margin-bottom:12px;line-height:1.5;}
+
+/* Client preview in sheet */
+.cp-box{background:#F8F8F8;border-radius:9px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.cp-av{width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#C8EEE3;flex-shrink:0;}
+.cp-name{font-size:13px;font-weight:500;color:var(--ink);}
+.cp-meta{font-size:12px;color:var(--ink-3);margin-top:2px;font-family:"DM Mono",monospace;}
+
+/* Chair options in sheet */
+.chair-opt{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--rule);cursor:pointer;}
+.chair-opt:last-of-type{border-bottom:none;}
+.so-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.so-ico.empty-s{background:var(--green-xl);}
+.so-ico.occ-s{background:var(--amber-l);}
+.so-lbl{flex:1;}
+.so-name-s{font-size:13px;font-weight:500;color:var(--ink);}
+.so-meta-s{font-size:12px;color:var(--ink-3);margin-top:1px;}
+
+.so-radio{width:18px;height:18px;border-radius:50%;border:2px solid #DADADA;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.so-radio.sel{border-color:var(--green);background:var(--green);}
+.so-inner{width:7px;height:7px;border-radius:50%;background:#fff;}
+
+.warn-box{background:var(--amber-l);border:1.5px solid var(--amber-b);border-radius:9px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;}
+.warn-txt{font-size:13px;color:var(--amber-b);line-height:1.5;flex:1;}
+.clothing-note{background:var(--green-xl);border:1px solid var(--green-b);border-radius:8px;padding:8px 11px;margin-bottom:10px;font-size:13px;color:#1A5C38;font-weight:500;}
+
+.cb-primary{width:100%;height:42px;background:var(--green);border:none;border-radius:9px;font-size:13px;font-weight:500;color:#fff;cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:7px;}
+.cb-secondary{width:100%;height:38px;background:#F5F5F5;border:none;border-radius:9px;font-size:13px;color:var(--ink-3);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:6px;}
+.cb-cancel{width:100%;height:34px;background:transparent;border:none;font-size:13px;color:var(--ink-3);cursor:pointer;font-family:"DM Sans",sans-serif;}
+
+.empty-state{padding:24px 14px;text-align:center;}
+.empty-lbl{font-size:13px;color:var(--ink-3);}
+.empty-sub{font-size:12px;color:var(--ink-3);opacity:.7;margin-top:4px;}
+
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:100;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;}
+.anim{animation:si .18s ease;}
+@keyframes si{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== Back-in-line position picker (ported from shower queue) ===== */
+.pos-presets{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.pos-preset{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1.5px solid var(--rule);border-radius:9px;background:#fff;cursor:pointer;font-family:"DM Sans",sans-serif;text-align:left;transition:all .12s;}
+.pos-preset:hover{border-color:var(--green-b);background:var(--green-xl);}
+.pos-preset.sel{border-color:var(--green);background:var(--green-xl);}
+.pos-lbl{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;line-height:1.2;}
+.pos-sub{font-size:12px;color:var(--ink-3);line-height:1.2;}
+
+.pos-custom{padding:12px 0;border-top:1px solid var(--rule);margin-bottom:12px;}
+.pos-custom-lbl{font-size:12px;color:var(--ink-3);margin-bottom:8px;text-align:center;text-transform:uppercase;letter-spacing:0.5px;font-weight:500;}
+.pos-stepper{display:flex;align-items:center;justify-content:center;gap:14px;}
+.pos-step{width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);background:#fff;font-size:18px;color:var(--ink);cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}
+.pos-step:disabled{opacity:.35;cursor:not-allowed;}
+.pos-val{font-size:22px;font-weight:500;color:var(--ink);min-width:70px;text-align:center;}
+.pos-of{font-size:13px;color:var(--ink-3);font-weight:400;}
+
+.pos-context{background:#F8F8F8;border-radius:8px;padding:8px 12px;margin-bottom:12px;}
+.pos-ctx-row{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:13px;color:var(--ink-2);}
+.pos-ctx-me{color:var(--green);font-weight:500;}
+.pos-ctx-n{display:inline-block;width:24px;font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:12px;}
+.pos-ctx-name{flex:1;}
+</style>
+  <!-- Playground: auto-injected Microsoft Clarity for inside-iframe recording -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window,document,"clarity","script","weqc268a3f");
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      var sid = p.get('sid');
+      if (sid) window.clarity('set', 'session_id', sid);
+      var m = window.location.pathname.match(/\/prototypes\/([^/]+)\//);
+      if (m) window.clarity('set', 'prototype', m[1]);
+      window.clarity('set', 'context', 'prototype');
+    })();
+  </script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-mark">
+      <div class="brand-logo">S</div>
+      <div class="brand-text">Barber queue<small>HMIS &middot; Pinellas Hope</small></div>
+    </div>
+    <div class="topbar-meta">
+      <div class="live-badge"><div class="live-dot"></div><div class="live-txt">LIVE</div></div>
+      <div class="sync-txt">Synced just now</div>
+    </div>
+  </div>
+</header>
+
+<div class="phone" id="phone-wrap">
+  <div class="coord-bar">
+    <div class="coord-bar-row1">
+      <span class="coord-bar-eyebrow"><span class="coord-bar-pip"></span> You&rsquo;re working here</span>
+      <span class="coord-bar-time">started 9:38 AM</span>
+    </div>
+    <div class="coord-bar-actions">
+      <button class="coord-btn coord-btn-leave" type="button">Leave station</button>
+      <button class="coord-btn coord-btn-stepout" type="button">Step out to coordinate</button>
+    </div>
+  </div>
+  <div id="phone"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var activeTab = "waiting";
+var pendingSheet = null; // {type:"sendto"|"markout", clientId?, chairIdx?}
+var selectedChair = null;
+
+var chairs = [
+  {id:"C003",name:"Patricia Kim",  flags:["mobility"],inTime:"10:22 AM",inTs:Date.now()-720000,clothing:false},
+  {id:"C001",name:"Diana Rivera",  flags:["hearing"], inTime:"10:28 AM",inTs:Date.now()-360000,clothing:false},
+  null,
+  null
+];
+
+var waiting = [
+  {id:"C004",name:"George Allen",   flags:["veteran"],           checkin:"10:31 AM",clothing:false},
+  {id:"C005",name:"Linda Martinez", flags:["hearing","mobility"],checkin:"10:38 AM",clothing:false},
+  {id:"C006",name:"Robert Harris",  flags:[],                    checkin:"10:44 AM",clothing:false},
+  {id:"C007",name:"James Carter",   flags:[],                    checkin:"10:49 AM",clothing:false},
+];
+var missed = [
+  {id:"C002",name:"Marcus Thompson",flags:[],checkin:"10:18 AM",clothing:false}
+];
+var done = [
+  {id:"C008",name:"Sarah Webb",inTime:"10:05 AM",outTime:"10:17 AM",duration:"12 min",clothing:false},
+  {id:"C009",name:"Tom Reyes", inTime:"10:08 AM",outTime:"10:22 AM",duration:"14 min",clothing:false}
+];
+
+function getInitials(n){return n.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();}
+
+// Live timer update
+
+
+function openSendTo(clientId){
+  pendingSheet={type:"sendto",clientId:clientId};
+  selectedChair=null;
+  render();
+}
+function openMarkOut(chairIdx){
+  pendingSheet={type:"markout",chairIdx:chairIdx};
+  render();
+}
+function selectChair(i){selectedChair=i;render();}
+function cancelAction(){pendingSheet=null;selectedChair=null;render();}
+
+function findClient(id){
+  var c = waiting.filter(function(x){return x.id===id;})[0];
+  if(c) return {client: c, source: "waiting"};
+  c = missed.filter(function(x){return x.id===id;})[0];
+  if(c) return {client: c, source: "missed"};
+  return null;
+}
+function removeClientFrom(source, id){
+  if(source==="waiting") waiting = waiting.filter(function(x){return x.id!==id;});
+  else if(source==="missed") missed = missed.filter(function(x){return x.id!==id;});
+}
+
+function confirmSendTo(){
+  if(selectedChair===null||!pendingSheet) return;
+  var i=selectedChair;
+  var found = findClient(pendingSheet.clientId);
+  if(!found) return;
+  var client = found.client;
+
+  // Auto close previous if occupied
+  if(chairs[i]){
+    var prev=chairs[i];
+    var outTime=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+    var ms=Date.now()-prev.inTs;
+    done.unshift({id:prev.id,name:prev.name,inTime:prev.inTime,outTime:outTime,duration:Math.floor(ms/60000)+" min",clothing:prev.clothing});
+  }
+
+  var inTime=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+  chairs[i]={id:client.id,name:client.name,flags:client.flags,inTime:inTime,inTs:Date.now(),clothing:client.clothing};
+  removeClientFrom(found.source, client.id);
+  showToast(client.name+" sent to chair"+(found.source==="missed"?" (was missed)":""));
+  pendingSheet=null;selectedChair=null;
+  render();
+}
+
+function confirmMarkOut(){
+  if(!pendingSheet) return;
+  var i=pendingSheet.chairIdx;
+  var s=chairs[i];if(!s) return;
+  var outTime=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+  var ms=Date.now()-s.inTs;
+  done.unshift({id:s.id,name:s.name,inTime:s.inTime,outTime:outTime,duration:Math.floor(ms/60000)+" min",clothing:s.clothing});
+  chairs[i]=null;
+  showToast(s.name+" marked out");
+  pendingSheet=null;
+  render();
+}
+
+function markMissed(id){
+  var c=null;
+  waiting=waiting.filter(function(x){if(x.id===id){c=x;return false;}return true;});
+  if(c){missed.push(c);showToast(c.name+" marked missed");render();}
+}
+
+// "Back in line" with volunteer-chosen position (ported from shower queue)
+var backInLinePos = 1; // 1-indexed position; set when opening
+
+function openBackInLine(id){
+  var c = missed.filter(function(x){return x.id===id;})[0];
+  if(!c) return;
+  // Sensible default: position 3 (or end of line if fewer than 3 waiting)
+  backInLinePos = Math.min(3, waiting.length + 1);
+  pendingSheet = {type:"backinline", clientId: id};
+  render();
+}
+
+function setBackPos(p){
+  var max = waiting.length + 1;
+  backInLinePos = Math.max(1, Math.min(max, p));
+  render();
+}
+
+function setBackPosFromInput(v){
+  var n = parseInt(v, 10);
+  if(isNaN(n)) return;
+  setBackPos(n);
+}
+
+function confirmBackInLine(){
+  if(!pendingSheet || pendingSheet.type !== "backinline") return;
+  var id = pendingSheet.clientId;
+  var c = missed.filter(function(x){return x.id===id;})[0];
+  if(!c) return;
+  missed = missed.filter(function(x){return x.id !== id;});
+  var insertIdx = Math.max(0, Math.min(waiting.length, backInLinePos - 1));
+  waiting.splice(insertIdx, 0, c);
+  showToast(c.name.split(" ")[0]+" placed at #"+backInLinePos);
+  pendingSheet = null;
+  activeTab = "waiting"; // switch to Waiting so volunteer sees the result
+  render();
+}
+function addChair(){chairs.push(null);render();}
+function removeChair(i){
+  if(chairs[i]){showToast("Mark client out first");return;}
+  chairs.splice(i,1);render();
+}
+function setTab(t){activeTab=t;render();}
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.innerHTML=msg;t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},3000);
+}
+
+function render(){
+  var occupied=chairs.filter(function(s){return s!==null;}).length;
+  var h="";
+
+  // Nav
+  h+="<div class='app-nav'><div class='nav-title'>Barber station</div>";
+  h+="<div class='nav-stats'>";
+  h+="<span class='nav-stat'><span class='nav-stat-n'>"+waiting.length+"</span> waiting</span>";
+  h+="<span class='nav-stat'><span class='nav-stat-n'>"+occupied+"/"+chairs.length+"</span> in chairs</span>";
+  h+="<span class='nav-stat'><span class='nav-stat-n'>"+done.length+"</span> done</span>";
+  h+="</div></div>";
+
+  // Chairs — compact reference panel
+  h+="<div class='chairs-section'>";
+  h+="<div class='chairs-hdr'><div class='chairs-lbl'>Chairs</div><button class='add-btn' onclick='addChair()'>+ Add</button></div>";
+  h+="<div class='chairs-row'>";
+
+  chairs.forEach(function(s,i){
+    if(s){
+      var ms=Date.now()-s.inTs;
+      h+="<div id='sp-"+i+"' class='chair-pill occ'>";
+      h+="<div class='sp-occ-body'><div class='sp-name'>"+s.name.split(" ")[0]+"</div>";
+      var fl="";
+      if(s.flags.indexOf("hearing")>-1)  fl+="<span class='spf' title='Hearing assistance' aria-label='Hearing assistance'>&#128263;</span>";
+      if(s.flags.indexOf("mobility")>-1) fl+="<span class='spf' title='Mobility assistance' aria-label='Mobility assistance'>&#9855;</span>";
+      if(fl) h+="<div class='sp-flags'>"+fl+"</div>";
+      h+="</div>";
+      h+="<div class='sp-times'><span class='sp-in'>In "+s.inTime+"</span></div>";
+      h+="<button class='sp-out-btn' onclick='openMarkOut("+i+")'><div class='chk'></div> Out</button>";
+      h+="</div>";
+    } else {
+      h+="<div class='chair-pill empty'>";
+      h+="<button class='sp-remove' onclick='removeChair("+i+")'>&times;</button>";
+      h+="<span class='sp-empty-ico'>&#9986;&#65039;</span>";
+      h+="<span class='sp-empty-lbl'>Empty</span>";
+      h+="</div>";
+    }
+  });
+  h+="</div></div>";
+
+  // Queue
+  h+="<div class='queue-section'>";
+  h+="<div class='q-tabs'>";
+  h+="<div class='q-tab "+(activeTab==="waiting"?"act":"")+"' onclick='setTab(\"waiting\")'>Waiting <div class='tbdg tbdg-w'>"+waiting.length+"</div></div>";
+  h+="<div class='q-tab "+(activeTab==="missed"?"act":"")+"' onclick='setTab(\"missed\")'>Missed <div class='tbdg tbdg-m'>"+missed.length+"</div></div>";
+  h+="<div class='q-tab "+(activeTab==="done"?"act":"")+"' onclick='setTab(\"done\")'>Done <div class='tbdg tbdg-d'>"+done.length+"</div></div>";
+  h+="</div>";
+
+  if(activeTab==="waiting"){
+    if(waiting.length){
+      waiting.forEach(function(c,idx){
+        var isNext=idx===0;
+        h+="<div class='q-card"+(isNext?" next-up":"")+" anim'>";
+        h+="<div class='qc-top'>";
+        h+="<div class='qc-pos "+(isNext?"next":"")+"'>"+(idx+1)+"</div>";
+        h+="<div style='flex:1;'><div class='qc-name'>"+c.name+"</div><div class='qc-meta'>Check-in "+c.checkin+"</div></div>";
+        h+="</div>";
+        var fl="";
+        if(c.flags.indexOf("hearing")>-1)  fl+="<div class='qcf qcf-h'>&#128263; Hearing</div>";
+        if(c.flags.indexOf("mobility")>-1) fl+="<div class='qcf qcf-m'>&#9855; Mobility</div>";
+        if(c.flags.indexOf("veteran")>-1)  fl+="<div class='qcf qcf-v'>&#9733; Veteran</div>";
+        
+        if(fl) h+="<div class='qc-flags'>"+fl+"</div>";
+        h+="<div class='qc-actions'>";
+        h+="<button class='qca qca-send' onclick='openSendTo(\""+c.id+"\")'><div class='chk'></div> Send to chair</button>";
+        h+="<button class='qca qca-missed' onclick='markMissed(\""+c.id+"\")'>Missed</button>";
+        h+="</div></div>";
+      });
+    } else {
+      h+="<div class='empty-state'><div class='empty-lbl'>No one waiting</div></div>";
+    }
+  } else if(activeTab==="missed"){
+    if(missed.length){
+      missed.forEach(function(c){
+        h+="<div class='q-card anim'><div class='qc-top'>";
+        h+="<div class='qc-pos'>&mdash;</div>";
+        h+="<div style='flex:1;'><div class='qc-name'>"+c.name+"</div><div class='qc-meta'>Check-in "+c.checkin+"</div></div>";
+        h+="</div>";
+        var fl="";
+        if(c.flags.indexOf("hearing")>-1)  fl+="<div class='qcf qcf-h'>&#128263; Hearing</div>";
+        if(c.flags.indexOf("mobility")>-1) fl+="<div class='qcf qcf-m'>&#9855; Mobility</div>";
+        if(fl) h+="<div class='qc-flags'>"+fl+"</div>";
+        h+="<div class='qc-actions'>";
+        h+="<button class='qca qca-send' onclick='openSendTo(\""+c.id+"\")'><div class='chk'></div> Send to chair</button>";
+        h+="<button class='qca qca-back' onclick='openBackInLine(\""+c.id+"\")'>Back in line&hellip;</button>";
+        h+="</div>";
+        h+="</div>";
+      });
+    } else {
+      h+="<div class='empty-state'><div class='empty-lbl'>No missed clients</div><div class='empty-sub'>Everyone responded when called</div></div>";
+    }
+  } else {
+    if(done.length){
+      done.forEach(function(c){
+        h+="<div class='done-card anim'><div class='dc-name'>"+c.name+"</div>";
+        h+="<div class='dc-times'><span class='dc-t'>In "+c.inTime+"</span><span class='dc-t'>&rarr; Out "+c.outTime+"</span><span class='dc-dur'>"+c.duration+"</span></div>";
+        
+        h+="</div>";
+      });
+    } else {
+      h+="<div class='empty-state'><div class='empty-lbl'>No completed haircuts yet</div></div>";
+    }
+  }
+  h+="</div>";
+
+  document.getElementById("phone").innerHTML=h;
+
+  // Sheet
+  var wrap=document.getElementById("phone-wrap");
+  var old=wrap.querySelector(".sheet-overlay");
+  if(old) wrap.removeChild(old);
+
+  if(pendingSheet){
+    var sh="<div class='sheet'><div class='sh-handle'></div>";
+
+    if(pendingSheet.type==="sendto"){
+      var found = findClient(pendingSheet.clientId);
+      if(!found){pendingSheet=null;return;}
+      var client = found.client;
+      var wasMissed = found.source === "missed";
+      sh+="<div class='sh-title'>Send "+client.name+" to a chair</div>";
+      sh+="<div class='sh-sub'>"+(wasMissed?"Previously missed \u2014 sending straight to a chair":"Choose an available chair")+"</div>";
+      sh+="<div class='cp-box'><div class='cp-av'>"+getInitials(client.name)+"</div>";
+      sh+="<div><div class='cp-name'>"+client.name+"</div><div class='cp-meta'>Check-in "+client.checkin+"</div></div></div>";
+
+      // Chair options
+      chairs.forEach(function(s,i){
+        var isSel=selectedChair===i;
+        var isOcc=!!s;
+        sh+="<div class='chair-opt' onclick='selectChair("+i+")'>";
+        sh+="<div class='so-ico "+(isOcc?"occ-s":"empty-s")+"'>"+(isOcc?"&#128265;":"&#9986;&#65039;")+"</div>";
+        sh+="<div class='so-lbl'><div class='so-name-s'>Chair "+(i+1)+"</div>";
+        if(isOcc) sh+="<div class='so-meta-s'>"+s.name+" \u00b7 In "+s.inTime+"</div>";
+        else sh+="<div class='so-meta-s' style='color:var(--green-b);'>Empty \u2014 ready</div>";
+        sh+="</div>";
+        sh+="<div class='so-radio "+(isSel?"sel":"")+"'>"+(isSel?"<div class='so-inner'></div>":"")+"</div>";
+        sh+="</div>";
+      });
+
+      // Warning if occupied chair selected
+      if(selectedChair!==null&&chairs[selectedChair]){
+        var prev=chairs[selectedChair];
+        sh+="<div class='warn-box'><div style='font-size:16px;'>&#9888;&#65039;</div><div class='warn-txt'><strong>"+prev.name+" is still inside.</strong> They will be automatically marked out when you confirm.</div></div>";
+        
+      }
+
+      var canConfirm=selectedChair!==null;
+      sh+="<button class='cb-primary' "+(canConfirm?"":"style='opacity:.45;cursor:not-allowed;'")+" onclick='confirmSendTo()'>Confirm \u2014 send to chair &rarr;</button>";
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+
+    } else if(pendingSheet.type==="backinline"){
+      var bc = missed.filter(function(x){return x.id===pendingSheet.clientId;})[0];
+      if(!bc){pendingSheet=null;return;}
+      var qLen = waiting.length;
+      var maxPos = qLen + 1;
+      var curPos = backInLinePos;
+      sh+="<div class='sh-title'>Put "+bc.name.split(" ")[0]+" back in line</div>";
+      sh+="<div class='sh-sub'>Where should they go? There "+(qLen===1?"is 1 person":"are "+qLen+" people")+" waiting.</div>";
+      sh+="<div class='cp-box'><div class='cp-av'>"+getInitials(bc.name)+"</div>";
+      sh+="<div><div class='cp-name'>"+bc.name+"</div><div class='cp-meta'>Checked in "+bc.checkin+" \u00b7 missed their call</div></div></div>";
+
+      // Preset positions
+      var presets = [
+        {label: "Next up",              sub: "#1 in line",                   val: 1},
+        {label: "After a couple people",sub: "#"+Math.min(3,maxPos)+" in line", val: Math.min(3, maxPos)},
+        {label: "End of line",          sub: "#"+maxPos+" in line",          val: maxPos}
+      ];
+      // Dedupe (e.g. if queue is 0 or short, all presets collapse)
+      var seen = {};
+      presets = presets.filter(function(p){if(seen[p.val])return false;seen[p.val]=1;return true;});
+
+      sh+="<div class='pos-presets'>";
+      presets.forEach(function(p){
+        var sel = curPos === p.val ? " sel" : "";
+        sh+="<button class='pos-preset"+sel+"' onclick='setBackPos("+p.val+")'>";
+        sh+="<div><div class='pos-lbl'>"+p.label+"</div>";
+        sh+="<div class='pos-sub'>"+p.sub+"</div></div>";
+        sh+="</button>";
+      });
+      sh+="</div>";
+
+      // Custom position picker
+      sh+="<div class='pos-custom'>";
+      sh+="<div class='pos-custom-lbl'>Or pick any spot:</div>";
+      sh+="<div class='pos-stepper'>";
+      sh+="<button class='pos-step' onclick='setBackPos("+(curPos-1)+")' "+(curPos<=1?"disabled":"")+">&minus;</button>";
+      sh+="<div class='pos-val'>#"+curPos+"<span class='pos-of'> of "+maxPos+"</span></div>";
+      sh+="<button class='pos-step' onclick='setBackPos("+(curPos+1)+")' "+(curPos>=maxPos?"disabled":"")+">+</button>";
+      sh+="</div>";
+      sh+="</div>";
+
+      // Context: who will be immediately before / after
+      var before = curPos > 1 ? waiting[curPos-2] : null;
+      var after  = curPos <= qLen ? waiting[curPos-1] : null;
+      if(before || after){
+        sh+="<div class='pos-context'>";
+        if(before) sh+="<div class='pos-ctx-row'><span class='pos-ctx-n'>#"+(curPos-1)+"</span> <span class='pos-ctx-name'>"+before.name.split(" ")[0]+"</span></div>";
+        sh+="<div class='pos-ctx-row pos-ctx-me'><span class='pos-ctx-n'>#"+curPos+"</span> <span class='pos-ctx-name'><strong>"+bc.name.split(" ")[0]+"</strong> \u2190 placed here</span></div>";
+        if(after) sh+="<div class='pos-ctx-row'><span class='pos-ctx-n'>#"+(curPos+1)+"</span> <span class='pos-ctx-name'>"+after.name.split(" ")[0]+"</span></div>";
+        sh+="</div>";
+      }
+
+      sh+="<button class='cb-primary' onclick='confirmBackInLine()'>Place "+bc.name.split(" ")[0]+" at #"+curPos+"</button>";
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+
+    } else if(pendingSheet.type==="markout"){
+      var i=pendingSheet.chairIdx;
+      var s=chairs[i];
+      if(!s){pendingSheet=null;return;}
+      var ms=Date.now()-s.inTs;
+      var mins=Math.floor(ms/60000);
+      sh+="<div class='sh-title'>Mark out</div>";
+      sh+="<div class='cp-box'><div class='cp-av'>"+getInitials(s.name)+"</div>";
+      sh+="<div><div class='cp-name'>"+s.name+"</div><div class='cp-meta'>In "+s.inTime+" \u00b7 "+mins+" min</div></div></div>";
+      
+      sh+="<button class='cb-primary' onclick='confirmMarkOut()'>Confirm mark out</button>";
+      sh+="<button class='cb-cancel' onclick='cancelAction()'>Cancel</button>";
+    }
+
+    sh+="</div>";
+    var overlay=document.createElement("div");
+    overlay.className="sheet-overlay";
+    overlay.innerHTML=sh;
+    wrap.appendChild(overlay);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
