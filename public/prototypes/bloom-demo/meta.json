@@ -1,0 +1,10 @@
+{
+  "slug": "bloom-demo",
+  "testName": "Bloom Demo",
+  "schemaVersion": 1,
+  "createdAt": "2026-06-10T16:00:55.909Z",
+  "mode": "exploration",
+  "prompt": null,
+  "tasks": null,
+  "archived": false
+}
